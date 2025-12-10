@@ -27,50 +27,59 @@ const faqs = [
     },
 ];
 
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+
+// ... imports remain the same
+
 export default function FAQPage() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
-        <main className="min-h-screen pt-24 pb-16 px-4">
-            <div className="max-w-3xl mx-auto">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-16"
-                >
-                    <h1 className="text-4xl font-bold tracking-tight mb-4">Preguntas Frecuentes</h1>
-                    <p className="text-muted-foreground">Todo lo que necesitas saber para tu próxima aventura mágica.</p>
-                </motion.div>
+        <div className="min-h-screen bg-background">
+            <Navbar />
+            <main className="pt-24 pb-16 px-4">
+                <div className="max-w-3xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center mb-16"
+                    >
+                        <h1 className="text-4xl font-bold tracking-tight mb-4">Preguntas Frecuentes</h1>
+                        <p className="text-muted-foreground">Todo lo que necesitas saber para tu próxima aventura mágica.</p>
+                    </motion.div>
 
-                <div className="space-y-4">
-                    {faqs.map((faq, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="border border-border rounded-2xl overflow-hidden bg-secondary/20"
-                        >
-                            <button
-                                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                                className="flex items-center justify-between w-full p-6 text-left font-medium active:bg-secondary/40 transition-colors"
+                    <div className="space-y-4">
+                        {faqs.map((faq, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                className="border border-border rounded-2xl overflow-hidden bg-secondary/20"
                             >
-                                <span>{faq.question}</span>
-                                {openIndex === index ? (
-                                    <Minus className="h-5 w-5 text-primary" />
-                                ) : (
-                                    <Plus className="h-5 w-5 text-muted-foreground" />
+                                <button
+                                    onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                                    className="flex items-center justify-between w-full p-6 text-left font-medium active:bg-secondary/40 transition-colors"
+                                >
+                                    <span>{faq.question}</span>
+                                    {openIndex === index ? (
+                                        <Minus className="h-5 w-5 text-primary" />
+                                    ) : (
+                                        <Plus className="h-5 w-5 text-muted-foreground" />
+                                    )}
+                                </button>
+                                {openIndex === index && (
+                                    <div className="px-6 pb-6 text-muted-foreground leading-relaxed animate-in slide-in-from-top-2 fade-in duration-200">
+                                        {faq.answer}
+                                    </div>
                                 )}
-                            </button>
-                            {openIndex === index && (
-                                <div className="px-6 pb-6 text-muted-foreground leading-relaxed animate-in slide-in-from-top-2 fade-in duration-200">
-                                    {faq.answer}
-                                </div>
-                            )}
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+            <Footer />
+        </div>
     );
 }

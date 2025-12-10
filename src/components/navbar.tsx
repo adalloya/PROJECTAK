@@ -23,6 +23,7 @@ export function Navbar() {
         { name: "Destinos", href: "/#destinations" },
         { name: "Nosotros", href: "/about" },
         { name: "Nuestros Servicios", href: "/services" },
+        { name: "FAQ", href: "/faq" },
     ];
 
     return (

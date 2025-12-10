@@ -14,24 +14,24 @@ const destinations = [
     },
     {
         id: 2,
-        title: "Universal Studios",
-        description: "Vive películas épicas en la vida real.",
-        image: "/images/universal.png",
-        href: "/destinations/universal-studios",
+        title: "Disneyland Resort",
+        description: "El lugar donde comenzó la magia.",
+        image: "/images/disney-world.png", // Placeholder until we have a disneyland image
+        href: "/destinations/disneyland",
     },
     {
         id: 3,
-        title: "Epcot",
-        description: "Explora el futuro y el mundo hoy.",
-        image: "/images/epcot.png",
-        href: "/destinations/epcot",
-    },
-    {
-        id: 4,
         title: "Disney Cruise Line",
         description: "Magia en alta mar.",
         image: "/images/disney-cruise.jpg",
         href: "/destinations/disney-cruise",
+    },
+    {
+        id: 4,
+        title: "Universal Studios",
+        description: "Vive películas épicas en la vida real.",
+        image: "/images/universal.png",
+        href: "/destinations/universal-studios",
     },
 ];
 
@@ -49,7 +49,7 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                     >
                         <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Descubre la Magia</h2>
                         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                            Elige tu próxima aventura mágica de nuestra selección curada de destinos premium.
+                            Elige tu próxima aventura mágica de nuestra selección exclusiva de destinos premium.
                         </p>
                     </motion.div>
                 )}

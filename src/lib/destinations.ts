@@ -19,7 +19,7 @@ export const destinationsData: Record<string, Destination> = {
         title: "Walt Disney World Resort",
         subtitle: "El lugar más mágico de la Tierra",
         heroImage: "/images/disney-world.png",
-        overview: "Walt Disney World Resort en Florida es el destino de vacaciones más grande y visitado del mundo. Con cuatro parques temáticos (Magic Kingdom, EPCOT, Disney's Hollywood Studios y Disney's Animal Kingdom), dos parques acuáticos, más de 25 hoteles temáticos y el distrito de compras y entretenimiento Disney Springs, ofrece una experiencia inmersiva inigualable para todas las edades.",
+        overview: "Walt Disney World Resort en Florida es el destino de vacaciones más grande y visitado del mundo. Con cuatro parques temáticos (Magic Kingdom, EPCOT, Disney's Hollywood Studios y Disney's Animal Kingdom), dos parques acuáticos, más de 25 hoteles temáticos y el centro de compras y entretenimiento Disney Springs, ofrece una experiencia inmersiva inigualable para todas las edades.",
         highlights: [
             {
                 title: "Magic Kingdom",
@@ -61,7 +61,7 @@ export const destinationsData: Record<string, Destination> = {
         title: "Universal Orlando Resort",
         subtitle: "Donde las películas cobran vida",
         heroImage: "/images/universal.png",
-        overview: "Universal Orlando Resort es el destino definitivo para los buscadores de emociones y fanáticos de la cultura pop. Conecta dos parques temáticos increíbles (Universal Studios Florida y Universal's Islands of Adventure) y el parque acuático temático Volcano Bay. Es la casa del fenómeno mundial: The Wizarding World of Harry Potter.",
+        overview: "Universal tiene dos grandes destinos: Hollywood y Florida. En Universal Orlando Resort (Florida), encontrarás tres parques temáticos increíbles (Universal Studios Florida, Universal's Islands of Adventure y Universal's Volcano Bay), hoteles espectaculares y la zona de entretenimiento City Walk. Es el hogar del fenómeno mundial: The Wizarding World of Harry Potter.",
         highlights: [
             {
                 title: "The Wizarding World of Harry Potter",
@@ -92,40 +92,40 @@ export const destinationsData: Record<string, Destination> = {
             "Usa la fila 'Single Rider' para ahorrar tiempo en atracciones populares como Gringotts."
         ]
     },
-    "epcot": {
-        slug: "epcot",
-        title: "EPCOT",
-        subtitle: "Imaginación, Innovación y Cultura",
-        heroImage: "/images/epcot.png",
-        overview: "EPCOT (Experimental Prototype Community of Tomorrow) celebra los logros humanos y la cooperación internacional. Dividido en cuatro vecindarios: World Celebration, World Discovery, World Nature y World Showcase, es el parque más diverso y gastronómico de Disney.",
+    "disneyland": {
+        slug: "disneyland",
+        title: "Disneyland Resort California",
+        subtitle: "El lugar donde comenzó la magia",
+        heroImage: "/images/disney-world.png", // Using WDW image as placeholder until we have one
+        overview: "Disneyland Resort en California es el original, donde Walt Disney caminó. Cuenta con dos parques temáticos legendarios: Disneyland Park y Disney California Adventure Park. Además, ofrece inmersión total con sus Hoteles Disney y la conveniencia de los Hoteles Good Neighbor certificados.",
         highlights: [
             {
-                title: "World Showcase",
-                description: "11 pabellones que representan países como México, Japón, Francia e Italia, atendidos por ciudadanos nativos.",
-                icon: "globe"
+                title: "Disneyland Park",
+                description: "El parque original. Camina por Main Street U.S.A. y descubre Star Wars: Galaxy's Edge.",
+                icon: "castle"
             },
             {
-                title: "Guardians of the Galaxy: Cosmic Rewind",
-                description: "Una montaña rusa rotatoria con lanzamiento inverso, considerada una de las mejores atracciones de Orlando.",
+                title: "Disney California Adventure",
+                description: "El hogar de Avengers Campus y Cars Land. Diversión y adrenalina al estilo californiano.",
                 icon: "star"
             },
             {
-                title: "Soarin' Around the World",
-                description: "Un simulador de vuelo que te lleva sobre las maravillas naturales y artificiales del planeta.",
-                icon: "island"
+                title: "Avengers Campus",
+                description: "Entrena con los héroes más poderosos de la Tierra y lanza telarañas con Spider-Man.",
+                icon: "shield"
             }
         ],
         mustDos: [
-            "Probar snacks y bebidas de cada país en el World Showcase",
-            "Ver el espectáculo nocturno en la laguna",
-            "Interactuar con Moana en 'Journey of Water'",
-            "Diseñar tu propio auto en 'Test Track'",
-            "Conocer a Elsa y Anna en el pabellón de Noruega"
+            "Visitar Cars Land y correr en Radiator Springs Racers",
+            "Probar un churro clásico de Disneyland",
+            "Ver el espectáculo 'World of Color'",
+            "Conocer a los Avengers",
+            "Caminar por donde Walt Disney caminó"
         ],
         tips: [
-            "EPCOT es enorme, usa zapatos muy cómodos.",
-            "Entra por el 'International Gateway' si vienes del área de hoteles del Boardwalk o del Skyliner.",
-            "Visita durante uno de los festivales (Food & Wine, Flower & Garden) para comida exclusiva."
+            "Usa Park Hopper, los parques están uno frente al otro.",
+            "Llega temprano para aprovechar las mañanas con menos gente.",
+            "Descarga la app de Disneyland para ver tiempos de espera."
         ]
     },
     "disney-cruise": {
@@ -133,7 +133,7 @@ export const destinationsData: Record<string, Destination> = {
         title: "Disney Cruise Line",
         subtitle: "Magia en alta mar",
         heroImage: "/images/disney-cruise.jpg",
-        overview: "Disney Cruise Line ofrece unas vacaciones en crucero donde la magia impregna cada detalle. Desde barcos clásicos hasta los más nuevos como el Disney Wish y el Disney Treasure, disfrutarás de servicio legendario, entretenimiento tipo Broadway y destinos paradisíacos.",
+        overview: "Disney Cruise Line ofrece unas vacaciones en crucero donde la magia impregna cada detalle. Desde barcos clásicos hasta los más nuevos como el Disney Wish, Disney Treasure y Disney Destiny, disfrutarás de servicio legendario, entretenimiento tipo Broadway y destinos paradisíacos.",
         highlights: [
             {
                 title: "Castaway Cay y Lookout Cay",
@@ -153,8 +153,7 @@ export const destinationsData: Record<string, Destination> = {
         ],
         mustDos: [
             "Ver los fuegos artificiales en el mar (única naviera que lo hace)",
-            "Desayunar con personajes de Disney",
-            "Ver un estreno de cine en el teatro Buena Vista",
+            "Ver un estreno de película Disney",
             "Disfrutar de un brunch en Palo (solo adultos)",
             "Deslizarse por el tobogán acuático del barco"
         ],

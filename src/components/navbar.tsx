@@ -38,7 +38,7 @@ export function Navbar() {
                 <div className="flex items-center justify-between h-24">
                     <div className="flex items-center gap-6">
                         <Link href="/" className="flex items-center">
-                            <div className="relative h-28 w-28 overflow-hidden transform hover:scale-105 transition-transform">
+                            <div className="relative h-20 w-20 md:h-28 md:w-28 overflow-hidden transform hover:scale-105 transition-transform">
                                 <Image src="/logo.png" alt="Here We Go Advisor" fill className="object-contain" />
                             </div>
                         </Link>

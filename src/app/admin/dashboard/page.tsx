@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X } from "lucide-react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2 } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
 import { LEAD_STATUSES, Lead, LeadStatus } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ export default function AdminDashboard() {
     const [isEditing, setIsEditing] = useState(false);
     const [isCreating, setIsCreating] = useState(false); // New state for create modal
     const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<LeadStatus>("new"); // Mobile tab state
 
     // Fetch real data on mount
     useEffect(() => {
@@ -77,6 +78,25 @@ export default function AdminDashboard() {
         // Update in DB
         await supabase.from('leads').update({ admin_notes: newNotes }).eq('id', leadId);
     }
+
+    const handleDeleteLead = async (leadId: string) => {
+        if (!confirm("¿Estás seguro de que quieres eliminar este lead? Esta acción no se puede deshacer.")) {
+            return;
+        }
+
+        // Optimistic delete
+        setLeads(leads.filter(l => l.id !== leadId));
+        setSelectedLead(null);
+
+        // Delete from DB
+        const { error } = await supabase.from('leads').delete().eq('id', leadId);
+
+        if (error) {
+            console.error("Error deleting lead:", error);
+            alert("Error al eliminar el lead");
+            fetchLeads(); // Revert on error
+        }
+    };
 
 
     const onDragEnd = (result: DropResult) => {
@@ -161,11 +181,40 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
+            {/* Mobile Tabs */}
+            <div className="flex md:hidden overflow-x-auto gap-2 mb-6 pb-2 scrollbar-hide">
+                {LEAD_STATUSES.map((status) => (
+                    <button
+                        key={status.value}
+                        onClick={() => setActiveTab(status.value)}
+                        className={cn(
+                            "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
+                            activeTab === status.value
+                                ? `bg-${status.color.replace('border-', '')} text-white border-transparent shadow-md`
+                                : "bg-white border-gray-200 text-gray-600"
+                        )}
+                        // Hack to match the status colors defined in types which use 'border-blue-500' etc. 
+                        // We need a mapping or string manipulation. Simple fix for now:
+                        style={activeTab === status.value ? { backgroundColor: status.color === 'border-gray-500' ? '#6b7280' : status.color === 'border-blue-500' ? '#3b82f6' : status.color === 'border-yellow-500' ? '#eab308' : status.color === 'border-green-500' ? '#22c55e' : '#ef4444' } : {}}
+                    >
+                        {status.label}
+                    </button>
+                ))}
+            </div>
+
             {/* Kanban Board */}
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="flex gap-4 overflow-hidden w-full h-[calc(100vh-220px)] min-h-[500px]">
                     {leadsByStatus.map((column) => (
-                        <div key={column.value} className="flex-1 min-w-0 flex flex-col bg-gray-50/50 rounded-xl border border-gray-100">
+                        // Show all on desktop, but only active one on mobile
+                        <div
+                            key={column.value}
+                            className={cn(
+                                "flex-1 min-w-0 flex-col bg-gray-50/50 rounded-xl border border-gray-100 transition-all",
+                                // Mobile logic: hidden unless it's the active tab. Desktop: always flex.
+                                activeTab === column.value ? "flex" : "hidden md:flex"
+                            )}
+                        >
                             {/* Column Header */}
                             <div className={`p-3 rounded-t-xl border-b-2 ${column.color} bg-white flex justify-between items-center mb-2 shadow-sm shrink-0`}>
                                 <h3 className="font-bold text-xs lg:text-sm uppercase tracking-wider truncate text-gray-700">{column.label}</h3>
@@ -399,7 +448,13 @@ export default function AdminDashboard() {
 
                             </div>
 
-                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-3xl">
+                            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-between gap-3 rounded-b-3xl">
+                                <button
+                                    onClick={() => handleDeleteLead(selectedLead.id)}
+                                    className="px-4 py-2 text-red-500 hover:bg-red-50 rounded-full transition-colors flex items-center gap-2 text-sm font-medium"
+                                >
+                                    <Trash2 className="h-4 w-4" /> Eliminar Lead
+                                </button>
                                 <button
                                     onClick={() => setSelectedLead(null)}
                                     className="px-6 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-full hover:bg-gray-50 transition-colors"

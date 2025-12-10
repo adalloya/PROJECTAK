@@ -22,7 +22,7 @@ export function Navbar() {
     const navLinks = [
         { name: "Destinos", href: "/#destinations" },
         { name: "Nosotros", href: "/about" },
-        { name: "Contacto", href: "/contact" },
+        { name: "Nuestros Servicios", href: "/services" },
     ];
 
     return (
@@ -53,7 +53,7 @@ export function Navbar() {
                         ))}
                         <Link href="/contact">
                             <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium transition-colors text-sm">
-                                Cotizar ahora
+                                Solicitar cotización
                             </button>
                         </Link>
                     </div>
@@ -95,7 +95,7 @@ export function Navbar() {
                                 onClick={() => setIsOpen(false)}
                                 className="block w-full text-center py-2 text-base font-medium bg-primary text-primary-foreground rounded-full"
                             >
-                                Reservar Ahora
+                                Solicitar cotización
                             </Link>
                         </div>
                     </motion.div>

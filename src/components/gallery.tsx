@@ -90,52 +90,61 @@ export function Gallery() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
+                        className="fixed inset-0 z-[60] bg-black/95 flex flex-col items-center justify-center backdrop-blur-md"
                         onClick={closeLightbox}
                     >
-                        <button
-                            onClick={closeLightbox}
-                            className="absolute top-4 right-4 text-white/70 hover:text-white p-2"
-                        >
-                            <X className="h-8 w-8" />
-                        </button>
+                        {/* Header Controls */}
+                        <div className="absolute top-0 right-0 p-4 z-50">
+                            <button
+                                onClick={closeLightbox}
+                                className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <X className="h-8 w-8" />
+                            </button>
+                        </div>
 
-                        <button
-                            onClick={showPrev}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 bg-black/20 hover:bg-black/40 rounded-full transition-colors"
-                        >
-                            <ChevronLeft className="h-8 w-8" />
-                        </button>
+                        {/* Main Image Area */}
+                        <div className="flex-1 w-full h-full relative flex items-center justify-center p-4 md:p-12 min-h-0">
+                            <button
+                                onClick={showPrev}
+                                className="absolute left-2 md:left-4 z-50 text-white/70 hover:text-white p-2 bg-black/20 hover:bg-black/40 rounded-full transition-colors"
+                            >
+                                <ChevronLeft className="h-8 w-8" />
+                            </button>
 
-                        <button
-                            onClick={showNext}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 bg-black/20 hover:bg-black/40 rounded-full transition-colors"
-                        >
-                            <ChevronRight className="h-8 w-8" />
-                        </button>
+                            <button
+                                onClick={showNext}
+                                className="absolute right-2 md:right-4 z-50 text-white/70 hover:text-white p-2 bg-black/20 hover:bg-black/40 rounded-full transition-colors"
+                            >
+                                <ChevronRight className="h-8 w-8" />
+                            </button>
 
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative w-full max-w-5xl aspect-[16/9] md:aspect-[3/2] rounded-lg overflow-hidden"
-                            onClick={(e) => e.stopPropagation()} // Prevent close on image click
-                        >
-                            <Image
-                                src={images[selectedIndex].src}
-                                alt={images[selectedIndex].alt}
-                                fill
-                                className="object-contain"
-                                priority
-                            />
-                            <div className="absolute bottom-24 left-0 right-0 text-center text-white/90 text-sm md:text-base px-4 font-medium drop-shadow-md z-20 pointer-events-none">
-                                {images[selectedIndex].alt}
-                            </div>
-                        </motion.div>
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="relative w-full h-full max-w-6xl flex items-center justify-center"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <Image
+                                    src={images[selectedIndex].src}
+                                    alt={images[selectedIndex].alt}
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                                {/* Caption floating at the bottom of the image area */}
+                                <div className="absolute bottom-0 left-0 right-0 p-4 text-center bg-gradient-to-t from-black/80 to-transparent pt-12 rounded-b-lg">
+                                    <p className="text-white/90 text-sm md:text-lg font-medium drop-shadow-md">
+                                        {images[selectedIndex].alt}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        </div>
 
-                        {/* Thumbnail Strip */}
-                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-50">
-                            <div className="flex gap-2 p-2 bg-black/50 backdrop-blur-md rounded-full overflow-x-auto max-w-full">
+                        {/* Thumbnail Strip - Static Flex Item */}
+                        <div className="w-full flex-shrink-0 bg-black/40 backdrop-blur-xl border-t border-white/5 p-4 z-50 flex justify-center">
+                            <div className="flex gap-2 overflow-x-auto max-w-full px-4 scrollbar-hide">
                                 {images.map((img, idx) => (
                                     <button
                                         key={idx}
@@ -143,9 +152,9 @@ export function Gallery() {
                                             e.stopPropagation();
                                             setSelectedIndex(idx);
                                         }}
-                                        className={`relative w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden transition-all duration-300 flex-shrink-0 ${selectedIndex === idx
-                                            ? "ring-2 ring-white scale-110 opacity-100"
-                                            : "opacity-50 hover:opacity-100 hover:scale-105"
+                                        className={`relative w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden transition-all duration-300 flex-shrink-0 border-2 ${selectedIndex === idx
+                                            ? "border-primary scale-105 opacity-100"
+                                            : "border-transparent opacity-50 hover:opacity-100"
                                             }`}
                                     >
                                         <Image

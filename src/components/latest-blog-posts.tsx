@@ -2,6 +2,7 @@
 
 import { blogPosts } from "@/lib/blog";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Calendar } from "lucide-react";
 
@@ -42,7 +43,12 @@ export function LatestBlogPosts() {
                             className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col h-full border border-border/50"
                         >
                             <Link href={`/blog/${post.slug}`} className="block relative aspect-video overflow-hidden bg-muted">
-                                {/* Placeholder gradient since we don't have images yet */}
+                                <Image
+                                    src={post.image}
+                                    alt={post.title}
+                                    fill
+                                    className="object-cover transition-transform duration-500 hover:scale-105"
+                                />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-transparent" />
                                 <div className="absolute bottom-4 left-4">
                                     <span className="bg-background/90 backdrop-blur text-foreground text-xs px-2 py-1 rounded-full font-medium border border-border">

@@ -2,6 +2,7 @@ import { blogPosts, BlogPost } from "@/lib/blog";
 import { Navbar } from "@/components/navbar";
 
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
 
@@ -66,10 +67,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         </div>
                     </header>
 
-                    {/* Featured Image Placeholder (Since we don't have real files yet) */}
-                    <div className="relative aspect-video w-full bg-muted rounded-2xl mb-12 overflow-hidden flex items-center justify-center">
-                        <div className="text-muted-foreground text-sm">Imagen Destacada: {post.title}</div>
-                        {/* In a real scenario: <Image src={post.image} fill className="object-cover" /> */}
+                    {/* Featured Image */}
+                    <div className="relative aspect-video w-full bg-muted rounded-2xl mb-12 overflow-hidden shadow-lg">
+                        <Image
+                            src={post.image}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
                     </div>
 
                     {/* Content */}

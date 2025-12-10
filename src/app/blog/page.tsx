@@ -50,11 +50,15 @@ export default function BlogPage() {
                                         Since we don't have real implementation of these image files locally yet, 
                                         we will use a placeholder styling but try to load the image.
                                       */}
-                                    <div className="absolute inset-0 bg-secondary/30" />
-                                    {/* Using a gradient overlay as placeholder if image fails or just as style */}
+                                    <Image
+                                        src={post.image}
+                                        alt={post.title}
+                                        fill
+                                        className="object-cover transition-transform duration-500 hover:scale-105"
+                                    />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                     <div className="absolute bottom-4 left-4">
-                                        <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
+                                        <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                                             {post.category}
                                         </span>
                                     </div>

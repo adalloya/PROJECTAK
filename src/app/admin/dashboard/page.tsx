@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [isCreating, setIsCreating] = useState(false); // New state for create modal
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch real data on mount
@@ -76,6 +77,33 @@ export default function AdminDashboard() {
         await supabase.from('leads').update({ admin_notes: newNotes }).eq('id', leadId);
     }
 
+    const handleCreateLead = async (formData: FormData) => {
+        const newLead = {
+            client_name: formData.get('client_name') as string,
+            email: formData.get('email') as string,
+            phone: formData.get('phone') as string,
+            destination: formData.get('destination') as string,
+            dates: formData.get('dates') as string,
+            travelers: formData.get('travelers') as string,
+            notes: formData.get('notes') as string,
+            status: 'new' as LeadStatus,
+        };
+
+        const { data, error } = await supabase
+            .from('leads')
+            .insert([newLead])
+            .select()
+            .single();
+
+        if (data) {
+            setLeads([data, ...leads]);
+            setIsCreating(false);
+        } else {
+            alert('Error al crear lead');
+            console.error(error);
+        }
+    };
+
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center">Cargando CRM...</div>
     }
@@ -102,6 +130,13 @@ export default function AdminDashboard() {
                     </div>
                     <button className="h-10 w-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:bg-gray-50">
                         <Filter className="h-4 w-4" />
+                    </button>
+
+                    <button
+                        onClick={() => setIsCreating(true)}
+                        className="h-10 px-4 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-colors flex items-center gap-2"
+                    >
+                        <span className="text-xl leading-none">+</span> Nuevo Lead
                     </button>
                 </div>
             </div>
@@ -305,6 +340,71 @@ export default function AdminDashboard() {
                                     Cerrar
                                 </button>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Create Lead Modal */}
+            <AnimatePresence>
+                {isCreating && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                                <h2 className="text-xl font-bold text-gray-900">Nuevo Lead Manual</h2>
+                                <button
+                                    onClick={() => setIsCreating(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    <X className="h-6 w-6 text-gray-400" />
+                                </button>
+                            </div>
+
+                            <form action={handleCreateLead} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Cliente *</label>
+                                    <input required name="client_name" type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Ej. Juan Pérez" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                        <input required name="email" type="email" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="juan@email.com" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                        <input name="phone" type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="+52..." />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Destino</label>
+                                    <input name="destination" type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Ej. Disney World" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fechas</label>
+                                        <input name="dates" type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Ej. Dic 2024" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Viajeros</label>
+                                        <input name="travelers" type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Ej. 2 Adultos" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                                    <textarea name="notes" rows={3} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Detalles adicionales..." />
+                                </div>
+
+                                <div className="pt-4">
+                                    <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all">
+                                        Crear Lead
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}

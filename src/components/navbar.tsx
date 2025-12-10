@@ -44,14 +44,14 @@ export function Navbar() {
                         </Link>
 
                         {/* Social Icons - Desktop Left */}
-                        <div className="hidden md:flex items-center space-x-3 border-l border-border/50 pl-6">
-                            <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
+                        <div className="hidden md:flex items-center space-x-3 border-l border-black/10 pl-6">
+                            <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" className="text-black hover:text-primary transition-colors hover:scale-110 transform duration-200">
                                 <Instagram className="h-5 w-5" />
                             </Link>
-                            <Link href="https://www.facebook.com/profile.php?id=61553712201003" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
+                            <Link href="https://www.facebook.com/profile.php?id=61553712201003" target="_blank" className="text-black hover:text-primary transition-colors hover:scale-110 transform duration-200">
                                 <Facebook className="h-5 w-5" />
                             </Link>
-                            <Link href="https://www.tiktok.com/@herewego_advisor?_r=1&_t=ZS-925JVbNLuqo" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
+                            <Link href="https://www.tiktok.com/@herewego_advisor?_r=1&_t=ZS-925JVbNLuqo" target="_blank" className="text-black hover:text-primary transition-colors hover:scale-110 transform duration-200">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="24"
@@ -76,7 +76,7 @@ export function Navbar() {
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                                className="text-sm font-bold text-black hover:text-primary transition-colors"
                             >
                                 {link.name}
                             </Link>

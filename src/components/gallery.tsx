@@ -2,9 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { X, ZoomIn } from "lucide-react";
+import { X, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
 
 const images = [
     { src: "/images/gallery/1.jpg", alt: "Familia feliz en Magic Kingdom" },
@@ -15,27 +15,61 @@ const images = [
     { src: "/images/gallery/6.jpg", alt: "Diversión en Andy's Room" },
 ];
 
+const variants = {
+    enter: (direction: number) => ({
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0,
+        scale: 0.8
+    }),
+    center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1,
+        scale: 1
+    },
+    exit: (direction: number) => ({
+        zIndex: 0,
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0,
+        scale: 0.8
+    })
+};
+
+const swipeConfidenceThreshold = 10000;
+const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+};
+
 export function Gallery() {
     const [current, setCurrent] = useState(0);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [direction, setDirection] = useState(0);
+
+    const paginate = useCallback((newDirection: number) => {
+        setDirection(newDirection);
+        setCurrent((prev) => (prev + newDirection + images.length) % images.length);
+    }, []);
 
     // Auto-rotation logic
     useEffect(() => {
-        if (isLightboxOpen) return; // Pause rotation when lightbox is open
+        if (isLightboxOpen) return;
         const timer = setInterval(() => {
-            setCurrent((prev) => (prev + 1) % images.length);
+            paginate(1);
         }, 4000);
         return () => clearInterval(timer);
-    }, [isLightboxOpen]);
+    }, [isLightboxOpen, paginate]);
 
-    // Handle Escape key to close lightbox
+    // Keyboard navigation
     useEffect(() => {
+        if (!isLightboxOpen) return;
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") setIsLightboxOpen(false);
+            if (e.key === "ArrowRight") paginate(1);
+            if (e.key === "ArrowLeft") paginate(-1);
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    }, [isLightboxOpen, paginate]);
 
     return (
         <section className="py-12 md:py-24 bg-background overflow-hidden">
@@ -62,7 +96,10 @@ export function Gallery() {
                             {images.map((img, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => setCurrent(index)}
+                                    onClick={() => {
+                                        setDirection(index > current ? 1 : -1);
+                                        setCurrent(index);
+                                    }}
                                     className={cn(
                                         "relative aspect-square rounded-2xl overflow-hidden transition-all duration-300 border-2",
                                         current === index
@@ -88,13 +125,18 @@ export function Gallery() {
                             className="relative aspect-[4/3] md:aspect-[16/10] bg-gray-100 rounded-[2rem] overflow-hidden shadow-2xl cursor-zoom-in group"
                             onClick={() => setIsLightboxOpen(true)}
                         >
-                            <AnimatePresence mode="wait">
+                            <AnimatePresence initial={false} custom={direction}>
                                 <motion.div
                                     key={current}
-                                    initial={{ opacity: 0, scale: 1.1 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.7 }}
+                                    custom={direction}
+                                    variants={variants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{
+                                        x: { type: "spring", stiffness: 300, damping: 30 },
+                                        opacity: { duration: 0.2 }
+                                    }}
                                     className="absolute inset-0"
                                 >
                                     <Image
@@ -104,7 +146,6 @@ export function Gallery() {
                                         className="object-cover"
                                         priority
                                     />
-                                    {/* Gradient Overlay for Text Visibility */}
                                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6 md:p-8">
                                         <p className="text-white text-lg md:text-xl font-medium drop-shadow-md">
                                             {images[current].alt}
@@ -136,38 +177,114 @@ export function Gallery() {
                 </div>
             </div>
 
-            {/* Fullscreen Lightbox */}
+            {/* Advanced Fullscreen Lightbox */}
             <AnimatePresence>
                 {isLightboxOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl"
+                        className="fixed inset-0 z-[100] bg-black/98 flex flex-col items-center justify-center backdrop-blur-2xl"
                         onClick={() => setIsLightboxOpen(false)}
                     >
-                        <button
-                            className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
-                            onClick={() => setIsLightboxOpen(false)}
-                        >
-                            <X className="h-8 w-8" />
-                        </button>
+                        {/* Top Controls */}
+                        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
+                            <span className="text-white/80 font-medium ml-2">
+                                {current + 1} / {images.length}
+                            </span>
+                            <button
+                                className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                                onClick={() => setIsLightboxOpen(false)}
+                            >
+                                <X className="h-8 w-8" />
+                            </button>
+                        </div>
 
-                        <div
-                            className="relative w-full max-w-6xl aspect-[4/3] md:aspect-video rounded-xl overflow-hidden shadow-2xl bg-black"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <Image
-                                src={images[current].src}
-                                alt={images[current].alt}
-                                fill
-                                className="object-contain"
-                                priority
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white text-center">
-                                <p className="text-xl font-medium">{images[current].alt}</p>
+                        {/* Main Image Area */}
+                        <div className="relative w-full h-full flex items-center justify-center p-4 md:p-10">
+                            {/* Navigation Arrows (Desktop) */}
+                            <button
+                                className="absolute left-4 z-50 hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all"
+                                onClick={(e) => { e.stopPropagation(); paginate(-1); }}
+                            >
+                                <ChevronLeft className="h-8 w-8" />
+                            </button>
+                            <button
+                                className="absolute right-4 z-50 hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all"
+                                onClick={(e) => { e.stopPropagation(); paginate(1); }}
+                            >
+                                <ChevronRight className="h-8 w-8" />
+                            </button>
+
+                            {/* Swipeable Image */}
+                            <motion.div
+                                key={current}
+                                custom={direction}
+                                variants={variants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{
+                                    x: { type: "spring", stiffness: 300, damping: 30 },
+                                    opacity: { duration: 0.2 }
+                                }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={1}
+                                onDragEnd={(e, { offset, velocity }) => {
+                                    const swipe = swipePower(offset.x, velocity.x);
+                                    if (swipe < -swipeConfidenceThreshold) {
+                                        paginate(1);
+                                    } else if (swipe > swipeConfidenceThreshold) {
+                                        paginate(-1);
+                                    }
+                                }}
+                                className="absolute w-full max-w-6xl aspect-[4/5] md:aspect-video rounded-xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <Image
+                                    src={images[current].src}
+                                    alt={images[current].alt}
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                    draggable={false}
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-center pb-12">
+                                    <p className="text-xl md:text-2xl font-bold tracking-tight">{images[current].alt}</p>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Bottom Thumbnails */}
+                        <div className="absolute bottom-4 left-0 right-0 z-50 px-4">
+                            <div className="flex justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
+                                {images.map((img, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDirection(index > current ? 1 : -1);
+                                            setCurrent(index);
+                                        }}
+                                        className={cn(
+                                            "relative w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-lg overflow-hidden transition-all duration-300 border-2",
+                                            current === index
+                                                ? "border-white scale-110 shadow-lg"
+                                                : "border-transparent opacity-50 hover:opacity-100"
+                                        )}
+                                    >
+                                        <Image
+                                            src={img.src}
+                                            alt={img.alt}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </button>
+                                ))}
                             </div>
                         </div>
+
                     </motion.div>
                 )}
             </AnimatePresence>

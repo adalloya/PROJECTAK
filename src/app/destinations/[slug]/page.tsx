@@ -20,9 +20,9 @@ const IconMap: Record<string, any> = {
 };
 
 interface DestinationPageProps {
-    params: {
+    params: Promise<{
         slug: string;
-    };
+    }>;
 }
 
 export function generateStaticParams() {
@@ -31,8 +31,10 @@ export function generateStaticParams() {
     }));
 }
 
-export default function DestinationPage({ params }: DestinationPageProps) {
-    const destination = destinationsData[params.slug];
+// Next.js 15+ requires params to be awaited
+export default async function DestinationPage({ params }: DestinationPageProps) {
+    const { slug } = await params;
+    const destination = destinationsData[slug];
 
     if (!destination) {
         notFound();

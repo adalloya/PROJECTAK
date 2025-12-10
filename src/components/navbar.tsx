@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Instagram, Facebook, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -52,8 +52,33 @@ export function Navbar() {
                                 {link.name}
                             </Link>
                         ))}
+                        <div className="flex items-center space-x-4 border-r border-border/50 pr-6 mr-2">
+                            <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
+                                <Instagram className="h-5 w-5" />
+                            </Link>
+                            <Link href="https://www.facebook.com/profile.php?id=61553712201003" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
+                                <Facebook className="h-5 w-5" />
+                            </Link>
+                            <Link href="https://www.tiktok.com/@herewego_advisor?_r=1&_t=ZS-925JVbNLuqo" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-5 w-5"
+                                >
+                                    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                                </svg>
+                            </Link>
+                        </div>
+
                         <Link href="/contact">
-                            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium transition-colors text-sm">
+                            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium transition-colors text-sm shadow-md hover:shadow-lg transform active:scale-95">
                                 Solicitar cotización
                             </button>
                         </Link>
@@ -91,6 +116,31 @@ export function Navbar() {
                                     {link.name}
                                 </Link>
                             ))}
+                            <div className="flex items-center justify-center space-x-6 py-4 border-t border-border/50">
+                                <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" className="text-muted-foreground hover:text-primary transition-colors">
+                                    <Instagram className="h-6 w-6" />
+                                </Link>
+                                <Link href="https://www.facebook.com/profile.php?id=61553712201003" target="_blank" className="text-muted-foreground hover:text-primary transition-colors">
+                                    <Facebook className="h-6 w-6" />
+                                </Link>
+                                <Link href="https://www.tiktok.com/@herewego_advisor?_r=1&_t=ZS-925JVbNLuqo" target="_blank" className="text-muted-foreground hover:text-primary transition-colors">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="h-6 w-6"
+                                    >
+                                        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                                    </svg>
+                                </Link>
+                            </div>
+
                             <Link
                                 href="/contact"
                                 onClick={() => setIsOpen(false)}

@@ -66,82 +66,39 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                     </div>
                 )}
 
-                <div className="flex flex-col lg:flex-row gap-8 items-stretch h-[600px] lg:h-[500px]">
-
-                    {/* Desktop Menu (Left Side) */}
-                    <div className="hidden lg:flex flex-col gap-2 w-1/3">
+                <div>
+                    {/* Desktop Grid (Restored) */}
+                    <div className="hidden lg:grid grid-cols-4 gap-6 mb-16">
                         {destinations.map((dest, index) => (
-                            <div
-                                key={dest.id}
-                                onMouseEnter={() => setActive(index)}
-                                className={cn(
-                                    "p-6 rounded-2xl cursor-pointer transition-all duration-300 border-2 border-transparent relative overflow-hidden group",
-                                    active === index
-                                        ? "bg-white shadow-lg border-primary/20 scale-105 z-10"
-                                        : "hover:bg-gray-50 text-muted-foreground"
-                                )}
-                            >
-                                <div className="relative z-10 flex justify-between items-center">
-                                    <h3 className={cn("text-xl font-bold", active === index && "text-primary")}>
-                                        {dest.title}
-                                    </h3>
-                                    {active === index && (
-                                        <motion.div layoutId="arrow">
-                                            <ArrowRight className="h-5 w-5 text-primary" />
-                                        </motion.div>
-                                    )}
-                                </div>
-                                <p className={cn("text-sm mt-1", active !== index && "opacity-70")}>
-                                    {dest.description}
-                                </p>
-                            </div>
-                        ))}
+                            <Link href={dest.href} key={dest.id} className="block group relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                                    className="h-full w-full"
+                                >
+                                    <div
+                                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                                        style={{ backgroundImage: `url(${dest.image})` }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-90" />
 
-                        {!hideTitle && (
-                            <Link href="/destinations" className="mt-auto">
-                                <button className="w-full py-4 text-center text-primary font-medium hover:underline flex items-center justify-center gap-2">
-                                    Ver todos los destinos <ArrowRight className="h-4 w-4" />
-                                </button>
+                                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 translate-y-2 group-hover:translate-y-0">
+                                        <h3 className="text-xl font-bold mb-2">{dest.title}</h3>
+                                        <p className="text-sm text-white/80 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
+                                            {dest.description}
+                                        </p>
+                                        <div className="flex items-center text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200 text-white/90">
+                                            Explorar <ArrowRight className="ml-2 h-3 w-3" />
+                                        </div>
+                                    </div>
+                                </motion.div>
                             </Link>
-                        )}
+                        ))}
                     </div>
 
-                    {/* Desktop Preview (Right Side) */}
-                    <div className="hidden lg:block w-2/3 relative rounded-[2.5rem] overflow-hidden shadow-2xl">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={active}
-                                initial={{ opacity: 0, scale: 1.05 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.4 }}
-                                className="absolute inset-0"
-                            >
-                                <Image
-                                    src={destinations[active].image}
-                                    alt={destinations[active].title}
-                                    fill
-                                    className="object-cover"
-                                    priority
-                                />
-                                <div className={cn("absolute inset-0 bg-gradient-to-tr to-transparent opacity-80", destinations[active].color)} />
-                                <div className="absolute top-0 right-0 left-0 bottom-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
-
-                                <div className="absolute bottom-12 left-12 right-12 text-white">
-                                    <h3 className="text-4xl font-bold mb-3">{destinations[active].title}</h3>
-                                    <p className="text-lg text-white/90 mb-8 max-w-lg">{destinations[active].description}</p>
-
-                                    <Link href={destinations[active].href}>
-                                        <button className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2">
-                                            Explorar este destino <ArrowRight className="h-4 w-4" />
-                                        </button>
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Mobile Swiper (Horizontal Scroll) */}
+                    {/* Mobile Swiper (Kept as is) */}
                     <div className="lg:hidden w-full overflow-x-auto snap-x snap-mandatory flex gap-4 pb-8 scrollbar-hide px-4 -mx-4">
                         {destinations.map((dest) => (
                             <Link
@@ -167,6 +124,16 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                         ))}
                     </div>
 
+                    {!hideTitle && (
+                        <div className="hidden lg:flex justify-center mt-8">
+                            <Link href="/destinations">
+                                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-4 rounded-full font-semibold transition-all hover:scale-105 shadow-lg flex items-center gap-2">
+                                    Conocer Más Destinos
+                                    <ArrowRight className="h-4 w-4" />
+                                </button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

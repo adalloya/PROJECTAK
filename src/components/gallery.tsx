@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { X, ZoomIn } from "lucide-react";
 
 const images = [
     { src: "/images/gallery/1.jpg", alt: "Familia feliz en Magic Kingdom" },
@@ -16,13 +17,24 @@ const images = [
 
 export function Gallery() {
     const [current, setCurrent] = useState(0);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     // Auto-rotation logic
     useEffect(() => {
+        if (isLightboxOpen) return; // Pause rotation when lightbox is open
         const timer = setInterval(() => {
             setCurrent((prev) => (prev + 1) % images.length);
-        }, 4000); // Change every 4 seconds
+        }, 4000);
         return () => clearInterval(timer);
+    }, [isLightboxOpen]);
+
+    // Handle Escape key to close lightbox
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setIsLightboxOpen(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     return (
@@ -73,7 +85,8 @@ export function Gallery() {
                     <div className="lg:col-span-7 order-1 lg:order-2">
                         <motion.div
                             layout
-                            className="relative aspect-[4/3] md:aspect-[16/10] bg-gray-100 rounded-[2rem] overflow-hidden shadow-2xl"
+                            className="relative aspect-[4/3] md:aspect-[16/10] bg-gray-100 rounded-[2rem] overflow-hidden shadow-2xl cursor-zoom-in group"
+                            onClick={() => setIsLightboxOpen(true)}
                         >
                             <AnimatePresence mode="wait">
                                 <motion.div
@@ -97,6 +110,11 @@ export function Gallery() {
                                             {images[current].alt}
                                         </p>
                                     </div>
+
+                                    {/* Icon hint */}
+                                    <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-md p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ZoomIn className="h-5 w-5" />
+                                    </div>
                                 </motion.div>
                             </AnimatePresence>
 
@@ -117,6 +135,42 @@ export function Gallery() {
 
                 </div>
             </div>
+
+            {/* Fullscreen Lightbox */}
+            <AnimatePresence>
+                {isLightboxOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl"
+                        onClick={() => setIsLightboxOpen(false)}
+                    >
+                        <button
+                            className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                            onClick={() => setIsLightboxOpen(false)}
+                        >
+                            <X className="h-8 w-8" />
+                        </button>
+
+                        <div
+                            className="relative w-full max-w-6xl aspect-[4/3] md:aspect-video rounded-xl overflow-hidden shadow-2xl bg-black"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Image
+                                src={images[current].src}
+                                alt={images[current].alt}
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white text-center">
+                                <p className="text-xl font-medium">{images[current].alt}</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 }

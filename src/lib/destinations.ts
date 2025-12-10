@@ -96,7 +96,7 @@ export const destinationsData: Record<string, Destination> = {
         slug: "disneyland",
         title: "Disneyland Resort California",
         subtitle: "El lugar donde comenzó la magia",
-        heroImage: "/images/disney-world.png", // Using WDW image as placeholder until we have one
+        heroImage: "/images/disneyland.png",
         overview: "Disneyland Resort en California es el original, donde Walt Disney caminó. Cuenta con dos parques temáticos legendarios: Disneyland Park y Disney California Adventure Park. Además, ofrece inmersión total con sus Hoteles Disney y la conveniencia de los Hoteles Good Neighbor certificados.",
         highlights: [
             {

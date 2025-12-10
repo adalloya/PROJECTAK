@@ -35,24 +35,26 @@ const destinations = [
     },
 ];
 
-export function Destinations() {
+export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
     return (
         <section id="destinations" className="py-24 bg-background">
             <div className="w-full px-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Descubre la Magia</h2>
-                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Elige tu próxima aventura mágica de nuestra selección curada de destinos premium.
-                    </p>
-                </motion.div>
+                {!hideTitle && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="text-center mb-16"
+                    >
+                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Descubre la Magia</h2>
+                        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                            Elige tu próxima aventura mágica de nuestra selección curada de destinos premium.
+                        </p>
+                    </motion.div>
+                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                     {destinations.map((dest, index) => (
                         <Link href={dest.href} key={dest.id} className="block">
                             <motion.div
@@ -81,6 +83,17 @@ export function Destinations() {
                         </Link>
                     ))}
                 </div>
+
+                {!hideTitle && (
+                    <div className="flex justify-center">
+                        <Link href="/destinations">
+                            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-4 rounded-full font-semibold transition-all hover:scale-105 shadow-lg flex items-center gap-2">
+                                Conocer Más Destinos
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                        </Link>
+                    </div>
+                )}
             </div>
         </section>
     );

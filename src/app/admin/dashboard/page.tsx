@@ -109,7 +109,7 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="p-6 md:p-10 max-w-[1600px] mx-auto">
+        <div className="p-6 md:p-10 pt-32 md:pt-36 max-w-[1600px] mx-auto">
             {/* Top Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                 <div>

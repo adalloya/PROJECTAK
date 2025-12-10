@@ -18,110 +18,114 @@ export const destinationsData: Record<string, Destination> = {
         slug: "disney-world",
         title: "Walt Disney World Resort",
         subtitle: "El lugar más mágico de la Tierra",
-        heroImage: "/images/disney-world.png", // Reusing existing image
-        overview: "Walt Disney World Resort en Florida es mucho más que un parque temático; es un mundo de sueños hecho realidad. Con cuatro parques temáticos únicos, dos parques acuáticos, y una infinidad de opciones de compras y restaurantes en Disney Springs, cada día es una nueva aventura.",
+        heroImage: "/images/disney-world.png",
+        overview: "Walt Disney World Resort en Florida es el destino de vacaciones más grande y visitado del mundo. Con cuatro parques temáticos (Magic Kingdom, EPCOT, Disney's Hollywood Studios y Disney's Animal Kingdom), dos parques acuáticos, más de 25 hoteles temáticos y el distrito de compras y entretenimiento Disney Springs, ofrece una experiencia inmersiva inigualable para todas las edades.",
         highlights: [
             {
                 title: "Magic Kingdom",
-                description: "El corazón de la magia, donde los cuentos de hadas cobran vida frente al Castillo de Cenicienta.",
+                description: "El parque icónico con el Castillo de Cenicienta. Disfruta de clásicos como 'Pirates of the Caribbean' y emociones nuevas como 'TRON Lightcycle / Run'.",
                 icon: "castle"
             },
             {
-                title: "Epcot",
-                description: "Celebra la innovación humana y la cultura internacional en un solo lugar.",
+                title: "EPCOT",
+                description: "Un viaje a través de la cultura y la innovación. Prueba comida de todo el mundo y viaja por el tiempo en 'Spaceship Earth'.",
                 icon: "globe"
             },
             {
                 title: "Disney's Hollywood Studios",
-                description: "Adéntrate en la acción de tus películas favoritas, desde Star Wars hasta Toy Story.",
+                description: "Sumérgete en Star Wars: Galaxy's Edge y Toy Story Land. El hogar de 'Rise of the Resistance' y 'Tower of Terror'.",
                 icon: "film"
             },
             {
                 title: "Disney's Animal Kingdom",
-                description: "Una aventura salvaje que celebra la belleza de la naturaleza y el mundo animal.",
+                description: "Explora la magia de la naturaleza y Pandora – The World of Avatar. No te pierdas 'Flight of Passage'.",
                 icon: "tree"
             }
         ],
         mustDos: [
-            "Ver los fuegos artificiales 'Happily Ever After' en Magic Kingdom",
-            "Viajar a Batuu en Star Wars: Galaxy's Edge",
-            "Disfrutar de un Dole Whip en Adventureland",
-            "Expedición al Everest en Animal Kingdom"
+            "Ver el espectáculo de fuegos artificiales 'Happily Ever After' en Magic Kingdom",
+            "Pilotar el Halcón Milenario en 'Smugglers Run'",
+            "Comer un Mickey Premium Bar o un Dole Whip",
+            "Subir a 'Guardians of the Galaxy: Cosmic Rewind' en EPCOT",
+            "Ver el show 'Festival of the Lion King'"
         ],
         tips: [
-            "Reserva tus Genie+ temprano en la mañana para asegurar las mejores atracciones.",
-            "Utiliza el transporte gratuito de Disney (autobuses, monorriel, Skyliner).",
-            "Hospúdate en un hotel Disney para obtener entrada temprana a los parques."
+            "Reserva tus Genie+ a las 7:00 AM en punto para las atracciones más populares.",
+            "Aprovecha el 'Early Theme Park Entry' si te hospedas en un hotel Disney (30 min antes).",
+            "Lleva baterías portátiles, la app My Disney Experience consume mucha energía.",
+            "Haz reservaciones de restaurantes 60 días antes de tu viaje."
         ]
     },
     "universal-studios": {
         slug: "universal-studios",
         title: "Universal Orlando Resort",
-        subtitle: "Vive películas épicas en la vida real",
+        subtitle: "Donde las películas cobran vida",
         heroImage: "/images/universal.png",
-        overview: "Universal Orlando Resort te sumerge directamente en la acción de tus películas y programas de televisión favoritos. Con tres parques increíbles, incluyendo el parque temático acuático Volcano Bay, la emoción nunca termina.",
+        overview: "Universal Orlando Resort es el destino definitivo para los buscadores de emociones y fanáticos de la cultura pop. Conecta dos parques temáticos increíbles (Universal Studios Florida y Universal's Islands of Adventure) y el parque acuático temático Volcano Bay. Es la casa del fenómeno mundial: The Wizarding World of Harry Potter.",
         highlights: [
             {
-                title: "Universal Studios Florida",
-                description: "Conviértete en el protagonista de la acción con atracciones basadas en Harry Potter, Transformers y los Minions.",
-                icon: "film"
+                title: "The Wizarding World of Harry Potter",
+                description: "Visita Hogwarts y Hogsmeade en Islands of Adventure, y Diagon Alley en Universal Studios. Viaja entre ellos en el Hogwarts Express.",
+                icon: "wand"
             },
             {
-                title: "Islands of Adventure",
-                description: "Explora mundos legendarios de superhéroes, bestias mágicas y dinosaurios.",
+                title: "Jurassic World VelociCoaster",
+                description: "La montaña rusa de lanzamiento más alta y rápida de Florida. Una experiencia intensa para los más valientes.",
                 icon: "mountain"
             },
             {
-                title: "The Wizarding World of Harry Potter",
-                description: "Viaja entre Diagon Alley y Hogsmeade a bordo del Hogwarts Express.",
-                icon: "wand"
+                title: "Minion Land",
+                description: "Diviértete con los traviesos Minions en atracciones para toda la familia como 'Despicable Me Minion Mayhem'.",
+                icon: "star"
             }
         ],
         mustDos: [
-            "Lanzar hechizos con una varita interactiva en Diagon Alley",
-            "Subir a la montaña rusa VelociCoaster (si te atreves)",
-            "Beber una Butterbeer fría",
-            "Escapar de Gringotts"
+            "Beber una Butterbeer (fría, caliente o frozen)",
+            "Lanzar hechizos con una varita interactiva",
+            "Enfrentar a 'Hagrid's Magical Creatures Motorbike Adventure'",
+            "Escapar de la Momia en Universal Studios",
+            "Comer en 'The Three Broomsticks'"
         ],
         tips: [
-            "Considera el Express Pass para saltar las filas regulares.",
-            "Toma el Hogwarts Express para moverte entre los dos parques (requiere boleto Park-to-Park).",
-            "Llega temprano a Hagrid's Magical Creatures Motorbike Adventure."
+            "Si te hospedas en un hotel Premier de Universal, obtienes Express Pass Ilimitado gratis.",
+            "El Hogwarts Express requiere un boleto 'Park-to-Park'.",
+            "Usa la fila 'Single Rider' para ahorrar tiempo en atracciones populares como Gringotts."
         ]
     },
     "epcot": {
         slug: "epcot",
         title: "EPCOT",
-        subtitle: "Explora el futuro y el mundo hoy",
+        subtitle: "Imaginación, Innovación y Cultura",
         heroImage: "/images/epcot.png",
-        overview: "EPCOT inspira la curiosidad, la imaginación y el asombro. Dedicado a la innovación tecnológica y a la cultura internacional, es un parque en constante transformación que celebra el espíritu humano.",
+        overview: "EPCOT (Experimental Prototype Community of Tomorrow) celebra los logros humanos y la cooperación internacional. Dividido en cuatro vecindarios: World Celebration, World Discovery, World Nature y World Showcase, es el parque más diverso y gastronómico de Disney.",
         highlights: [
             {
                 title: "World Showcase",
-                description: "Viaja alrededor del mundo visitando 11 pabellones de diferentes países, con comida y arquitectura auténtica.",
+                description: "11 pabellones que representan países como México, Japón, Francia e Italia, atendidos por ciudadanos nativos.",
                 icon: "globe"
             },
             {
                 title: "Guardians of the Galaxy: Cosmic Rewind",
-                description: "Una de las montañas rusas más grandes y emocionantes bajo techo en el mundo.",
+                description: "Una montaña rusa rotatoria con lanzamiento inverso, considerada una de las mejores atracciones de Orlando.",
                 icon: "star"
             },
             {
-                title: "Festivales Estacionales",
-                description: "Disfruta de eventos únicos como el Food & Wine Festival o el Flower & Garden Festival.",
-                icon: "utensils"
+                title: "Soarin' Around the World",
+                description: "Un simulador de vuelo que te lleva sobre las maravillas naturales y artificiales del planeta.",
+                icon: "island"
             }
         ],
         mustDos: [
-            "Salvar la galaxia en Cosmic Rewind",
-            "Comer alrededor del mundo en el World Showcase",
-            "Ver el espectáculo nocturno Luminous The Symphony of Us",
-            "Volar sobre el mundo en Soarin'"
+            "Probar snacks y bebidas de cada país en el World Showcase",
+            "Ver el espectáculo nocturno en la laguna",
+            "Interactuar con Moana en 'Journey of Water'",
+            "Diseñar tu propio auto en 'Test Track'",
+            "Conocer a Elsa y Anna en el pabellón de Noruega"
         ],
         tips: [
-            "Entra al parque por el International Gateway si te hospedas en los hoteles del área de Epcot.",
-            "Las filas virtuales son comunes para las atracciones más nuevas, prepárate con la app.",
-            "No te pierdas Spaceship Earth, el ícono del parque."
+            "EPCOT es enorme, usa zapatos muy cómodos.",
+            "Entra por el 'International Gateway' si vienes del área de hoteles del Boardwalk o del Skyliner.",
+            "Visita durante uno de los festivales (Food & Wine, Flower & Garden) para comida exclusiva."
         ]
     },
     "disney-cruise": {
@@ -129,34 +133,35 @@ export const destinationsData: Record<string, Destination> = {
         title: "Disney Cruise Line",
         subtitle: "Magia en alta mar",
         heroImage: "/images/disney-cruise.jpg",
-        overview: "Zarpa hacia la aventura con Disney Cruise Line, donde la magia de Disney se encuentra con la relajación de un crucero de lujo. Entretenimiento de clase mundial, cenas temáticas y destinos exóticos te esperan.",
+        overview: "Disney Cruise Line ofrece unas vacaciones en crucero donde la magia impregna cada detalle. Desde barcos clásicos hasta los más nuevos como el Disney Wish y el Disney Treasure, disfrutarás de servicio legendario, entretenimiento tipo Broadway y destinos paradisíacos.",
         highlights: [
             {
-                title: "Castaway Cay",
-                description: "La isla privada de Disney en las Bahamas, un paraíso exclusivo para los pasajeros.",
+                title: "Castaway Cay y Lookout Cay",
+                description: "Las islas privadas de Disney en las Bahamas, exclusivas para huéspedes, con playas prístinas y barbacoa incluida.",
                 icon: "island"
             },
             {
                 title: "Cenas Rotativas",
-                description: "Disfruta de un restaurante diferente cada noche con tus mismos meseros acompañándote.",
+                description: "Un concepto único donde cenas en tres restaurantes temáticos diferentes, pero tus meseros viajan contigo.",
                 icon: "utensils"
             },
             {
-                title: "Entretenimiento a Bordo",
-                description: "Espectáculos estilo Broadway, fuegos artificiales en el mar y encuentros con personajes.",
+                title: "Clubes para Niños",
+                description: "Espacios increíbles (Oceaneer Club) donde los niños juegan supervisados mientras los adultos se relajan.",
                 icon: "ticket"
             }
         ],
         mustDos: [
-            "Deslizarse por el AquaDuck o AquaMouse",
-            "Ver una película de estreno en el cine del barco",
-            "Disfrutar de un helado ilimitado en la cubierta",
-            "Conocer a Mickey Capitán"
+            "Ver los fuegos artificiales en el mar (única naviera que lo hace)",
+            "Desayunar con personajes de Disney",
+            "Ver un estreno de cine en el teatro Buena Vista",
+            "Disfrutar de un brunch en Palo (solo adultos)",
+            "Deslizarse por el tobogán acuático del barco"
         ],
         tips: [
-            "Descarga la app de Disney Cruise Line para ver las actividades diarias.",
-            "Reserva actividades especiales y cenas para adultos (Palo/Remy) con anticipación.",
-            "Decora la puerta de tu camarote con imanes (una tradición divertida)."
+            "Descarga la app 'Disney Cruise Line Navigator' antes de embarcar.",
+            "El servicio a la habitación es gratuito las 24 horas (la mayoría del menú).",
+            "Reserva actividades a bordo tan pronto se abra tu ventana de reserva (depende de tu nivel Castaway Club)."
         ]
     }
 };

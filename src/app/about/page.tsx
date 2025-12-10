@@ -43,28 +43,28 @@ export default function AboutPage() {
                         <h2 className="text-2xl font-semibold text-foreground mt-12 mb-4">¿Por Qué Elegirnos?</h2>
 
                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors">
+                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
                                 <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
                                     <Sparkles className="h-6 w-6" />
                                 </div>
                                 <h3 className="font-semibold text-foreground mb-2">Concierge Personalizado</h3>
                                 <p className="text-base text-muted-foreground">Planificación uno a uno con un experto dedicado que aprende las preferencias de tu familia.</p>
                             </li>
-                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors">
+                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
                                 <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
                                     <Map className="h-6 w-6" />
                                 </div>
                                 <h3 className="font-semibold text-foreground mb-2">Arquitectura de Itinerario</h3>
                                 <p className="text-base text-muted-foreground">Diseñamos tus días para maximizar la magia y minimizar las esperas, a tu propio ritmo.</p>
                             </li>
-                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors">
+                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
                                 <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
                                     <Ticket className="h-6 w-6" />
                                 </div>
                                 <h3 className="font-semibold text-foreground mb-2">Reservas y Extras</h3>
                                 <p className="text-base text-muted-foreground">Nos encargamos de las reservas difíciles y experiencias exclusivas, para que tú no tengas que madrugar.</p>
                             </li>
-                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors">
+                            <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
                                 <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
                                     <Headphones className="h-6 w-6" />
                                 </div>

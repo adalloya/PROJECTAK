@@ -9,10 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Here We Go Advisor | Experiencias Mágicas Disney",
   description: "Agencia premium de planificación de viajes Disney por Ana Karen.",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
+  description: "Agencia premium de planificación de viajes Disney por Ana Karen.",
   openGraph: {
     title: "Here We Go Advisor | Experiencias Mágicas Disney",
     description: "Agencia premium de planificación de viajes Disney por Ana Karen.",

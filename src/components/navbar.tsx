@@ -51,11 +51,10 @@ export function Navbar() {
                                 {link.name}
                             </Link>
                         ))}
-                        <Link
-                            href="/contact"
-                            className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
-                        >
-                            Reservar Ahora
+                        <Link href="/contact">
+                            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium transition-colors text-sm">
+                                Cotizar ahora
+                            </button>
                         </Link>
                     </div>
 

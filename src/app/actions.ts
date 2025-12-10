@@ -10,7 +10,7 @@ export async function submitLead(formData: FormData) {
         phone: formData.get('phone') as string,
         destination: formData.get('destination') as string,
         dates: formData.get('dates') as string,
-        travelers: formData.get('travelers') as string,
+        travelers: `${formData.get('adults')} Adultos, ${formData.get('children')} Niños`,
         notes: formData.get('notes') as string,
         status: 'new', // Default status
     };

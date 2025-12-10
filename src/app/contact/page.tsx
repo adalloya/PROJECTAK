@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Calendar, Users, MapPin, Mail, Phone, User, CheckCircle2, AlertCircle } from "lucide-react";
+import { Calendar, Users, MapPin, Mail, Phone, User, CheckCircle2, AlertCircle, Baby } from "lucide-react";
+import { destinationsData } from "@/lib/destinations";
 
 import { submitLead } from "../actions";
 import { useTransition } from "react";
@@ -112,6 +113,7 @@ export default function ContactPage() {
                                         <label htmlFor="name" className="text-sm font-medium">Nombre Completo</label>
                                         <input
                                             id="name"
+                                            name="name"
                                             required
                                             className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
                                             placeholder="Ej. Ana García"
@@ -121,6 +123,7 @@ export default function ContactPage() {
                                         <label htmlFor="phone" className="text-sm font-medium">Teléfono / WhatsApp</label>
                                         <input
                                             id="phone"
+                                            name="phone"
                                             type="tel"
                                             required
                                             className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
@@ -131,6 +134,7 @@ export default function ContactPage() {
                                         <label htmlFor="email" className="text-sm font-medium">Correo Electrónico</label>
                                         <input
                                             id="email"
+                                            name="email"
                                             type="email"
                                             required
                                             className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
@@ -152,15 +156,15 @@ export default function ContactPage() {
                                         <label htmlFor="destination" className="text-sm font-medium">Destino de Interés</label>
                                         <select
                                             id="destination"
+                                            name="destination"
                                             className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
                                         >
-                                            <option>Walt Disney World (Orlando)</option>
-                                            <option>Disneyland Resort (California)</option>
-                                            <option>Disney Cruise Line</option>
-                                            <option>Universal Orlando Resort</option>
-                                            <option>Adventures by Disney</option>
-                                            <option>Aulani, A Disney Resort & Spa</option>
-                                            <option>Otro</option>
+                                            {Object.values(destinationsData).map((dest) => (
+                                                <option key={dest.slug} value={dest.title}>{dest.title}</option>
+                                            ))}
+                                            <option value="Aulani">Aulani, A Disney Resort & Spa</option>
+                                            <option value="Adventures by Disney">Adventures by Disney</option>
+                                            <option value="Otro">Otro</option>
                                         </select>
                                     </div>
 
@@ -170,23 +174,40 @@ export default function ContactPage() {
                                             <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
                                             <input
                                                 id="dates"
-                                                type="text"
+                                                name="dates"
+                                                type="date"
                                                 className="flex h-12 w-full rounded-xl border border-input bg-background/50 pl-10 pr-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
-                                                placeholder="Ej. Julio 2024"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label htmlFor="travelers" className="text-sm font-medium">Número de Personas</label>
-                                        <div className="relative">
-                                            <Users className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
-                                            <input
-                                                id="travelers"
-                                                type="text"
-                                                className="flex h-12 w-full rounded-xl border border-input bg-background/50 pl-10 pr-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
-                                                placeholder="Ej. 2 Adultos, 2 Niños (5, 8 años)"
-                                            />
+                                        <label className="text-sm font-medium">Viajeros</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="relative">
+                                                <Users className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+                                                <input
+                                                    type="number"
+                                                    name="adults"
+                                                    min="1"
+                                                    defaultValue="2"
+                                                    className="flex h-12 w-full rounded-xl border border-input bg-background/50 pl-10 pr-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    placeholder="Adultos"
+                                                />
+                                                <span className="absolute right-3 top-3.5 text-xs text-muted-foreground">Adultos</span>
+                                            </div>
+                                            <div className="relative">
+                                                <Baby className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+                                                <input
+                                                    type="number"
+                                                    name="children"
+                                                    min="0"
+                                                    defaultValue="0"
+                                                    className="flex h-12 w-full rounded-xl border border-input bg-background/50 pl-10 pr-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    placeholder="Niños"
+                                                />
+                                                <span className="absolute right-3 top-3.5 text-xs text-muted-foreground">Niños</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -199,6 +220,7 @@ export default function ContactPage() {
                                 <label htmlFor="notes" className="text-sm font-medium">Comentarios Adicionales</label>
                                 <textarea
                                     id="notes"
+                                    name="notes"
                                     className="flex min-h-[120px] w-full rounded-xl border border-input bg-background/50 px-4 py-3 text-sm shadow-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none resize-y"
                                     placeholder="¿Celebran algo especial? ¿Tienen algún hotel en mente? ¿Presupuesto aproximado?"
                                 />

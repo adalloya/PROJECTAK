@@ -5,17 +5,25 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar, Users, MapPin, Mail, Phone, User, CheckCircle2, AlertCircle } from "lucide-react";
 
-export default function ContactPage() {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
+import { submitLead } from "../actions";
+import { useTransition } from "react";
 
-    const handleSubmit = async (e: React.FormEvent) => {
+export default function ContactPage() {
+    const [submitted, setSubmitted] = useState(false);
+    const [isPending, startTransition] = useTransition();
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        // Simulate submission
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        setSubmitted(true);
+        const formData = new FormData(e.currentTarget);
+
+        startTransition(async () => {
+            const result = await submitLead(formData);
+            if (result.success) {
+                setSubmitted(true);
+            } else {
+                alert("Hubo un error al enviar la solicitud. Por favor intenta de nuevo.");
+            }
+        });
     };
 
     return (
@@ -198,13 +206,13 @@ export default function ContactPage() {
 
                             <button
                                 type="submit"
-                                disabled={isSubmitting}
+                                disabled={isPending}
                                 className={cn(
                                     "w-full h-14 rounded-xl font-bold text-lg transition-all text-white shadow-lg hover:shadow-xl hover:-translate-y-1",
-                                    isSubmitting ? "bg-primary/70 cursor-wait" : "bg-gradient-to-r from-primary to-purple-600"
+                                    isPending ? "bg-primary/70 cursor-wait" : "bg-gradient-to-r from-primary to-purple-600"
                                 )}
                             >
-                                {isSubmitting ? "Enviando Solicitud..." : "Enviar Cotización"}
+                                {isPending ? "Enviando Solicitud..." : "Enviar Cotización"}
                             </button>
                         </form>
                     )}

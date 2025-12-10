@@ -1,7 +1,7 @@
 "use client";
 
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+
 import { blogPosts } from "@/lib/blog";
 import Link from "next/link";
 import Image from "next/image";
@@ -98,7 +98,7 @@ export default function BlogPage() {
                 </div>
             </main>
 
-            <Footer />
+
         </div>
     );
 }

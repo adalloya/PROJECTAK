@@ -28,7 +28,7 @@ const faqs = [
 ];
 
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+
 
 // ... imports remain the same
 
@@ -79,7 +79,7 @@ export default function FAQPage() {
                     </div>
                 </div>
             </main>
-            <Footer />
+
         </div>
     );
 }

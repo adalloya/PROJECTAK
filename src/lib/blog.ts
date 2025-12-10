@@ -13,27 +13,33 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
     {
         id: "1",
-        slug: "guia-definitiva-genie-plus",
-        title: "Guía Definitiva de Genie+: Cómo Maximizar tu Tiempo en los Parques",
-        excerpt: "¿Confundido con Lightning Lanes y filas virtuales? Te explicamos cómo usar esta herramienta para evitar pasar tus vacaciones esperando en filas.",
+        slug: "guia-lightning-lane-multi-pass",
+        title: "Guía Definitiva de Lightning Lane: Multi Pass y Single Pass",
+        excerpt: "Genie+ ha evolucionado. Aprende a dominar el nuevo sistema Lightning Lane Multi Pass para reservar tus atracciones favoritas desde antes de llegar a los parques.",
         date: "10 Dic, 2025",
-        readTime: "5 min de lectura",
-        image: "/images/blog/genie-plus.jpg",
+        readTime: "6 min de lectura",
+        image: "/blog/lightning-lane.png",
         category: "Tips Expertos",
         content: `
-            <p>Una de las quejas más comunes al visitar los parques es el tiempo perdido en las filas. El sistema Genie+ (y las Lightning Lanes individuales) puede ser tu mejor aliado o tu peor pesadilla si no sabes usarlo.</p>
+            <p>Adiós Genie+, ¡hola Lightning Lane Multi Pass! Disney ha renovado su sistema de filas rápidas y trae grandes ventajas para quienes aman planificar.</p>
             
-            <h3>¿Qué es Genie+ y Lightning Lane?</h3>
-            <p>Es el sistema de pago que reemplazó al antiguo FastPass gratuito. Te permite reservar ventanas de llegada a las atracciones y entrar por una fila rápida (Lightning Lane), ahorrándote horas de espera.</p>
+            <h3>¿Qué es Lightning Lane Multi Pass?</h3>
+            <p>Es el nuevo servicio que reemplaza a Genie+. La gran diferencia: <strong>ahora puedes reservar 3 atracciones ANTES de tu viaje</strong>. Ya no tienes que despertarte a las 7:00 AM cada día de tus vacaciones estresado por conseguir un lugar.</p>
 
-            <h3>La regla de las 7:00 AM</h3>
-            <p>Si te hospedas en un hotel Disney, tu primera reserva la puedes hacer a las 7:00 AM en punto. Si te hospedas fuera, debes esperar a que abra el parque. Esta ventaja es crucial para atracciones súper populares como Slinky Dog Dash o Peter Pan's Flight.</p>
-            
-            <h3>La "acumulación" de reservas</h3>
-            <p>Muchos no saben esto: puedes tener más de una reserva a la vez si sabes aplicar la regla de los 120 minutos. Si reservas una atracción para la tarde, puedes hacer otra reserva 2 horas después de que abra el parque, ¡aunque no hayas usado la primera!</p>
+            <h3>Reglas de Reserva Anticipada</h3>
+            <ul>
+                <li><strong>Huéspedes de Hoteles Disney:</strong> Pueden reservar sus pases con plantillas de <strong>7 días de anticipación</strong> a su check-in.</li>
+                <li><strong>Visitantes Generales:</strong> Pueden reservar con <strong>3 días de anticipación</strong> a su visita al parque.</li>
+            </ul>
 
-            <h3>¿Vale la pena el costo?</h3>
-            <p>En nuestra opinión experta: SÍ. Especialmente en Magic Kingdom y Hollywood Studios. El tiempo que ahorras (promedio de 3-4 horas al día) vale mucho más que el costo del servicio. Recuerda, ¡el tiempo en Disney es dinero!</p>
+            <h3>Single Pass vs. Multi Pass</h3>
+            <p>Al igual que antes, las atracciones más populares (como <em>Star Wars: Rise of the Resistance</em> o <em>TRON Lightcycle / Run</em>) no suelen estar incluidas en el Multi Pass y se venden por separado como <strong>Lightning Lane Single Pass</strong>. Puedes comprar hasta 2 de estos por día.</p>
+
+            <h3>Estrategia de Tiers (Niveles)</h3>
+            <p>En Magic Kingdom, Epcot y Hollywood Studios, las atracciones están divididas en grupos. Al hacer tus pre-reservas, generalmente puedes elegir 1 atracción del Grupo A (las más populares) y 2 del Grupo B (las demás).</p>
+
+            <h3>¿Vale la pena?</h3>
+            <p>Definitivamente. Poder llegar al parque sabiendo que ya tienes asegurada la entrada rápida a <em>Slinky Dog Dash</em> o <em>Remy’s Ratatouille Adventure</em> te da una tranquilidad invaluable. ¡Nosotros te ayudamos a configurar todo!</p>
         `
     },
     {
@@ -43,7 +49,7 @@ export const blogPosts: BlogPost[] = [
         excerpt: "¿Vale la pena pagar más por un hotel dentro de Disney? Analizamos los costos ocultos y beneficios reales para que decidas la mejor opción para tu familia.",
         date: "08 Dic, 2025",
         readTime: "7 min de lectura",
-        image: "/images/blog/hotel-disney.jpg",
+        image: "/blog/hotel-disney.png",
         category: "Planificación",
         content: `
             <p>Esta es la pregunta del millón. A simple vista, un hotel fuera de Disney parece mucho más barato. Pero cuando sumas los costos "invisibles", la balanza puede inclinarse.</p>
@@ -52,7 +58,7 @@ export const blogPosts: BlogPost[] = [
             <ul>
                 <li><strong>Transporte Gratuito:</strong> Buses, monorriel, barcos y el Skyliner te llevan a los parques gratis. Ahorras en Uber o alquiler de auto + estacionamiento ($30/día).</li>
                 <li><strong>Early Entry:</strong> Entras a CUALQUIER parque 30 minutos antes que el público general. Esos 30 min valen oro para hacer 1 o 2 atracciones principales sin fila.</li>
-                <li><strong>Reservas Anticipadas:</strong> Puedes reservar restaurantes 60 días antes de tu check-in para TODA tu estancia. Los huéspedes externos reservan día por día.</li>
+                <li><strong>Reservas de Lightning Lane:</strong> Acceso prioritario para reservar tus pases rápidos 7 días antes, frente a solo 3 días para los demás.</li>
             </ul>
 
             <h3>Cuándo elegir un Hotel Externo</h3>
@@ -69,13 +75,13 @@ export const blogPosts: BlogPost[] = [
         excerpt: "Evita caer en las trampas de novato que arruinan vacaciones. Desde zapatos incómodos hasta itinerarios imposibles, aquí te decimos qué NO hacer.",
         date: "05 Dic, 2025",
         readTime: "6 min de lectura",
-        image: "/images/blog/errors.jpg",
+        image: "/blog/errors.png",
         category: "Guías Básicas",
         content: `
             <p>Hemos visto muchas familias regresar agotadas y frustradas por no planear correctamente. Aquí los errores más graves:</p>
 
             <ol>
-                <li><strong>No reservar los parques (si aplica):</strong> Aunque ya casi no se requiere reserva en la mayoría de tickets, verifica siempre las reglas vigentes.</li>
+                <li><strong>No comprar Lightning Lane con anticipación:</strong> Ahora que se puede pre-reservar, llegar sin nada planeado es un error.</li>
                 <li><strong>Querer hacerlo todo:</strong> Disney es ENORME. Intentar ver todo en un solo viaje es receta para el agotamiento. Prioriza tus "must-dos".</li>
                 <li><strong>Ignorar el clima de Florida:</strong> Lloverá. Hará calor húmedo. Lleva ponchos (cómpralos en Amazon antes, no en el parque a $15) y zapatos extra cómodos ya caminados.</li>
                 <li><strong>No descargar la App My Disney Experience antes:</strong> Familiarízate con los mapas y tiempos de espera desde casa.</li>
@@ -92,7 +98,7 @@ export const blogPosts: BlogPost[] = [
         excerpt: "¿Harry Potter o Star Wars? ¿Montañas rusas extremas o magia clásica? Te ayudamos a decidir qué destino se adapta mejor a la edad y gustos de tu grupo.",
         date: "01 Dic, 2025",
         readTime: "4 min de lectura",
-        image: "/images/blog/universal-vs-disney.jpg",
+        image: "/blog/universal-vs-disney.png",
         category: "Comparativas",
         content: `
             <p>Ambos son increíbles, pero ofrecen experiencias muy diferentes. Elegir el incorrecto para la edad de tus hijos puede ser un error costoso.</p>
@@ -123,7 +129,7 @@ export const blogPosts: BlogPost[] = [
         excerpt: "Desglosamos los costos reales de boletos, hospedaje y comida para que no te lleves sorpresas. Aprende dónde ahorrar y dónde invertir.",
         date: "28 Nov, 2025",
         readTime: "8 min de lectura",
-        image: "/images/blog/budget.jpg",
+        image: "/blog/budget.png",
         category: "Finanzas",
         content: `
             <p>Hablemos de números claros. Un viaje a Orlando es una inversión importante y la transparencia es clave.</p>
@@ -142,7 +148,7 @@ export const blogPosts: BlogPost[] = [
             <p>Presupuesta unos $60-$100 USD por persona al día si haces una comida rápida y una comida de mesa (Table Service). Puedes ahorrar llevando snacks y desayunando en la habitación.</p>
 
             <h3>4. Extras Ocultos</h3>
-            <p>No olvides: Genie+ ($20-$35/día), Propinas (18-20% en USA), Souvenirs y Vuelos. </p>
+            <p>No olvides: Lightning Lane ($25-$40/día), Propinas (18-20% en USA), Souvenirs y Vuelos. </p>
 
             <p><strong>Nuestra promesa:</strong> Te ayudaremos a construir un paquete que maximice cada dólar de tu presupuesto, aprovechando ofertas que a veces no son públicas.</p>
         `
@@ -154,7 +160,7 @@ export const blogPosts: BlogPost[] = [
         excerpt: "Muchos creen que contratar un agente es más caro. Descubre por qué es exactamente lo contrario y cómo ganamos dinero sin cobrarte un centavo extra.",
         date: "25 Nov, 2025",
         readTime: "3 min de lectura",
-        image: "/images/blog/agent.jpg",
+        image: "/blog/agent.png",
         category: "Servicios",
         content: `
             <p>Suena demasiado bueno para ser verdad, ¿cierto? ¿Alguien que planea todo mi viaje, hace mis reservas de madrugada y resuelve mis problemas... gratis?</p>

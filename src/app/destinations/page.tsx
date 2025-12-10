@@ -1,6 +1,6 @@
 import { Destinations } from "@/components/destinations";
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+
 
 export default function DestinationsPage() {
     return (
@@ -20,7 +20,7 @@ export default function DestinationsPage() {
         */}
                 <Destinations hideTitle />
             </main>
-            <Footer />
+
         </div>
     );
 }

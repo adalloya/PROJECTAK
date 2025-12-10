@@ -1,7 +1,7 @@
 "use client";
 
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+
 import { motion } from "framer-motion";
 import { Check, Star, Sparkles, Map, Phone, Clock } from "lucide-react";
 import Link from "next/link";
@@ -156,7 +156,7 @@ export default function ServicesPage() {
                 </div>
             </section>
 
-            <Footer />
+
         </div>
     );
 }

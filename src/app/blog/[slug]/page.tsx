@@ -1,6 +1,6 @@
 import { blogPosts, BlogPost } from "@/lib/blog";
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
@@ -93,7 +93,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </article>
             </main>
 
-            <Footer />
+
         </div>
     );
 }

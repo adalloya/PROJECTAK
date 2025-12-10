@@ -2,6 +2,7 @@ import { Hero } from "@/components/hero";
 import { Destinations } from "@/components/destinations";
 import { Testimonials } from "@/components/testimonials";
 import { Gallery } from "@/components/gallery";
+import { LatestBlogPosts } from "@/components/latest-blog-posts";
 
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
       <Hero />
       <Destinations />
       <Gallery />
+      <LatestBlogPosts />
       <Testimonials />
     </main>
   );

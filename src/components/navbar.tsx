@@ -23,6 +23,7 @@ export function Navbar() {
         { name: "Destinos", href: "/#destinations" },
         { name: "Nosotros", href: "/about" },
         { name: "Nuestros Servicios", href: "/services" },
+        { name: "Blog", href: "/blog" },
         { name: "FAQ", href: "/faq" },
     ];
 
@@ -35,24 +36,15 @@ export function Navbar() {
         >
             <div className="max-w-[1400px] mx-auto px-6 w-full">
                 <div className="flex items-center justify-between h-24">
-                    <Link href="/" className="flex items-center">
-                        <div className="relative h-28 w-28 overflow-hidden transform hover:scale-105 transition-transform">
-                            <Image src="/logo.png" alt="Here We Go Advisor" fill className="object-contain" />
-                        </div>
-                    </Link>
+                    <div className="flex items-center gap-6">
+                        <Link href="/" className="flex items-center">
+                            <div className="relative h-28 w-28 overflow-hidden transform hover:scale-105 transition-transform">
+                                <Image src="/logo.png" alt="Here We Go Advisor" fill className="object-contain" />
+                            </div>
+                        </Link>
 
-                    {/* Desktop Nav */}
-                    <div className="hidden md:flex items-center space-x-8">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                href={link.href}
-                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
-                        <div className="flex items-center space-x-4 border-r border-border/50 pr-6 mr-2">
+                        {/* Social Icons - Desktop Left */}
+                        <div className="hidden md:flex items-center space-x-3 border-l border-border/50 pl-6">
                             <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 transform duration-200">
                                 <Instagram className="h-5 w-5" />
                             </Link>
@@ -76,6 +68,19 @@ export function Navbar() {
                                 </svg>
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Desktop Nav */}
+                    <div className="hidden md:flex items-center space-x-8">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.name}
+                                href={link.href}
+                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
 
                         <Link href="/contact">
                             <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium transition-colors text-sm shadow-md hover:shadow-lg transform active:scale-95">

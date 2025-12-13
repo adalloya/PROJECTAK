@@ -18,7 +18,7 @@ export const destinationsData: Record<string, Destination> = {
         slug: "disney-world",
         title: "Walt Disney World Resort",
         subtitle: "El lugar más mágico de la Tierra",
-        heroImage: "/images/disney-world.png",
+        heroImage: "/images/disney-world-castle.png",
         overview: "Walt Disney World Resort en Florida es el destino de vacaciones más grande y visitado del mundo. Con cuatro parques temáticos (Magic Kingdom, EPCOT, Disney's Hollywood Studios y Disney's Animal Kingdom), dos parques acuáticos, más de 25 hoteles temáticos y el centro de compras y entretenimiento Disney Springs, ofrece una experiencia inmersiva inigualable para todas las edades.",
         highlights: [
             {
@@ -50,18 +50,89 @@ export const destinationsData: Record<string, Destination> = {
             "Ver el show 'Festival of the Lion King'"
         ],
         tips: [
-            "Reserva tus Genie+ a las 7:00 AM en punto para las atracciones más populares.",
+            "Reserva tus Lightning Lanes a las 7:00 AM en punto para las atracciones más populares.",
             "Aprovecha el 'Early Theme Park Entry' si te hospedas en un hotel Disney (30 min antes).",
             "Lleva baterías portátiles, la app My Disney Experience consume mucha energía.",
             "Haz reservaciones de restaurantes 60 días antes de tu viaje."
         ]
     },
+    "disneyland": {
+        slug: "disneyland",
+        title: "Disneyland Resort California",
+        subtitle: "El lugar donde comenzó la magia",
+        heroImage: "/images/disneyland.png",
+        overview: "Disneyland Resort cuenta con 2 parques temáticos, hoteles Disney y hoteles Good Neighbor. Es el original, donde Walt Disney caminó, ofreciendo una experiencia histórica y mágica inigualable.",
+        highlights: [
+            {
+                title: "Disneyland Park",
+                description: "El parque original. Camina por Main Street U.S.A. y descubre Star Wars: Galaxy's Edge.",
+                icon: "castle"
+            },
+            {
+                title: "Disney California Adventure",
+                description: "El hogar de Avengers Campus y Cars Land. Diversión y adrenalina al estilo californiano.",
+                icon: "star"
+            },
+            {
+                title: "Avengers Campus",
+                description: "Entrena con los héroes más poderosos de la Tierra y lanza telarañas con Spider-Man.",
+                icon: "shield"
+            }
+        ],
+        mustDos: [
+            "Visitar Cars Land y correr en Radiator Springs Racers",
+            "Probar un churro clásico de Disneyland",
+            "Ver el espectáculo 'World of Color'",
+            "Conocer a los Avengers",
+            "Caminar por donde Walt Disney caminó"
+        ],
+        tips: [
+            "Aprovecha el Disney PhotoPass para tener fotos profesionales de toda la familia.",
+            "Llega temprano para aprovechar las mañanas con menos gente.",
+            "Descarga la app de Disneyland para ver tiempos de espera."
+        ]
+    },
+    "disney-cruise": {
+        slug: "disney-cruise",
+        title: "Disney Cruise Line",
+        subtitle: "Magia en alta mar",
+        heroImage: "/images/disney-cruise.jpg",
+        overview: "Desde barcos clásicos hasta los más nuevos como el Disney Wish, Disney Treasure y Disney Destiny. Disney Cruise Line ofrece unas vacaciones donde la magia impregna cada detalle, con servicio legendario y entretenimiento tipo Broadway.",
+        highlights: [
+            {
+                title: "Castaway Cay y Lookout Cay",
+                description: "Las islas privadas de Disney en las Bahamas, exclusivas para huéspedes, con playas prístinas y barbacoa incluida.",
+                icon: "island"
+            },
+            {
+                title: "Cenas Rotativas",
+                description: "Un concepto único donde cenas en tres restaurantes temáticos diferentes, pero tus meseros viajan contigo.",
+                icon: "utensils"
+            },
+            {
+                title: "Clubes para Niños",
+                description: "Espacios increíbles donde los niños juegan supervisados mientras los adultos se relajan, con áreas diseñadas para cada edad.",
+                icon: "ticket"
+            }
+        ],
+        mustDos: [
+            "Ver los fuegos artificiales en el mar (única naviera que lo hace)",
+            "Ver un estreno de película Disney",
+            "Disfrutar de un brunch en Palo (solo adultos)",
+            "Deslizarse por el tobogán acuático del barco"
+        ],
+        tips: [
+            "Descarga la app 'Disney Cruise Line Navigator' antes de embarcar.",
+            "El servicio a la habitación es gratuito las 24 horas (la mayoría del menú).",
+            "Reserva actividades a bordo tan pronto se abra tu ventana de reserva (depende de tu nivel Castaway Club)."
+        ]
+    },
     "universal-studios": {
         slug: "universal-studios",
-        title: "Universal Orlando Resort",
+        title: "Universal Studios",
         subtitle: "Donde las películas cobran vida",
         heroImage: "/images/universal.png",
-        overview: "Universal tiene dos grandes destinos: Hollywood y Florida. En Universal Orlando Resort (Florida), encontrarás tres parques temáticos increíbles (Universal Studios Florida, Universal's Islands of Adventure y Universal's Volcano Bay), hoteles espectaculares y la zona de entretenimiento City Walk. Es el hogar del fenómeno mundial: The Wizarding World of Harry Potter.",
+        overview: "Universal tiene dos grandes destinos: Hollywood y Florida. En Universal Orlando Resort (Florida), encontrarás tres parques temáticos increíbles (Universal Studios Florida, Universal's Islands of Adventure y Universal Epic Universe), un parque acuático (Universal's Volcano Bay), hoteles espectaculares y la zona de entretenimiento City Walk. Es el hogar del fenómeno mundial: The Wizarding World of Harry Potter.",
         highlights: [
             {
                 title: "The Wizarding World of Harry Potter",
@@ -90,77 +161,6 @@ export const destinationsData: Record<string, Destination> = {
             "Si te hospedas en un hotel Premier de Universal, obtienes Express Pass Ilimitado gratis.",
             "El Hogwarts Express requiere un boleto 'Park-to-Park'.",
             "Usa la fila 'Single Rider' para ahorrar tiempo en atracciones populares como Gringotts."
-        ]
-    },
-    "disneyland": {
-        slug: "disneyland",
-        title: "Disneyland Resort California",
-        subtitle: "El lugar donde comenzó la magia",
-        heroImage: "/images/disneyland.png",
-        overview: "Disneyland Resort en California es el original, donde Walt Disney caminó. Cuenta con dos parques temáticos legendarios: Disneyland Park y Disney California Adventure Park. Además, ofrece inmersión total con sus Hoteles Disney y la conveniencia de los Hoteles Good Neighbor certificados.",
-        highlights: [
-            {
-                title: "Disneyland Park",
-                description: "El parque original. Camina por Main Street U.S.A. y descubre Star Wars: Galaxy's Edge.",
-                icon: "castle"
-            },
-            {
-                title: "Disney California Adventure",
-                description: "El hogar de Avengers Campus y Cars Land. Diversión y adrenalina al estilo californiano.",
-                icon: "star"
-            },
-            {
-                title: "Avengers Campus",
-                description: "Entrena con los héroes más poderosos de la Tierra y lanza telarañas con Spider-Man.",
-                icon: "shield"
-            }
-        ],
-        mustDos: [
-            "Visitar Cars Land y correr en Radiator Springs Racers",
-            "Probar un churro clásico de Disneyland",
-            "Ver el espectáculo 'World of Color'",
-            "Conocer a los Avengers",
-            "Caminar por donde Walt Disney caminó"
-        ],
-        tips: [
-            "Usa Park Hopper, los parques están uno frente al otro.",
-            "Llega temprano para aprovechar las mañanas con menos gente.",
-            "Descarga la app de Disneyland para ver tiempos de espera."
-        ]
-    },
-    "disney-cruise": {
-        slug: "disney-cruise",
-        title: "Disney Cruise Line",
-        subtitle: "Magia en alta mar",
-        heroImage: "/images/disney-cruise.jpg",
-        overview: "Disney Cruise Line ofrece unas vacaciones en crucero donde la magia impregna cada detalle. Desde barcos clásicos hasta los más nuevos como el Disney Wish, Disney Treasure y Disney Destiny, disfrutarás de servicio legendario, entretenimiento tipo Broadway y destinos paradisíacos.",
-        highlights: [
-            {
-                title: "Castaway Cay y Lookout Cay",
-                description: "Las islas privadas de Disney en las Bahamas, exclusivas para huéspedes, con playas prístinas y barbacoa incluida.",
-                icon: "island"
-            },
-            {
-                title: "Cenas Rotativas",
-                description: "Un concepto único donde cenas en tres restaurantes temáticos diferentes, pero tus meseros viajan contigo.",
-                icon: "utensils"
-            },
-            {
-                title: "Clubes para Niños",
-                description: "Espacios increíbles (Oceaneer Club) donde los niños juegan supervisados mientras los adultos se relajan.",
-                icon: "ticket"
-            }
-        ],
-        mustDos: [
-            "Ver los fuegos artificiales en el mar (única naviera que lo hace)",
-            "Ver un estreno de película Disney",
-            "Disfrutar de un brunch en Palo (solo adultos)",
-            "Deslizarse por el tobogán acuático del barco"
-        ],
-        tips: [
-            "Descarga la app 'Disney Cruise Line Navigator' antes de embarcar.",
-            "El servicio a la habitación es gratuito las 24 horas (la mayoría del menú).",
-            "Reserva actividades a bordo tan pronto se abra tu ventana de reserva (depende de tu nivel Castaway Club)."
         ]
     }
 };

@@ -12,6 +12,7 @@ import { useTransition } from "react";
 export default function ContactPage() {
     const [submitted, setSubmitted] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [selectedDestination, setSelectedDestination] = useState("");
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -158,32 +159,96 @@ export default function ContactPage() {
                                             id="destination"
                                             name="destination"
                                             className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
+                                            onChange={(e) => setSelectedDestination(e.target.value)}
+                                            required
                                         >
+                                            <option value="">Selecciona un destino</option>
                                             {Object.values(destinationsData).map((dest) => (
                                                 <option key={dest.slug} value={dest.title}>{dest.title}</option>
                                             ))}
+                                            <option value="Universal Studios Hollywood">Universal Studios Hollywood</option>
                                             <option value="Aulani">Aulani, A Disney Resort & Spa</option>
                                             <option value="Adventures by Disney">Adventures by Disney</option>
                                             <option value="Otro">Otro</option>
                                         </select>
                                     </div>
 
+                                    {/* Conditional Logic: Disney World Dining Plan */}
+                                    {selectedDestination === "Walt Disney World Resort" && (
+                                        <div className="md:col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                            <label className="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" name="dining_plan" className="h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary" />
+                                                <span className="font-medium text-foreground/90">¿Te interesa agregar Plan de Comidas a tu paquete?</span>
+                                            </label>
+                                        </div>
+                                    )}
+
+                                    {/* Conditional Logic: Disneyland Hotels */}
+                                    {selectedDestination.includes("Disneyland") && (
+                                        <div className="md:col-span-2 bg-purple-50/50 p-6 rounded-xl border border-purple-100 space-y-3">
+                                            <label className="text-sm font-medium block mb-2">Preferencia de Hospedaje:</label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <label className="flex items-center space-x-3 p-3 bg-white border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                                                    <input type="radio" name="hotel_preference" value="Disney Hotel" className="h-4 w-4 text-primary" />
+                                                    <span className="text-sm">Hotel Disney (On-Property)</span>
+                                                </label>
+                                                <label className="flex items-center space-x-3 p-3 bg-white border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                                                    <input type="radio" name="hotel_preference" value="Good Neighbor" className="h-4 w-4 text-primary" />
+                                                    <span className="text-sm">Hotel Good Neighbor</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-medium">Tipo de Cotización</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <label className="flex items-center space-x-3 p-4 border rounded-xl cursor-pointer hover:bg-secondary/50 transition-colors">
+                                                <input type="radio" name="package_type" value="Paquete Completo" className="h-4 w-4 text-primary" required />
+                                                <span className="text-sm font-medium">Paquete (Hotel + Tickets)</span>
+                                            </label>
+                                            <label className="flex items-center space-x-3 p-4 border rounded-xl cursor-pointer hover:bg-secondary/50 transition-colors">
+                                                <input type="radio" name="package_type" value="Solo Tickets" className="h-4 w-4 text-primary" required />
+                                                <span className="text-sm font-medium">Solo Tickets</span>
+                                            </label>
+                                            <label className="flex items-center space-x-3 p-4 border rounded-xl cursor-pointer hover:bg-secondary/50 transition-colors">
+                                                <input type="radio" name="package_type" value="Solo Asesoría" className="h-4 w-4 text-primary" required />
+                                                <span className="text-sm font-medium">Solo Asesoría</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
-                                        <label htmlFor="dates" className="text-sm font-medium">Fechas Tentativas</label>
+                                        <label htmlFor="checkin" className="text-sm font-medium">Check-in</label>
                                         <div className="relative">
                                             <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
                                             <input
-                                                id="dates"
-                                                name="dates"
+                                                id="checkin"
+                                                name="checkin"
                                                 type="date"
+                                                required
                                                 className="flex h-12 w-full rounded-xl border border-input bg-background/50 pl-10 pr-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
+                                        <label htmlFor="checkout" className="text-sm font-medium">Check-out</label>
+                                        <div className="relative">
+                                            <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+                                            <input
+                                                id="checkout"
+                                                name="checkout"
+                                                type="date"
+                                                required
+                                                className="flex h-12 w-full rounded-xl border border-input bg-background/50 pl-10 pr-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-medium">Viajeros</label>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div className="relative">
                                                 <Users className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
                                                 <input
@@ -207,6 +272,14 @@ export default function ContactPage() {
                                                     placeholder="Niños"
                                                 />
                                                 <span className="absolute right-3 top-3.5 text-xs text-muted-foreground">Niños</span>
+                                            </div>
+                                            <div className="relative col-span-1 sm:col-span-1">
+                                                <input
+                                                    type="text"
+                                                    name="children_ages"
+                                                    className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    placeholder="Edades niños (ej. 4, 8)"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -234,7 +307,7 @@ export default function ContactPage() {
                                     isPending ? "bg-primary/70 cursor-wait" : "bg-gradient-to-r from-primary to-purple-600"
                                 )}
                             >
-                                {isPending ? "Enviando Solicitud..." : "Enviar Cotización"}
+                                {isPending ? "Enviando Solicitud..." : "Solicitar Cotización"}
                             </button>
                         </form>
                     )}

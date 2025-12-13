@@ -12,7 +12,7 @@ const destinations = [
         id: 1,
         title: "Walt Disney World",
         description: "El lugar más mágico de la Tierra.",
-        image: "/images/disney-world.png",
+        image: "/images/disney-world-castle.png",
         href: "/destinations/disney-world",
         color: "from-blue-600/90"
     },

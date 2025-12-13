@@ -11,18 +11,28 @@ export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
+    const [logoSrc, setLogoSrc] = useState("/logo.png");
+
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
+
+        // Holiday Logo Logic
+        const now = new Date();
+        const cutoff = new Date("2026-01-01T00:00:00");
+        if (now < cutoff) {
+            setLogoSrc("/logo-xmas.png");
+        }
+
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const navLinks = [
         { name: "Destinos", href: "/#destinations" },
-        { name: "Nosotros", href: "/about" },
-        { name: "Nuestros Servicios", href: "/services" },
+        { name: "Sobre mí", href: "/about" },
+        { name: "Mis Servicios", href: "/services" },
         { name: "Blog", href: "/blog" },
         { name: "FAQ", href: "/faq" },
     ];
@@ -39,7 +49,7 @@ export function Navbar() {
                     <div className="flex items-center gap-6">
                         <Link href="/" className="flex items-center">
                             <div className="relative h-20 w-20 md:h-28 md:w-28 overflow-hidden transform hover:scale-105 transition-transform">
-                                <Image src="/logo.png" alt="Here We Go Advisor" fill className="object-contain" />
+                                <Image src={logoSrc} alt="Here We Go Advisor" fill className="object-contain" />
                             </div>
                         </Link>
 

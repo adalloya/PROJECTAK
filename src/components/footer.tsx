@@ -1,10 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook, Twitter, Mail } from "lucide-react";
 
 export function Footer() {
+    const [logoSrc, setLogoSrc] = useState("/logo.png");
+
+    useEffect(() => {
+        const now = new Date();
+        const cutoff = new Date("2026-01-01T00:00:00");
+        if (now < cutoff) {
+            setLogoSrc("/logo-xmas.png");
+        }
+    }, []);
+
     return (
         <footer className="bg-background border-t border-border py-12 md:py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,12 +23,12 @@ export function Footer() {
                     <div className="md:col-span-2">
                         <div className="flex items-center space-x-2 mb-4">
                             <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                                <Image src="/logo.png" alt="Here We Go Advisor Logo" fill className="object-cover" />
+                                <Image src={logoSrc} alt="Here We Go Advisor Logo" fill className="object-cover" />
                             </div>
                             <h3 className="text-xl font-bold tracking-tight">Here We Go Advisor</h3>
                         </div>
                         <p className="text-muted-foreground max-w-sm mb-6">
-                            Tu socio exclusivo para crear experiencias Disney a medida. Nosotros nos encargamos de los detalles mientras tú creas los recuerdos.
+                            El apoyo experto que necesitas. Nosotros nos encargamos de los detalles mientras tú creas los recuerdos.
                         </p>
                         <div className="flex space-x-4">
                             <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">

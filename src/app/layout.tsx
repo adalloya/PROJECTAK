@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     description: "Agencia premium de planificación de viajes Disney por Ana Karen.",
     images: [
       {
-        url: "/logo.png",
-        width: 800,
-        height: 600,
-        alt: "Here We Go Advisor Logo",
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 1200,
+        alt: "Here We Go Advisor - Experiencias Disney",
       },
     ],
   },

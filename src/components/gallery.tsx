@@ -15,7 +15,6 @@ const images = [
     { src: "/images/gallery/6.jpg", alt: "Diversión en Andy's Room" },
     { src: "/images/gallery/7.jpg", alt: "Momentos inolvidables en familia" },
     { src: "/images/gallery/8.jpg", alt: "Noche mágica en Disney" },
-    { src: "/images/gallery/9.png", alt: "Sonrisas en el estudio" },
 ];
 
 const variants = {

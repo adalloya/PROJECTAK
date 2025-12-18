@@ -13,7 +13,7 @@ interface Review {
     image_url?: string;
 }
 
-const defaultTestimonials = [
+const defaultTestimonials: Review[] = [
     {
         id: 1,
         name: "María G.",

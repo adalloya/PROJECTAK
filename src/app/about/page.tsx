@@ -35,7 +35,7 @@ export default function AboutPage() {
                                 <div className="relative w-full h-full overflow-hidden">
                                     <img
                                         src="/images/about-grads.jpg"
-                                        alt="Ana Karen Graduación Disney"
+                                        alt="Anna Karen Graduación Disney"
                                         className="object-cover w-full h-full"
                                     />
                                 </div>
@@ -54,7 +54,7 @@ export default function AboutPage() {
                                 <div className="relative w-full h-full overflow-hidden">
                                     <img
                                         src="/images/about-solo.jpg"
-                                        alt="Ana Karen en Disney"
+                                        alt="Anna Karen en Disney"
                                         className="object-cover w-full h-full"
                                     />
                                 </div>
@@ -64,7 +64,7 @@ export default function AboutPage() {
                         {/* Text Content */}
                         <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
                             <p className="font-medium text-2xl text-primary mb-2">
-                                ¡Hola! Soy Ana Karen.
+                                ¡Hola! Soy Anna Karen.
                             </p>
                             <p className="text-xl font-semibold text-foreground mb-4">
                                 Creadora de Here We Go Advisor y Agente Certificada Disney.
@@ -113,7 +113,7 @@ export default function AboutPage() {
                                 <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
                                     <Headphones className="h-6 w-6" />
                                 </div>
-                                <h3 className="font-semibold text-foreground mb-2">Soporte 24/7</h3>
+                                <h3 className="font-semibold text-foreground mb-2">Soporte antes y durante tu viaje</h3>
                                 <p className="text-base text-muted-foreground">Mientras viajas, permanecemos atentos para resolver cualquier contratiempo al instante.</p>
                             </li>
                         </ul>

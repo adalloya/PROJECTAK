@@ -59,12 +59,12 @@ export default function ServicesPage() {
 
                             <ul className="space-y-4 mb-8">
                                 {[
-                                    "Boletos de parques garantizados",
+                                    "Boletos de parques",
                                     "Reservación de hoteles Disney/Universal",
-                                    "Planificación detallada día por día",
+                                    "Planeación personalizada",
                                     "Reservas de restaurantes y experiencias",
                                     "Acompañamiento digital durante el viaje",
-                                    "Guía de uso de Apps (Genie+, My D.E.)",
+                                    "Guía de uso de Apps (Ej. My Disney Experience)",
                                     "Tips para optimizar filas y tiempos"
                                 ].map((item, i) => (
                                     <li key={i} className="flex items-start gap-3">
@@ -102,7 +102,7 @@ export default function ServicesPage() {
                             <ul className="space-y-4 mb-8">
                                 {[
                                     "Estrategia de itinerario personalizada",
-                                    "Asesoría en compra de Genie+ / Express Pass",
+                                    "Asesoría en compra de Lightning Lane / Express Pass",
                                     "Guía de restaurantes imperdibles",
                                     "Tips de expertos para ahorrar tiempo",
                                     "Soporte para vincular tus reservaciones",

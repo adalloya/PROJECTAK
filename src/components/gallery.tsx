@@ -13,6 +13,9 @@ const images = [
     { src: "/images/gallery/4.jpg", alt: "Relax en la cubierta del crucero" },
     { src: "/images/gallery/5.jpg", alt: "Toy Story Land en Hollywood Studios" },
     { src: "/images/gallery/6.jpg", alt: "Diversión en Andy's Room" },
+    { src: "/images/gallery/7.jpg", alt: "Momentos inolvidables en familia" },
+    { src: "/images/gallery/8.jpg", alt: "Noche mágica en Disney" },
+    { src: "/images/gallery/9.png", alt: "Sonrisas en el estudio" },
 ];
 
 const variants = {

@@ -22,8 +22,12 @@ const faqs = [
         answer: "Monitoreamos constantemente las nuevas promociones. Si Disney lanza una oferta aplicable a tu viaje ya reservado, la aplicaremos automáticamente para reducir tu precio final.",
     },
     {
+        question: "¿Cómo son los pagos?",
+        answer: "Los paquetes Disney los puedes reservar con solo $200 USD, paga a plazos, tú decides cuánto pagar y cuándo. Debes liquidar con un mes previo a tu check in. Método de pago: tarjeta, ya sea crédito, débito, Disney gift cards. Precios en USD.",
+    },
+    {
         question: "¿Trabajan con viajes que no sean de Disney?",
-        answer: "Sí, somos especialistas en Universal Studios (Hollywood y Orlando), cruceros Royal Caribbean, y destinos de lujo selectos. Pregúntanos por tu destino soñado.",
+        answer: "Sí, somos especialistas en Universal Studios (Hollywood y Orlando), cruceros Royal Caribbean, y destinos de lujo selectos. Manejamos diferentes navieras, cualquier otro parque temático como Legoland, Sea World. Pregúntanos por tu destino soñado.",
     },
 ];
 

@@ -4,7 +4,16 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const testimonials = [
+interface Review {
+    id: number;
+    name: string;
+    role: string;
+    content: string;
+    rating: number;
+    image_url?: string;
+}
+
+const defaultTestimonials = [
     {
         id: 1,
         name: "María G.",
@@ -12,44 +21,16 @@ const testimonials = [
         content: "¡Ana Karen hizo que nuestro viaje fuera perfecto! No tuvimos que preocuparnos por nada, solo disfrutar.",
         rating: 5,
     },
-    {
-        id: 2,
-        name: "Carlos R.",
-        role: "Viajero Frecuente",
-        content: "He ido a Disney muchas veces, pero esta fue la mejor experiencia. El servicio VIP vale cada centavo.",
-        rating: 5,
-    },
-    {
-        id: 3,
-        name: "Familia López",
-        role: "Primer Viaje a Disney",
-        content: "Estábamos abrumados con tanta información, pero Ana nos guió paso a paso. Universal Studios fue un éxito.",
-        rating: 5,
-    },
-    {
-        id: 4,
-        name: "Sofía M.",
-        role: "Luna de Miel",
-        content: "Fue el viaje más romántico y sin estrés. Ana se encargó de cada detalle, desde el hotel hasta las reservas de cena.",
-        rating: 5,
-    },
-    {
-        id: 5,
-        name: "Ricardo D.",
-        role: "Viaje de Amigos",
-        content: "Increíble experiencia en Epcot. La guía de bebidas y comidas fue top. Definitivamente volveremos a reservar.",
-        rating: 5,
-    },
-    {
-        id: 6,
-        name: "Familia Torres",
-        role: "Vacaciones de Verano",
-        content: "El crucero de Disney superó nuestras expectativas. Los niños amaron el club y nosotros el área de adultos.",
-        rating: 5,
-    },
+    // ... keep defaults or reduce them if we expect DB data
 ];
 
-export function Testimonials() {
+interface TestimonialsProps {
+    reviews?: Review[];
+}
+
+export function Testimonials({ reviews = [] }: TestimonialsProps) {
+    const displayReviews = reviews.length > 0 ? reviews : defaultTestimonials;
+
     return (
         <section className="py-24 bg-secondary/30 overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
@@ -85,7 +66,7 @@ export function Testimonials() {
                         style={{ width: "fit-content" }}
                     >
                         {/* Render list twice for seamless loop */}
-                        {[...testimonials, ...testimonials].map((t, index) => (
+                        {[...displayReviews, ...displayReviews].map((t, index) => (
                             <div
                                 key={`${t.id}-${index}`}
                                 className="flex-shrink-0 w-[400px] bg-background/60 backdrop-blur-md p-8 rounded-3xl border border-border/50 shadow-sm hover:border-primary/20 transition-colors"
@@ -97,9 +78,16 @@ export function Testimonials() {
                                     ))}
                                 </div>
                                 <p className="text-lg text-foreground/90 mb-6 italic leading-relaxed">"{t.content}"</p>
-                                <div>
-                                    <h4 className="font-bold text-foreground">{t.name}</h4>
-                                    <p className="text-sm text-muted-foreground">{t.role}</p>
+                                <div className="flex items-center gap-4">
+                                    {t.image_url && (
+                                        <div className="relative h-12 w-12 rounded-full overflow-hidden border border-border">
+                                            <img src={t.image_url} alt={t.name} className="object-cover w-full h-full" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h4 className="font-bold text-foreground">{t.name}</h4>
+                                        <p className="text-sm text-muted-foreground">{t.role}</p>
+                                    </div>
                                 </div>
                             </div>
                         ))}

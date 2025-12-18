@@ -85,3 +85,60 @@ export async function submitLead(formData: FormData) {
         return { success: false, message: 'Internal Server Error' };
     }
 }
+
+export async function submitReview(formData: FormData) {
+    const name = formData.get('name') as string;
+    const role = formData.get('role') as string;
+    const content = formData.get('content') as string;
+    const rating = parseInt(formData.get('rating') as string);
+    const imageFile = formData.get('image') as File | null;
+
+    if (!name || !role || !content || !rating) {
+        return { success: false, message: 'Faltan campos requeridos' };
+    }
+
+    let image_url = null;
+
+    try {
+        // Upload Image if present
+        if (imageFile && imageFile.size > 0) {
+            const fileExt = imageFile.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage
+                .from('reviews')
+                .upload(fileName, imageFile);
+
+            if (uploadError) {
+                console.error('Storage Upload Error:', uploadError);
+                // Continue without image or return error? We'll continue without image for now but log it.
+            } else {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('reviews')
+                    .getPublicUrl(fileName);
+                image_url = publicUrl;
+            }
+        }
+
+        const { error } = await supabase
+            .from('reviews')
+            .insert([{
+                name,
+                role,
+                content,
+                rating,
+                image_url,
+                is_approved: true // Auto-approve for now
+            }]);
+
+        if (error) {
+            console.error('Supabase Review Error:', error);
+            return { success: false, message: 'Error saving review' };
+        }
+
+        revalidatePath('/'); // Update home page testimonials
+        return { success: true };
+    } catch (e) {
+        console.error('Review Action Error:', e);
+        return { success: false, message: 'Server error' };
+    }
+}

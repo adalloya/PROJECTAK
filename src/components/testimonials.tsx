@@ -73,15 +73,23 @@ export function Testimonials({ reviews = [] }: TestimonialsProps) {
                                 style={{ whiteSpace: "normal" }} // Ensure text wraps inside card
                             >
                                 <div className="flex gap-1 mb-4">
-                                    {[...Array(t.rating)].map((_, i) => (
+                                    {[...Array(Math.max(0, Math.min(5, Math.floor(t.rating || 5))))].map((_, i) => (
                                         <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                                     ))}
                                 </div>
                                 <p className="text-lg text-foreground/90 mb-6 italic leading-relaxed">"{t.content}"</p>
                                 <div className="flex items-center gap-4">
-                                    {t.image_url && (
-                                        <div className="relative h-12 w-12 rounded-full overflow-hidden border border-border">
-                                            <img src={t.image_url} alt={t.name} className="object-cover w-full h-full" />
+                                    {t.image_url && typeof t.image_url === 'string' && (
+                                        <div className="relative h-12 w-12 rounded-full overflow-hidden border border-border shrink-0">
+                                            <img
+                                                src={t.image_url}
+                                                alt={t.name}
+                                                className="object-cover w-full h-full"
+                                                onError={(e) => {
+                                                    // Fallback if image fails to load
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                }}
+                                            />
                                         </div>
                                     )}
                                     <div>

@@ -142,3 +142,23 @@ export async function submitReview(formData: FormData) {
         return { success: false, message: 'Server error' };
     }
 }
+
+export async function deleteLead(leadId: string) {
+    try {
+        const { error } = await supabase
+            .from('leads')
+            .delete()
+            .eq('id', leadId);
+
+        if (error) {
+            console.error('Error deleting lead:', error);
+            return { success: false, message: 'Error deleting lead' };
+        }
+
+        revalidatePath('/admin/dashboard');
+        return { success: true };
+    } catch (error) {
+        console.error('Server Action Delete Error:', error);
+        return { success: false, message: 'Internal Server Error' };
+    }
+}

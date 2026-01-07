@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { supabase } from "@/lib/supabase";
+import { submitLead, deleteLead } from "@/app/actions";
 import { useEffect } from "react";
 
 export default function AdminDashboard() {
@@ -88,11 +89,10 @@ export default function AdminDashboard() {
         setLeads(leads.filter(l => l.id !== leadId));
         setSelectedLead(null);
 
-        // Delete from DB
-        const { error } = await supabase.from('leads').delete().eq('id', leadId);
+        // Delete via Server Action
+        const result = await deleteLead(leadId);
 
-        if (error) {
-            console.error("Error deleting lead:", error);
+        if (!result.success) {
             alert("Error al eliminar el lead");
             fetchLeads(); // Revert on error
         }

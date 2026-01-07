@@ -1,5 +1,13 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useTransition, useRef, useCallback } from "react";
+import { Star, Send, Upload, X, Crop as CropIcon } from "lucide-react";
+import { submitReview } from "../../actions";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
 import Cropper from "react-easy-crop";
 // import { Point, Area } from "react-easy-crop/types"; // Broken import
 

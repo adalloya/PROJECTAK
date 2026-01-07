@@ -5,7 +5,8 @@ import { Gallery } from "@/components/gallery";
 import { LatestBlogPosts } from "@/components/latest-blog-posts";
 import { supabase } from "@/lib/supabase";
 
-export const revalidate = 0; // Ensure fresh data on every request, or remove for static cache
+export const dynamic = 'force-dynamic'; // Force no-cache on Vercel
+export const revalidate = 0;
 
 export default async function Home() {
   const { data: reviews } = await supabase

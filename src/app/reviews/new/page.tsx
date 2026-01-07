@@ -1,12 +1,12 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { useState, useTransition } from "react";
-import { Star, Send } from "lucide-react";
-import { submitReview } from "../../actions"; // We'll create this next
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useTransition, useRef, useCallback } from "react";
+import { Star, Send, Upload, X, Crop as CropIcon } from "lucide-react";
+import { submitReview } from "../../actions";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Cropper from "react-easy-crop";
+import { Point, Area } from "react-easy-crop/types";
 
 export default function NewReviewPage() {
     const [rating, setRating] = useState(5);
@@ -14,9 +14,58 @@ export default function NewReviewPage() {
     const [isPending, startTransition] = useTransition();
     const [submitted, setSubmitted] = useState(false);
 
+    // Image State
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [finalImageBlob, setFinalImageBlob] = useState<Blob | null>(null);
+    const [showCropper, setShowCropper] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+                setImageSrc(reader.result as string);
+                setShowCropper(true);
+            });
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const createCroppedImage = async () => {
+        try {
+            if (!imageSrc || !croppedAreaPixels) return;
+            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+            setFinalImageBlob(croppedBlob);
+            setShowCropper(false);
+        } catch (e) {
+            console.error(e);
+            alert("Error al recortar la imagen");
+        }
+    };
+
+    const cancelCrop = () => {
+        setImageSrc(null);
+        setFinalImageBlob(null);
+        setShowCropper(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
     const handleSubmit = async (formData: FormData) => {
-        // Append rating manually since it's a state, not a simple input
         formData.append("rating", rating.toString());
+
+        // Replace the original large file with the optimized blob if available
+        if (finalImageBlob) {
+            formData.delete("image"); // Remove original
+            formData.append("image", finalImageBlob, "review-image.jpg");
+        }
 
         startTransition(async () => {
             const result = await submitReview(formData);
@@ -53,6 +102,55 @@ export default function NewReviewPage() {
 
     return (
         <div className="min-h-screen py-12 px-4 bg-secondary/30 flex items-center justify-center">
+            {/* Cropper Modal */}
+            <AnimatePresence>
+                {showCropper && imageSrc && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white w-full max-w-md rounded-2xl overflow-hidden flex flex-col h-[500px]"
+                        >
+                            <div className="p-4 border-b flex justify-between items-center">
+                                <h3 className="font-bold">Ajustar Imagen</h3>
+                                <button onClick={cancelCrop}><X className="h-6 w-6" /></button>
+                            </div>
+                            <div className="relative flex-1 bg-black">
+                                <Cropper
+                                    image={imageSrc}
+                                    crop={crop}
+                                    zoom={zoom}
+                                    aspect={1} // Square aspect ratio
+                                    onCropChange={setCrop}
+                                    onCropComplete={onCropComplete}
+                                    onZoomChange={setZoom}
+                                />
+                            </div>
+                            <div className="p-4 bg-white flex flex-col gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">Zoom</span>
+                                    <input
+                                        type="range"
+                                        value={zoom}
+                                        min={1}
+                                        max={3}
+                                        step={0.1}
+                                        aria-labelledby="Zoom"
+                                        onChange={(e) => setZoom(Number(e.target.value))}
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={cancelCrop} className="flex-1">Cancelar</Button>
+                                    <Button onClick={createCroppedImage} className="flex-1 bg-primary text-white">Confirmar</Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -113,14 +211,39 @@ export default function NewReviewPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="image" className="text-sm font-medium">Foto (Opcional)</label>
-                        <input
-                            id="image"
-                            name="image"
-                            type="file"
-                            accept="image/*"
-                            className="flex h-12 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        />
+                        <label className="text-sm font-medium">Foto (Opcional)</label>
+                        <div
+                            onClick={() => fileInputRef.current?.click()}
+                            className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
+                        >
+                            {finalImageBlob ? (
+                                <div className="relative">
+                                    {/* Preview the blob */}
+                                    <img
+                                        src={URL.createObjectURL(finalImageBlob)}
+                                        alt="Preview"
+                                        className="h-32 w-32 object-cover rounded-full mx-auto mb-2 border-4 border-white shadow-md"
+                                    />
+                                    <p className="text-sm text-green-600 font-medium">¡Foto lista!</p>
+                                    <p className="text-xs text-gray-400">Clic para cambiar</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                        <Upload className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-600">Sube una foto</p>
+                                    <p className="text-xs text-gray-400 mt-1">Haga clic confirmar después de seleccionar</p>
+                                </>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -146,4 +269,52 @@ export default function NewReviewPage() {
             </motion.div>
         </div>
     );
+}
+
+// Utility function to crop image
+const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+        const image = new Image();
+        image.addEventListener("load", () => resolve(image));
+        image.addEventListener("error", (error) => reject(error));
+        image.setAttribute("crossOrigin", "anonymous");
+        image.src = url;
+    });
+
+async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+        throw new Error("No 2d context");
+    }
+
+    // set canvas size to match the bounding box
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    // draw image
+    ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+    );
+
+    // As Blob
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error("Canvas is empty"));
+                return;
+            }
+            resolve(blob);
+        }, "image/jpeg", 0.85); // Compress quality 0.85
+    });
 }

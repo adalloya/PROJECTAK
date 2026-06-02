@@ -14,8 +14,8 @@ const faqs = [
         answer: "Recomendamos reservar con al menos 6-8 meses de anticipación para Disney World y 12 meses para Disney Cruise Line. Esto nos permite asegurar las mejores tarifas, disponibilidad en hoteles y las reservas de restaurantes más populares.",
     },
     {
-        question: "¿Pueden ayudarme con reservas de restaurantes y Genie+?",
-        answer: "¡Absolutamente! Nos encargamos de reservar tus restaurantes a las 6:00 AM el día que se abre tu ventana de reserva. También te brindamos una estrategia detallada para usar Genie+ y Lightning Lanes para minimizar tus tiempos de espera.",
+        question: "¿Pueden ayudarme con reservas de restaurantes y Lightning Lane?",
+        answer: "¡Absolutamente! Nos encargamos de reservar tus restaurantes a las 6:00 AM el día que se abre tu ventana de reserva. También te brindamos una estrategia detallada para usar Lightning Lane para minimizar tus tiempos de espera.",
     },
     {
         question: "¿Qué pasa si salen ofertas después de que ya reservé?",

@@ -122,14 +122,40 @@ export default function ContactPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <label htmlFor="phone" className="text-sm font-medium">Teléfono / WhatsApp</label>
-                                        <input
-                                            id="phone"
-                                            name="phone"
-                                            type="tel"
-                                            required
-                                            className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
-                                            placeholder="+52 55 1234 5678"
-                                        />
+                                        <div className="flex gap-2">
+                                            <select
+                                                name="country_code"
+                                                defaultValue="+52"
+                                                className="flex h-12 w-[110px] shrink-0 rounded-xl border border-input bg-background/50 px-3 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer text-foreground"
+                                            >
+                                                <option value="+52">🇲🇽 +52</option>
+                                                <option value="+1">🇺🇸 +1</option>
+                                                <option value="+54">🇦🇷 +54</option>
+                                                <option value="+57">🇨🇴 +57</option>
+                                                <option value="+56">🇨🇱 +56</option>
+                                                <option value="+51">🇵🇪 +51</option>
+                                                <option value="+58">🇻🇪 +58</option>
+                                                <option value="+502">🇬🇹 +502</option>
+                                                <option value="+506">🇨🇷 +506</option>
+                                                <option value="+503">🇸🇻 +503</option>
+                                                <option value="+504">🇭🇳 +504</option>
+                                                <option value="+505">🇳🇮 +505</option>
+                                                <option value="+507">🇵🇦 +507</option>
+                                                <option value="+591">🇧🇴 +591</option>
+                                                <option value="+593">🇪🇨 +593</option>
+                                                <option value="+595">🇵🇾 +595</option>
+                                                <option value="+598">🇺🇾 +598</option>
+                                                <option value="+34">🇪🇸 +34</option>
+                                            </select>
+                                            <input
+                                                id="phone"
+                                                name="phone"
+                                                type="tel"
+                                                required
+                                                className="flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 outline-none"
+                                                placeholder="55 1234 5678"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
                                         <label htmlFor="email" className="text-sm font-medium">Correo Electrónico</label>

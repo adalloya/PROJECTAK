@@ -24,7 +24,7 @@ export async function submitLead(formData: FormData) {
     const rawFormData = {
         client_name: formData.get('name') as string,
         email: formData.get('email') as string,
-        phone: formData.get('phone') as string,
+        phone: `${formData.get('country_code') || ''} ${formData.get('phone')}`.trim(),
         destination: formData.get('destination') as string,
         dates: `In: ${checkin} | Out: ${checkout}`,
         travelers: `${formData.get('adults')} Adultos, ${formData.get('children')} Niños${childrenAges ? ` (Edades: ${childrenAges})` : ''}`,

@@ -126,7 +126,12 @@ export default function AdminDashboard() {
         }
 
         // Update in DB
-        await supabase.from('leads').update({ status: newStatus }).eq('id', leadId);
+        const { error } = await supabase.from('leads').update({ status: newStatus }).eq('id', leadId);
+        if (error) {
+            console.error("Error al actualizar estado del lead:", error);
+            alert(`Error al actualizar el estado: ${error.message}`);
+            fetchLeads();
+        }
     };
 
     const handleSaveNotes = async (leadId: string, newNotes: string) => {
@@ -140,7 +145,12 @@ export default function AdminDashboard() {
         setIsEditing(false);
 
         // Update in DB
-        await supabase.from('leads').update({ admin_notes: newNotes }).eq('id', leadId);
+        const { error } = await supabase.from('leads').update({ admin_notes: newNotes }).eq('id', leadId);
+        if (error) {
+            console.error("Error al guardar notas:", error);
+            alert(`Error al guardar notas: ${error.message}`);
+            fetchLeads();
+        }
     }
 
     const handleSaveEdit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -187,7 +197,8 @@ export default function AdminDashboard() {
             .eq('id', selectedLead.id);
 
         if (error) {
-            alert("Error al actualizar el lead en la base de datos.");
+            console.error("Error al actualizar lead:", error);
+            alert(`Error al actualizar el lead en la base de datos: ${error.message}`);
             fetchLeads(); // Revert on error
         }
     };

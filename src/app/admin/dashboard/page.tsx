@@ -122,6 +122,38 @@ export default function AdminDashboard() {
     };
 
     // Fetch real data on mount
+    const getLocalYYYYMMDD = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const autoClassifyStatus = (currentStatus: LeadStatus, checkInDate: string | null | undefined): LeadStatus => {
+        if (!checkInDate) return currentStatus;
+
+        const postSalesStatuses: LeadStatus[] = ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'];
+        if (!postSalesStatuses.includes(currentStatus)) return currentStatus;
+
+        const todayStr = getLocalYYYYMMDD();
+
+        if (checkInDate < todayStr) {
+            return 'trip_completed';
+        }
+
+        const todayTime = new Date(todayStr + 'T00:00:00').getTime();
+        const checkInTime = new Date(checkInDate + 'T00:00:00').getTime();
+        const diffTime = checkInTime - todayTime;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 60) {
+            return 'reservation_60_minus';
+        } else {
+            return 'reservation_60_plus';
+        }
+    };
+
     useEffect(() => {
         fetchLeads();
     }, []);
@@ -133,8 +165,19 @@ export default function AdminDashboard() {
             .order('created_at', { ascending: false });
 
         if (data) {
-            // Cast status to LeadStatus to satisfy type checker
-            const typedData = data.map(d => ({ ...d, status: d.status as LeadStatus }));
+            const typedData = data.map(d => {
+                const lead = { ...d, status: d.status as LeadStatus };
+                const targetStatus = autoClassifyStatus(lead.status, lead.check_in);
+
+                if (targetStatus !== lead.status) {
+                    supabase.from('leads').update({ status: targetStatus }).eq('id', lead.id)
+                        .then(({ error }) => {
+                            if (error) console.error(`Error updating auto-classified lead status:`, error);
+                        });
+                    lead.status = targetStatus;
+                }
+                return lead;
+            });
             setLeads(typedData);
         }
         setIsLoading(false);
@@ -182,22 +225,40 @@ export default function AdminDashboard() {
                 ? LEAD_STATUSES.filter(s => ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(s.value))
                 : LEAD_STATUSES.filter(s => s.value === 'lost');
 
-    const leadsByStatus = activeStatuses.map(status => ({
-        ...status,
-        items: filteredAndSortedLeads.filter(l => l.status === status.value)
-    }));
+    const leadsByStatus = activeStatuses.map(status => {
+        let items = filteredAndSortedLeads.filter(l => l.status === status.value);
+        if (view === 'post-sales') {
+            const todayTime = new Date(getLocalYYYYMMDD() + 'T00:00:00').getTime();
+            items = [...items].sort((a, b) => {
+                if (!a.check_in && !b.check_in) return 0;
+                if (!a.check_in) return 1;
+                if (!b.check_in) return -1;
+
+                const diffA = Math.abs(new Date(a.check_in + 'T00:00:00').getTime() - todayTime);
+                const diffB = Math.abs(new Date(b.check_in + 'T00:00:00').getTime() - todayTime);
+                return diffA - diffB;
+            });
+        }
+        return {
+            ...status,
+            items
+        };
+    });
 
     const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
+        const lead = leads.find(l => l.id === leadId);
+        const statusToApply = autoClassifyStatus(newStatus, lead?.check_in);
+
         // Optimistic update
         setLeads(leads.map(lead =>
-            lead.id === leadId ? { ...lead, status: newStatus } : lead
+            lead.id === leadId ? { ...lead, status: statusToApply } : lead
         ));
         if (selectedLead && selectedLead.id === leadId) {
-            setSelectedLead({ ...selectedLead, status: newStatus });
+            setSelectedLead({ ...selectedLead, status: statusToApply });
         }
 
         // Update in DB
-        const { error } = await supabase.from('leads').update({ status: newStatus }).eq('id', leadId);
+        const { error } = await supabase.from('leads').update({ status: statusToApply }).eq('id', leadId);
         if (error) {
             console.error("Error al actualizar estado del lead:", error);
             alert(`Error al actualizar el estado: ${error.message}`);
@@ -232,6 +293,9 @@ export default function AdminDashboard() {
         const check_in = formData.get('check_in') as string;
         const check_out = formData.get('check_out') as string;
 
+        let statusInput = formData.get('status') as LeadStatus;
+        const statusToApply = autoClassifyStatus(statusInput, check_in);
+
         const updatedFields = {
             client_name: formData.get('client_name') as string,
             email: formData.get('email') as string,
@@ -251,7 +315,7 @@ export default function AdminDashboard() {
             booking_reference: formData.get('booking_reference') as string || null,
             quote_sent_date: formData.get('quote_sent_date') ? formData.get('quote_sent_date') as string : null,
             estimated_sale_amount: formData.get('estimated_sale_amount') ? parseFloat(formData.get('estimated_sale_amount') as string) : null,
-            status: formData.get('status') as LeadStatus,
+            status: statusToApply,
         };
 
         const updatedLead = { ...selectedLead, ...updatedFields };

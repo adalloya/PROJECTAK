@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2 } from "lucide-react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
 import { LEAD_STATUSES, Lead, LeadStatus } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
@@ -25,44 +25,97 @@ export default function AdminDashboard() {
     const [sortBy, setSortBy] = useState<SortOption>('created_at');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost';
+    const [view, setView] = useState<AdminView>('portal');
+
     const handleExportCSV = () => {
-        const headers = [
-            "ID", "Fecha de Registro", "Cliente", "Email", "Teléfono", "Destino", 
-            "Check-In", "Check-Out", "Viajeros", "Etapa", "Probabilidad (%)", 
-            "Clasificación Proveedor", "Precio", "Comisión", "Status de Pago", 
-            "Booking/Reference", "Fecha de Envío Cotización", "Monto Estimado", 
-            "Notas del Cliente", "Notas del Admin"
-        ];
-        
-        const rows = leads.map(l => [
-            l.id,
-            new Date(l.created_at).toLocaleString(),
-            l.client_name,
-            l.email,
-            l.phone,
-            l.destination,
-            l.check_in || '',
-            l.check_out || '',
-            l.travelers,
-            l.status,
-            l.probability !== undefined && l.probability !== null ? `${l.probability}` : '',
-            l.provider_classification || '',
-            l.price || 0,
-            l.commission || 0,
-            l.payment_status || '',
-            l.booking_reference || '',
-            l.quote_sent_date || '',
-            l.estimated_sale_amount || 0,
-            l.notes || '',
-            l.admin_notes || ''
-        ]);
+        let headers: string[] = [];
+        let rows: any[][] = [];
+        let filename = "leads";
+
+        const filteredLeads = leads.filter(l => {
+            if (view === 'sales') return ['new', 'contacted', 'proposal'].includes(l.status);
+            if (view === 'post-sales') return ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(l.status);
+            if (view === 'lost') return l.status === 'lost';
+            return true;
+        });
+
+        if (view === 'sales') {
+            headers = [
+                "ID", "Fecha de Registro", "Cliente", "Email", "Teléfono", "Destino", 
+                "Check-In", "Check-Out", "Viajeros", "Etapa", "Probabilidad (%)", 
+                "Monto Estimado", "Notas"
+            ];
+            rows = filteredLeads.map(l => [
+                l.id,
+                new Date(l.created_at).toLocaleString(),
+                l.client_name,
+                l.email,
+                l.phone,
+                l.destination,
+                l.check_in || '',
+                l.check_out || '',
+                l.travelers,
+                l.status,
+                l.probability !== undefined && l.probability !== null ? `${l.probability}` : '',
+                l.estimated_sale_amount || 0,
+                l.notes || ''
+            ]);
+            filename = `leads_ventas_${new Date().toISOString().slice(0,10)}`;
+        } else if (view === 'post-sales') {
+            headers = [
+                "ID", "Fecha de Registro", "Cliente", "Email", "Teléfono", "Destino", 
+                "Check-In", "Check-Out", "Viajeros", "Etapa", "Clasificación Proveedor", 
+                "Precio Final", "Comisión", "Status de Pago", "Booking/Reference", 
+                "Fecha de Envío Cotización", "Monto Estimado", "Notas del Cliente", "Notas del Admin"
+            ];
+            rows = filteredLeads.map(l => [
+                l.id,
+                new Date(l.created_at).toLocaleString(),
+                l.client_name,
+                l.email,
+                l.phone,
+                l.destination,
+                l.check_in || '',
+                l.check_out || '',
+                l.travelers,
+                l.status,
+                l.provider_classification || '',
+                l.price || 0,
+                l.commission || 0,
+                l.payment_status || '',
+                l.booking_reference || '',
+                l.quote_sent_date || '',
+                l.estimated_sale_amount || 0,
+                l.notes || '',
+                l.admin_notes || ''
+            ]);
+            filename = `leads_postventa_${new Date().toISOString().slice(0,10)}`;
+        } else {
+            headers = [
+                "ID", "Fecha de Registro", "Cliente", "Email", "Teléfono", "Destino", 
+                "Viajeros", "Notas del Cliente", "Notas del Admin"
+            ];
+            rows = filteredLeads.map(l => [
+                l.id,
+                new Date(l.created_at).toLocaleString(),
+                l.client_name,
+                l.email,
+                l.phone,
+                l.destination,
+                l.travelers,
+                l.notes || '',
+                l.admin_notes || ''
+            ]);
+            filename = `leads_perdidos_${new Date().toISOString().slice(0,10)}`;
+        }
         
         const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `leads_herewego_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute("download", `${filename}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -110,8 +163,26 @@ export default function AdminDashboard() {
             return sortOrder === 'desc' ? -comparison : comparison;
         });
 
-    // Group by status
-    const leadsByStatus = LEAD_STATUSES.map(status => ({
+    // Set a default mobile activeTab when view changes
+    useEffect(() => {
+        if (view === 'sales') {
+            setActiveTab('new');
+        } else if (view === 'post-sales') {
+            setActiveTab('won');
+        } else if (view === 'lost') {
+            setActiveTab('lost');
+        }
+    }, [view]);
+
+    // Group by status, filtering statuses depending on active view
+    const activeStatuses = 
+        view === 'sales' 
+            ? LEAD_STATUSES.filter(s => ['new', 'contacted', 'proposal'].includes(s.value))
+            : view === 'post-sales'
+                ? LEAD_STATUSES.filter(s => ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(s.value))
+                : LEAD_STATUSES.filter(s => s.value === 'lost');
+
+    const leadsByStatus = activeStatuses.map(status => ({
         ...status,
         items: filteredAndSortedLeads.filter(l => l.status === status.value)
     }));
@@ -280,207 +351,488 @@ export default function AdminDashboard() {
         }
     };
 
+    // Statistical calculations for Portal Home
+    const stats = {
+        new: leads.filter(l => l.status === 'new').length,
+        contacted: leads.filter(l => l.status === 'contacted').length,
+        proposal: leads.filter(l => l.status === 'proposal').length,
+        won: leads.filter(l => l.status === 'won').length,
+        reservation_60_plus: leads.filter(l => l.status === 'reservation_60_plus').length,
+        reservation_60_minus: leads.filter(l => l.status === 'reservation_60_minus').length,
+        disney_reserved: leads.filter(l => l.status === 'disney_reserved').length,
+        trip_completed: leads.filter(l => l.status === 'trip_completed').length,
+        lost: leads.filter(l => l.status === 'lost').length,
+    };
+
+    const totalCotizado = leads
+        .filter(l => l.status === 'proposal')
+        .reduce((sum, l) => sum + (l.estimated_sale_amount || l.price || 0), 0);
+
+    const totalGanado = leads
+        .filter(l => ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(l.status))
+        .reduce((sum, l) => sum + (l.price || l.estimated_sale_amount || 0), 0);
+
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center">Cargando CRM...</div>
     }
 
     return (
-        <div className="p-6 md:p-10 pt-32 md:pt-36 max-w-[1600px] mx-auto">
-            {/* Top Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">CRM - Here We Go Advisor</h1>
-                    <p className="text-gray-500">Gestiona tus prospectos y oportunidades de venta.</p>
-                </div>
-
-                <div className="flex items-center flex-wrap gap-3 w-full md:w-auto">
-                    <div className="relative w-full md:w-56">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Buscar cliente..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm bg-white"
-                        />
+        <div className="p-6 md:p-10 pt-32 md:pt-36 max-w-[1600px] mx-auto text-sm">
+            {view === 'portal' ? (
+                /* Portal Home Dashboard View */
+                <div className="space-y-10">
+                    {/* Header Welcome Card */}
+                    <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 p-8 rounded-3xl border border-gray-100 backdrop-blur-md shadow-sm">
+                        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+                        <div className="absolute left-1/3 bottom-0 translate-y-1/2 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl" />
+                        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Portal de Administración</h1>
+                                <p className="text-gray-500 mt-1.5 text-base">Resumen general de tus prospectos, cotizaciones y ventas de viaje.</p>
+                            </div>
+                            <button
+                                onClick={() => setIsCreating(true)}
+                                className="px-6 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 shadow-md shrink-0 self-start md:self-auto"
+                            >
+                                <span className="text-xl leading-none font-bold">+</span> Crear Lead Manual
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Sorting selector */}
-                    <div className="flex items-center gap-1.5 border border-gray-300 rounded-full px-3 h-10 bg-white shadow-sm">
-                        <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Ordenar por:</span>
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            className="text-xs font-semibold text-gray-700 outline-none cursor-pointer bg-transparent pr-1"
-                        >
-                            <option value="created_at">Fecha Registro</option>
-                            <option value="check_in">Fecha Check-in</option>
-                            <option value="probability">Probabilidad</option>
-                        </select>
-                        <button
-                            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                            className="text-gray-500 hover:text-primary transition-colors text-xs font-bold pl-1.5 border-l border-gray-200"
-                            title="Cambiar dirección de ordenamiento"
-                        >
-                            {sortOrder === 'asc' ? '▲' : '▼'}
-                        </button>
+                    {/* Top Statistics Cards */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {/* Quoted Cards */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-700 p-6 rounded-3xl text-white shadow-lg border border-purple-500/20 group hover:shadow-xl transition-all">
+                            <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-sm font-semibold tracking-wide text-purple-100 uppercase">Venta Cotizada (Activa)</p>
+                                    <h2 className="text-3xl lg:text-4xl font-black mt-2 tracking-tight">
+                                        ${totalCotizado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg font-bold text-purple-200">USD</span>
+                                    </h2>
+                                    <p className="text-xs text-purple-200 mt-2">Suma total estimada en etapa de "Cotización Enviada"</p>
+                                </div>
+                                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
+                                    <FileText className="h-6 w-6 text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Won Cards */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-3xl text-white shadow-lg border border-emerald-500/20 group hover:shadow-xl transition-all">
+                            <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-sm font-semibold tracking-wide text-emerald-100 uppercase">Ventas Ganadas / Logrado</p>
+                                    <h2 className="text-3xl lg:text-4xl font-black mt-2 tracking-tight">
+                                        ${totalGanado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg font-bold text-emerald-200">USD</span>
+                                    </h2>
+                                    <p className="text-xs text-emerald-200 mt-2">Suma de precios finales en etapas ganadas y post-venta</p>
+                                </div>
+                                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
+                                    <CheckCircle2 className="h-6 w-6 text-white" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Excel download button */}
-                    <button
-                        onClick={handleExportCSV}
-                        className="h-10 px-4 border border-green-600 text-green-700 hover:bg-green-50 rounded-full font-medium text-xs sm:text-sm transition-colors flex items-center gap-2 shadow-sm"
-                    >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        Descargar Excel
-                    </button>
-
-                    <button
-                        onClick={() => setIsCreating(true)}
-                        className="h-10 px-4 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
-                    >
-                        <span className="text-xl leading-none">+</span> Nuevo Lead
-                    </button>
-                </div>
-            </div>
-
-            {/* Mobile Tabs */}
-            <div className="flex md:hidden overflow-x-auto gap-2 mb-6 pb-2 scrollbar-hide">
-                {LEAD_STATUSES.map((status) => (
-                    <button
-                        key={status.value}
-                        onClick={() => setActiveTab(status.value)}
-                        className={cn(
-                            "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
-                            activeTab === status.value
-                                ? `bg-${status.color.replace('border-', '')} text-white border-transparent shadow-md`
-                                : "bg-white border-gray-200 text-gray-600"
-                        )}
-                        // Hack to match the status colors defined in types which use 'border-blue-500' etc. 
-                        // We need a mapping or string manipulation. Simple fix for now:
-                        style={activeTab === status.value ? { backgroundColor: status.color === 'border-gray-500' ? '#6b7280' : status.color === 'border-blue-500' ? '#3b82f6' : status.color === 'border-yellow-500' ? '#eab308' : status.color === 'border-green-500' ? '#22c55e' : '#ef4444' } : {}}
-                    >
-                        {status.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Kanban Board */}
-            <DragDropContext onDragEnd={onDragEnd}>
-                <div className="flex gap-4 overflow-hidden w-full h-[calc(100vh-220px)] min-h-[500px]">
-                    {leadsByStatus.map((column) => (
-                        // Show all on desktop, but only active one on mobile
-                        <div
-                            key={column.value}
-                            className={cn(
-                                "flex-1 min-w-0 flex-col bg-gray-50/50 rounded-xl border border-gray-100 transition-all",
-                                // Mobile logic: hidden unless it's the active tab. Desktop: always flex.
-                                activeTab === column.value ? "flex" : "hidden md:flex"
-                            )}
-                        >
-                            {/* Column Header */}
-                            <div className={`p-3 rounded-t-xl border-b-2 ${column.color} bg-white flex justify-between items-center mb-2 shadow-sm shrink-0`}>
-                                <h3 className="font-bold text-xs lg:text-sm uppercase tracking-wider truncate text-gray-700">{column.label}</h3>
-                                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
-                                    {column.items.length}
-                                </span>
+                    {/* Primary Section Buttons */}
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase">Secciones de Gestión</h2>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {/* Section 1: Manejo de Ventas */}
+                            <div
+                                onClick={() => setView('sales')}
+                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        <Clock className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Manejo de Ventas</h3>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed">Prospectos entrantes, contactos iniciales y cotizaciones activas de clientes.</p>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex flex-wrap gap-2">
+                                    <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">Nuevos: {stats.new}</span>
+                                    <span className="px-2.5 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full">Contactados: {stats.contacted}</span>
+                                    <span className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full">Cotizados: {stats.proposal}</span>
+                                </div>
                             </div>
 
-                            {/* Cards Container */}
-                            <Droppable droppableId={column.value}>
-                                {(provided, snapshot) => (
+                            {/* Section 2: Manejo de Post Venta */}
+                            <div
+                                onClick={() => setView('post-sales')}
+                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                        <CheckCircle2 className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Manejo de Post Venta</h3>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed">Ventas ganadas, reservas de Disney, plazos de 60 días, pagos pendientes y viajes realizados.</p>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex flex-wrap gap-1.5">
+                                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">Ganadas: {stats.won}</span>
+                                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-full">&gt;60d: {stats.reservation_60_plus}</span>
+                                    <span className="px-2 py-0.5 bg-pink-50 text-pink-700 text-[10px] font-bold rounded-full">&lt;=60d: {stats.reservation_60_minus}</span>
+                                    <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 text-[10px] font-bold rounded-full">Disney: {stats.disney_reserved}</span>
+                                    <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded-full">Viajes: {stats.trip_completed}</span>
+                                </div>
+                            </div>
+
+                            {/* Section 3: Leads Perdidos */}
+                            <div
+                                onClick={() => setView('lost')}
+                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-4 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                                        <XCircle className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Leads Perdidos</h3>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed">Cotizaciones y oportunidades de venta que no se concretaron.</p>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex">
+                                    <span className="px-2.5 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full">Perdidos: {stats.lost}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stage-by-Stage Breakdown Interactive Cards */}
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase">Distribución por Etapa (Haz clic para abrir)</h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-4">
+                            {LEAD_STATUSES.map((status) => {
+                                const count = stats[status.value];
+                                // Determine destination board based on stage
+                                const getDestView = (st: LeadStatus) => {
+                                    if (['new', 'contacted', 'proposal'].includes(st)) return 'sales';
+                                    if (st === 'lost') return 'lost';
+                                    return 'post-sales';
+                                };
+                                return (
                                     <div
-                                        {...provided.droppableProps}
-                                        ref={provided.innerRef}
+                                        key={status.value}
+                                        onClick={() => {
+                                            const dest = getDestView(status.value);
+                                            setView(dest);
+                                            setActiveTab(status.value);
+                                        }}
+                                        className="bg-white p-4 rounded-2xl border border-gray-200 hover:border-primary/50 shadow-sm hover:shadow-md cursor-pointer transition-all text-center flex flex-col justify-between hover:scale-105 group"
+                                    >
+                                        <span className="text-xs font-bold text-gray-500 truncate block uppercase tracking-wider">{status.label}</span>
+                                        <div className="my-3">
+                                            <span className="text-3xl font-extrabold text-gray-900 group-hover:text-primary transition-colors">{count}</span>
+                                        </div>
+                                        <span className="text-[10px] text-gray-400 italic">Ir a sección →</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                /* Board Views (Sales, Post-Sales, Lost Leads) */
+                <>
+                    {/* Back navigation */}
+                    <button
+                        onClick={() => setView('portal')}
+                        className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors bg-white px-3 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Volver al Portal
+                    </button>
+
+                    {/* Top Bar */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                                {view === 'sales' && 'Manejo de Ventas'}
+                                {view === 'post-sales' && 'Manejo de Post Venta'}
+                                {view === 'lost' && 'Leads Perdidos'}
+                            </h1>
+                            <p className="text-gray-500">
+                                {view === 'sales' && 'Prospectos entrantes, contactos iniciales y cotizaciones.'}
+                                {view === 'post-sales' && 'Ventas ganadas, reservas y seguimiento.'}
+                                {view === 'lost' && 'Oportunidades de venta que no se concretaron.'}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center flex-wrap gap-3 w-full md:w-auto">
+                            <div className="relative w-full md:w-56">
+                                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar cliente..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm bg-white"
+                                />
+                            </div>
+
+                            {/* Sorting selector (only visible for Kanban boards) */}
+                            {view !== 'lost' && (
+                                <div className="flex items-center gap-1.5 border border-gray-300 rounded-full px-3 h-10 bg-white shadow-sm">
+                                    <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Ordenar:</span>
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                        className="text-xs font-semibold text-gray-700 outline-none cursor-pointer bg-transparent pr-1"
+                                    >
+                                        <option value="created_at">Fecha Registro</option>
+                                        <option value="check_in">Fecha Check-in</option>
+                                        <option value="probability">Probabilidad</option>
+                                    </select>
+                                    <button
+                                        onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                                        className="text-gray-500 hover:text-primary transition-colors text-xs font-bold pl-1.5 border-l border-gray-200"
+                                        title="Cambiar dirección de ordenamiento"
+                                    >
+                                        {sortOrder === 'asc' ? '▲' : '▼'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Excel download button */}
+                            <button
+                                onClick={handleExportCSV}
+                                className="h-10 px-4 border border-green-600 text-green-700 hover:bg-green-50 rounded-full font-medium text-xs sm:text-sm transition-colors flex items-center gap-2 shadow-sm"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                Descargar Excel
+                            </button>
+
+                            <button
+                                onClick={() => setIsCreating(true)}
+                                className="h-10 px-4 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
+                            >
+                                <span className="text-xl leading-none">+</span> Nuevo Lead
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Mobile Tabs */}
+                    {view !== 'lost' && (
+                        <div className="flex md:hidden overflow-x-auto gap-2 mb-6 pb-2 scrollbar-hide">
+                            {activeStatuses.map((status) => (
+                                <button
+                                    key={status.value}
+                                    onClick={() => setActiveTab(status.value)}
+                                    className={cn(
+                                        "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border",
+                                        activeTab === status.value
+                                            ? "text-white border-transparent shadow-md"
+                                            : "bg-white border-gray-200 text-gray-600"
+                                    )}
+                                    style={activeTab === status.value ? { 
+                                        backgroundColor: 
+                                            status.value === 'new' ? '#3b82f6' : 
+                                            status.value === 'contacted' ? '#eab308' : 
+                                            status.value === 'proposal' ? '#a855f7' : 
+                                            status.value === 'won' ? '#10b981' : 
+                                            status.value === 'reservation_60_plus' ? '#6366f1' : 
+                                            status.value === 'reservation_60_minus' ? '#ec4899' : 
+                                            status.value === 'disney_reserved' ? '#06b6d4' : 
+                                            status.value === 'trip_completed' ? '#14b8a6' : 
+                                            '#ef4444' 
+                                    } : {}}
+                                >
+                                    {status.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {view === 'lost' ? (
+                        /* Lost Leads List View */
+                        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse text-sm">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold">
+                                            <th className="p-4">Cliente</th>
+                                            <th className="p-4">Destino / Viajeros</th>
+                                            <th className="p-4">Registro</th>
+                                            <th className="p-4">Notas</th>
+                                            <th className="p-4 text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {filteredAndSortedLeads
+                                            .filter(l => l.status === 'lost')
+                                            .map((lead) => (
+                                                <tr key={lead.id} className="hover:bg-gray-50/50 transition-colors">
+                                                    <td className="p-4">
+                                                        <div className="font-bold text-gray-900 cursor-pointer hover:text-primary" onClick={() => setSelectedLead(lead)}>
+                                                            {lead.client_name}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">{lead.email}</div>
+                                                        <div className="text-xs text-gray-500">{lead.phone}</div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="font-medium text-gray-700">{lead.destination}</div>
+                                                        <div className="text-xs text-gray-500">{lead.travelers}</div>
+                                                    </td>
+                                                    <td className="p-4 text-xs text-gray-500">
+                                                        {new Date(lead.created_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="p-4 max-w-xs">
+                                                        {lead.notes && (
+                                                            <div className="text-xs text-gray-500 truncate" title={lead.notes}>
+                                                                Cliente: "{lead.notes}"
+                                                            </div>
+                                                        )}
+                                                        {lead.admin_notes && (
+                                                            <div className="text-xs text-purple-700 font-semibold truncate" title={lead.admin_notes}>
+                                                                Interno: "{lead.admin_notes}"
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 text-right space-x-2">
+                                                        <button
+                                                            onClick={() => setSelectedLead(lead)}
+                                                            className="px-3 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-full transition-colors"
+                                                        >
+                                                            Detalles
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleUpdateStatus(lead.id, 'new')}
+                                                            className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-bold rounded-full transition-colors"
+                                                        >
+                                                            Reabrir
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        {filteredAndSortedLeads.filter(l => l.status === 'lost').length === 0 && (
+                                            <tr>
+                                                <td colSpan={5} className="p-10 text-center text-gray-400">
+                                                    No hay leads perdidos en este momento.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        /* Kanban Board for Sales & Post-Sales */
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <div className="flex gap-4 overflow-hidden w-full h-[calc(100vh-220px)] min-h-[500px]">
+                                {leadsByStatus.map((column) => (
+                                    <div
+                                        key={column.value}
                                         className={cn(
-                                            "flex-1 space-y-3 p-2 overflow-y-auto custom-scrollbar",
-                                            snapshot.isDraggingOver ? "bg-blue-50/50 ring-2 ring-primary/10 transition-colors" : ""
+                                            "flex-1 min-w-0 flex-col bg-gray-50/50 rounded-xl border border-gray-100 transition-all",
+                                            activeTab === column.value ? "flex" : "hidden md:flex"
                                         )}
                                     >
-                                        {column.items.map((lead, index) => (
-                                            <Draggable key={lead.id} draggableId={lead.id} index={index}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        style={{
-                                                            ...provided.draggableProps.style,
-                                                        }}
-                                                    >
-                                                        <motion.div
-                                                            layoutId={lead.id}
-                                                            onClick={() => {
-                                                                setSelectedLead(lead);
-                                                                setIsEditing(false);
-                                                            }}
-                                                            className={cn(
-                                                                "bg-white p-3 rounded-xl border border-gray-200 shadow-sm hover:shadow-md cursor-pointer transition-all hover:border-primary/40 group relative overflow-hidden",
-                                                                snapshot.isDragging ? "shadow-2xl rotate-2 scale-105 z-50 ring-2 ring-primary" : ""
+                                        {/* Column Header */}
+                                        <div className={`p-3 rounded-t-xl border-b-2 ${column.color} bg-white flex justify-between items-center mb-2 shadow-sm shrink-0`}>
+                                            <h3 className="font-bold text-xs lg:text-sm uppercase tracking-wider truncate text-gray-700">{column.label}</h3>
+                                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
+                                                {column.items.length}
+                                            </span>
+                                        </div>
+
+                                        {/* Cards Container */}
+                                        <Droppable droppableId={column.value}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    {...provided.droppableProps}
+                                                    ref={provided.innerRef}
+                                                    className={cn(
+                                                        "flex-1 space-y-3 p-2 overflow-y-auto custom-scrollbar",
+                                                        snapshot.isDraggingOver ? "bg-blue-50/50 ring-2 ring-primary/10 transition-colors" : ""
+                                                    )}
+                                                >
+                                                    {column.items.map((lead, index) => (
+                                                        <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={{
+                                                                        ...provided.draggableProps.style,
+                                                                    }}
+                                                                >
+                                                                    <motion.div
+                                                                        layoutId={lead.id}
+                                                                        onClick={() => {
+                                                                            setSelectedLead(lead);
+                                                                            setIsEditing(false);
+                                                                        }}
+                                                                        className={cn(
+                                                                            "bg-white p-3 rounded-xl border border-gray-200 shadow-sm hover:shadow-md cursor-pointer transition-all hover:border-primary/40 group relative overflow-hidden",
+                                                                            snapshot.isDragging ? "shadow-2xl rotate-2 scale-105 z-50 ring-2 ring-primary" : ""
+                                                                        )}
+                                                                    >
+                                                                        {/* Status Stripe */}
+                                                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${column.color.replace('border-', 'bg-')}`} style={{ backgroundColor: column.value === 'won' ? '#10b981' : column.value === 'reservation_60_plus' ? '#6366f1' : column.value === 'reservation_60_minus' ? '#ec4899' : column.value === 'disney_reserved' ? '#06b6d4' : column.value === 'trip_completed' ? '#14b8a6' : undefined }} />
+
+                                                                        <div className="pl-2">
+                                                                            <div className="flex justify-between items-start mb-2">
+                                                                                <h4 className="font-bold text-gray-900 text-sm group-hover:text-primary transition-colors line-clamp-1">{lead.client_name}</h4>
+                                                                                <span className="text-[10px] text-gray-400 shrink-0 ml-1">{new Date(lead.created_at).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}</span>
+                                                                            </div>
+                                                                            <div className="space-y-1 mb-2">
+                                                                                <div className="flex items-center text-[10px] text-gray-500">
+                                                                                    <User className="h-3 w-3 mr-1.5 shrink-0" />
+                                                                                    <span className="truncate">{lead.travelers}</span>
+                                                                                </div>
+                                                                                <div className="flex items-center text-[10px] text-gray-500">
+                                                                                    <MapPinIcon className="h-3 w-3 mr-1.5 shrink-0" />
+                                                                                    <span className="truncate">{lead.destination}</span>
+                                                                                </div>
+                                                                                <div className="flex items-center text-[10px] text-gray-500">
+                                                                                    <Calendar className="h-3 w-3 mr-1.5 shrink-0" />
+                                                                                    <span className="truncate">
+                                                                                        {lead.check_in && lead.check_out 
+                                                                                            ? `${lead.check_in} al ${lead.check_out}` 
+                                                                                            : lead.dates || 'Sin fechas'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {lead.status === 'proposal' && lead.probability !== undefined && lead.probability !== null && (
+                                                                                <div className="mt-2 flex items-center">
+                                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                                                                        🎯 Probabilidad: {lead.probability}%
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+
+                                                                            {lead.admin_notes && (
+                                                                                <div className="mt-2 pt-2 border-t border-gray-50">
+                                                                                    <p className="text-[10px] text-gray-400 italic line-clamp-1">"{lead.admin_notes}"</p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </motion.div>
+                                                                </div>
                                                             )}
-                                                        >
-                                                            {/* Status Stripe */}
-                                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${column.color.replace('border-', 'bg-')}`} />
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
 
-                                                            <div className="pl-2">
-                                                                <div className="flex justify-between items-start mb-2">
-                                                                    <h4 className="font-bold text-gray-900 text-sm group-hover:text-primary transition-colors line-clamp-1">{lead.client_name}</h4>
-                                                                    <span className="text-[10px] text-gray-400 shrink-0 ml-1">{new Date(lead.created_at).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}</span>
-                                                                </div>
-                                                                <div className="space-y-1 mb-2">
-                                                                    <div className="flex items-center text-[10px] text-gray-500">
-                                                                        <User className="h-3 w-3 mr-1.5 shrink-0" />
-                                                                        <span className="truncate">{lead.travelers}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center text-[10px] text-gray-500">
-                                                                        <MapPinIcon className="h-3 w-3 mr-1.5 shrink-0" />
-                                                                        <span className="truncate">{lead.destination}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center text-[10px] text-gray-500">
-                                                                        <Calendar className="h-3 w-3 mr-1.5 shrink-0" />
-                                                                        <span className="truncate">
-                                                                            {lead.check_in && lead.check_out 
-                                                                                ? `${lead.check_in} al ${lead.check_out}` 
-                                                                                : lead.dates || 'Sin fechas'}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-
-                                                                {lead.status === 'proposal' && lead.probability !== undefined && lead.probability !== null && (
-                                                                    <div className="mt-2 flex items-center">
-                                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                                                            🎯 Probabilidad: {lead.probability}%
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                {lead.admin_notes && (
-                                                                    <div className="mt-2 pt-2 border-t border-gray-50">
-                                                                        <p className="text-[10px] text-gray-400 italic line-clamp-1">"{lead.admin_notes}"</p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </motion.div>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-
-                                        {column.items.length === 0 && !snapshot.isDraggingOver && (
-                                            <div className="h-24 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-xs text-center p-4">
-                                                Sin Leads en esta etapa
-                                            </div>
-                                        )}
+                                                    {column.items.length === 0 && !snapshot.isDraggingOver && (
+                                                        <div className="h-24 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-xs text-center p-4">
+                                                            Sin Leads en esta etapa
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Droppable>
                                     </div>
-                                )}
-                            </Droppable>
-                        </div>
-                    ))}
-                </div>
-            </DragDropContext>
+                                ))}
+                            </div>
+                        </DragDropContext>
+                    )}
+                </>
+            )}
 
             {/* Detail Modal */}
             <AnimatePresence>

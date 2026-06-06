@@ -1,4 +1,13 @@
-export type LeadStatus = 'new' | 'contacted' | 'proposal' | 'won' | 'lost';
+export type LeadStatus = 
+    | 'new' 
+    | 'contacted' 
+    | 'proposal' 
+    | 'won' 
+    | 'reservation_60_plus' 
+    | 'reservation_60_minus' 
+    | 'disney_reserved' 
+    | 'trip_completed' 
+    | 'lost';
 
 export interface Lead {
     id: string;
@@ -29,5 +38,9 @@ export const LEAD_STATUSES: { value: LeadStatus; label: string; color: string }[
     { value: 'contacted', label: 'Contactado', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'proposal', label: 'Cotización Enviada', color: 'bg-purple-100 text-purple-800' },
     { value: 'won', label: 'Ganada', color: 'bg-green-100 text-green-800' },
+    { value: 'reservation_60_plus', label: 'Reserva > 60 días', color: 'bg-indigo-100 text-indigo-800' },
+    { value: 'reservation_60_minus', label: 'Reserva <= 60 días', color: 'bg-pink-100 text-pink-800' },
+    { value: 'disney_reserved', label: 'Reserva Disney', color: 'bg-cyan-100 text-cyan-800' },
+    { value: 'trip_completed', label: 'Viaje Realizado', color: 'bg-teal-100 text-teal-800' },
     { value: 'lost', label: 'Perdida', color: 'bg-red-100 text-red-800' },
 ];

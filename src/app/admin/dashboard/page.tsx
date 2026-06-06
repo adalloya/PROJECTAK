@@ -450,7 +450,12 @@ export default function AdminDashboard() {
                                         <Clock className="h-6 w-6" />
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Manejo de Ventas</h3>
-                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed">Prospectos entrantes, contactos iniciales y cotizaciones activas de clientes.</p>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Prospectos entrantes, contactos iniciales y cotizaciones activas de clientes.</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">Nuevos: {stats.new}</span>
+                                        <span className="px-2.5 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full">Contactados: {stats.contacted}</span>
+                                        <span className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full">Cotizados: {stats.proposal}</span>
+                                    </div>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
                                     <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
@@ -470,7 +475,14 @@ export default function AdminDashboard() {
                                         <CheckCircle2 className="h-6 w-6" />
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Manejo de Post Venta</h3>
-                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed">Ventas ganadas, reservas de Disney, plazos de 60 días, pagos pendientes y viajes realizados.</p>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Ventas ganadas, reservas de Disney, plazos de 60 días, pagos pendientes y viajes realizados.</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">Ganadas: {stats.won}</span>
+                                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-full">&gt;60d: {stats.reservation_60_plus}</span>
+                                        <span className="px-2 py-0.5 bg-pink-50 text-pink-700 text-[10px] font-bold rounded-full">&lt;=60d: {stats.reservation_60_minus}</span>
+                                        <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 text-[10px] font-bold rounded-full">Disney: {stats.disney_reserved}</span>
+                                        <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded-full">Viajes: {stats.trip_completed}</span>
+                                    </div>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
                                     <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
@@ -490,7 +502,10 @@ export default function AdminDashboard() {
                                         <XCircle className="h-6 w-6" />
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Leads Perdidos</h3>
-                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed">Cotizaciones y oportunidades de venta que no se concretaron.</p>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Cotizaciones y oportunidades de venta que no se concretaron.</p>
+                                    <div className="flex">
+                                        <span className="px-2.5 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full">Perdidos: {stats.lost}</span>
+                                    </div>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
                                     <span className="text-gray-500 font-medium text-xs">Total de registros:</span>

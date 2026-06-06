@@ -11,7 +11,17 @@ export interface Lead {
     travelers: string;
     notes: string;
     status: LeadStatus;
-    admin_notes?: string;
+    admin_notes?: string | null;
+    probability?: number | null;
+    check_in?: string | null;
+    check_out?: string | null;
+    provider_classification?: string | null;
+    price?: number | null;
+    commission?: number | null;
+    payment_status?: string | null;
+    booking_reference?: string | null;
+    quote_sent_date?: string | null;
+    estimated_sale_amount?: number | null;
 }
 
 export const LEAD_STATUSES: { value: LeadStatus; label: string; color: string }[] = [

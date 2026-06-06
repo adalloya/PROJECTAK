@@ -72,3 +72,16 @@ using ( bucket_id = 'reviews' );
 create policy "Public Upload"
 on storage.objects for insert
 with check ( bucket_id = 'reviews' );
+
+-- Migration: Add new fields for advanced lead management
+ALTER TABLE leads
+ADD COLUMN IF NOT EXISTS probability integer,
+ADD COLUMN IF NOT EXISTS check_in date,
+ADD COLUMN IF NOT EXISTS check_out date,
+ADD COLUMN IF NOT EXISTS provider_classification text,
+ADD COLUMN IF NOT EXISTS price numeric,
+ADD COLUMN IF NOT EXISTS commission numeric,
+ADD COLUMN IF NOT EXISTS payment_status text,
+ADD COLUMN IF NOT EXISTS booking_reference text,
+ADD COLUMN IF NOT EXISTS quote_sent_date date,
+ADD COLUMN IF NOT EXISTS estimated_sale_amount numeric;

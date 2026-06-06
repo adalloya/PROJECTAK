@@ -27,6 +27,8 @@ export async function submitLead(formData: FormData) {
         phone: `${formData.get('country_code') || ''} ${formData.get('phone')}`.trim(),
         destination: formData.get('destination') as string,
         dates: `In: ${checkin} | Out: ${checkout}`,
+        check_in: checkin || null,
+        check_out: checkout || null,
         travelers: `${formData.get('adults')} Adultos, ${formData.get('children')} Niños${childrenAges ? ` (Edades: ${childrenAges})` : ''}`,
         notes: detailedNotes,
         status: 'new', // Default status

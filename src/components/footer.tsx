@@ -23,7 +23,7 @@ export function Footer() {
                     <div className="md:col-span-2">
                         <div className="flex items-center space-x-2 mb-4">
                             <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                                <Image src={logoSrc} alt="Here We Go Advisor Logo" fill className="object-cover" />
+                                <Image src={logoSrc} alt="Here We Go Advisor Logo" fill className="object-cover" sizes="48px" />
                             </div>
                             <h3 className="text-xl font-bold tracking-tight">Here We Go Advisor</h3>
                         </div>

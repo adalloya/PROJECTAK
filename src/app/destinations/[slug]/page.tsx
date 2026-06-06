@@ -50,6 +50,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
                     fill
                     className="object-cover"
                     priority
+                    sizes="100vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-black/50 to-transparent" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pt-20">

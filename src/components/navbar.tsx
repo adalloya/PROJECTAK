@@ -49,7 +49,7 @@ export function Navbar() {
                     <div className="flex items-center gap-6">
                         <Link href="/" className="flex items-center">
                             <div className="relative h-20 w-20 md:h-28 md:w-28 overflow-hidden transform hover:scale-105 transition-transform">
-                                <Image src={logoSrc} alt="Here We Go Advisor" fill className="object-contain" />
+                                <Image src={logoSrc} alt="Here We Go Advisor" fill className="object-contain" sizes="(max-width: 768px) 80px, 112px" priority />
                             </div>
                         </Link>
 

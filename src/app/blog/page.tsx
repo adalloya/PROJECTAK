@@ -55,6 +55,7 @@ export default function BlogPage() {
                                         alt={post.title}
                                         fill
                                         className="object-cover transition-transform duration-500 hover:scale-105"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                     <div className="absolute bottom-4 left-4">

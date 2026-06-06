@@ -111,6 +111,7 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                                     alt={dest.title}
                                     fill
                                     className="object-cover"
+                                    sizes="(max-width: 768px) 85vw, (max-width: 1024px) 40vw, 300px"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                 <div className="absolute bottom-6 left-6 right-6 text-white">

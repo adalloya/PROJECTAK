@@ -114,6 +114,7 @@ export function Gallery() {
                                         alt={img.alt}
                                         fill
                                         className="object-cover"
+                                        sizes="150px"
                                     />
                                 </button>
                             ))}
@@ -147,6 +148,7 @@ export function Gallery() {
                                         fill
                                         className="object-cover"
                                         priority
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 700px"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6 md:p-8">
                                         <p className="text-white text-lg md:text-xl font-medium drop-shadow-md">
@@ -251,6 +253,7 @@ export function Gallery() {
                                     className="object-contain"
                                     priority
                                     draggable={false}
+                                    sizes="(max-width: 1200px) 100vw, 1152px"
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-center pb-12">
                                     <p className="text-xl md:text-2xl font-bold tracking-tight">{images[current].alt}</p>
@@ -281,6 +284,7 @@ export function Gallery() {
                                             alt={img.alt}
                                             fill
                                             className="object-cover"
+                                            sizes="(max-width: 768px) 48px, 64px"
                                         />
                                     </button>
                                 ))}

@@ -90,6 +90,7 @@ export function LatestBlogPosts() {
                                         fill
                                         className="object-cover"
                                         priority
+                                        sizes="(max-width: 1024px) 100vw, 900px"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
                                 </div>
@@ -122,6 +123,7 @@ export function LatestBlogPosts() {
                                         alt={post.title}
                                         fill
                                         className="object-cover"
+                                        sizes="(max-width: 768px) 80vw, 350px"
                                     />
                                     <span className="absolute top-4 left-4 bg-background/90 backdrop-blur text-foreground text-xs px-2 py-1 rounded-full font-bold shadow-sm">
                                         {post.category}

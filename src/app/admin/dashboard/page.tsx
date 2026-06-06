@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check } from "lucide-react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
 import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
@@ -46,6 +46,8 @@ export default function AdminDashboard() {
 
     const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
     const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+    const [statsYear, setStatsYear] = useState<string>('all');
+    const [statsMonth, setStatsMonth] = useState<string>('all');
 
     const handlePrevMonth = () => {
         setCalendarMonth(prev => {
@@ -640,13 +642,53 @@ export default function AdminDashboard() {
         lost: leads.filter(l => l.status === 'lost').length,
     };
 
-    const totalCotizado = leads
+    // Filter leads for statistical calculations based on statsYear and statsMonth
+    const statsFilteredLeads = leads.filter(l => {
+        if (!l.created_at) return false;
+        const leadDate = new Date(l.created_at);
+        const leadYear = leadDate.getFullYear().toString();
+        const leadMonth = leadDate.getMonth().toString(); // 0-indexed
+
+        if (statsYear !== 'all' && leadYear !== statsYear) return false;
+        if (statsMonth !== 'all' && leadMonth !== statsMonth) return false;
+
+        return true;
+    });
+
+    const totalCotizado = statsFilteredLeads
         .filter(l => l.status === 'proposal')
         .reduce((sum, l) => sum + (l.estimated_sale_amount || l.price || 0), 0);
 
-    const totalGanado = leads
+    const totalGanado = statsFilteredLeads
         .filter(l => ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(l.status))
         .reduce((sum, l) => sum + (l.price || l.estimated_sale_amount || 0), 0);
+
+    const totalComision = statsFilteredLeads
+        .filter(l => ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(l.status))
+        .reduce((sum, l) => sum + (l.commission || 0), 0);
+
+    // Extract unique years from all leads for dropdown options
+    const availableYears = Array.from(new Set(leads.map(l => {
+        if (!l.created_at) return null;
+        return new Date(l.created_at).getFullYear().toString();
+    }).filter(Boolean) as string[])).sort((a, b) => b.localeCompare(a));
+
+    const yearsToDisplay = availableYears.length > 0 ? availableYears : [new Date().getFullYear().toString()];
+
+    const MONTHS = [
+        { value: '0', label: 'Enero' },
+        { value: '1', label: 'Febrero' },
+        { value: '2', label: 'Marzo' },
+        { value: '3', label: 'Abril' },
+        { value: '4', label: 'Mayo' },
+        { value: '5', label: 'Junio' },
+        { value: '6', label: 'Julio' },
+        { value: '7', label: 'Agosto' },
+        { value: '8', label: 'Septiembre' },
+        { value: '9', label: 'Octubre' },
+        { value: '10', label: 'Noviembre' },
+        { value: '11', label: 'Diciembre' },
+    ];
 
     const urgentLeads = leads.filter(l => {
         if (!l.check_in || l.status === 'lost') return false;
@@ -694,8 +736,38 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
+                    {/* Period filter for statistics */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base font-bold text-gray-900">📊 Rendimiento y Ventas</span>
+                            <span className="text-xs text-gray-400 font-medium">Filtrado por fecha de creación del lead</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <select
+                                value={statsYear}
+                                onChange={(e) => setStatsYear(e.target.value)}
+                                className="text-xs font-semibold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none cursor-pointer"
+                            >
+                                <option value="all">Todos los años</option>
+                                {yearsToDisplay.map(y => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={statsMonth}
+                                onChange={(e) => setStatsMonth(e.target.value)}
+                                className="text-xs font-semibold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none cursor-pointer"
+                            >
+                                <option value="all">Todos los meses</option>
+                                {MONTHS.map(m => (
+                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
                     {/* Top Statistics Cards */}
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-3 gap-6">
                         {/* Quoted Cards */}
                         <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-700 p-6 rounded-3xl text-white shadow-lg border border-purple-500/20 group hover:shadow-xl transition-all">
                             <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
@@ -726,6 +798,23 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
                                     <CheckCircle2 className="h-6 w-6 text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Commission Cards */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-rose-600 p-6 rounded-3xl text-white shadow-lg border border-amber-500/20 group hover:shadow-xl transition-all">
+                            <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-sm font-semibold tracking-wide text-amber-100 uppercase">Comisiones Generadas</p>
+                                    <h2 className="text-3xl lg:text-4xl font-black mt-2 tracking-tight">
+                                        ${totalComision.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg font-bold text-amber-200">USD</span>
+                                    </h2>
+                                    <p className="text-xs text-amber-200 mt-2">Suma de comisiones logradas en etapas de post-venta</p>
+                                </div>
+                                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
+                                    <DollarSign className="h-6 w-6 text-white" />
                                 </div>
                             </div>
                         </div>

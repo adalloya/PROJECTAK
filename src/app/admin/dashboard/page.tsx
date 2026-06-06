@@ -452,10 +452,11 @@ export default function AdminDashboard() {
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Manejo de Ventas</h3>
                                     <p className="text-gray-500 text-sm mt-2 leading-relaxed">Prospectos entrantes, contactos iniciales y cotizaciones activas de clientes.</p>
                                 </div>
-                                <div className="mt-6 pt-4 border-t border-gray-50 flex flex-wrap gap-2">
-                                    <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">Nuevos: {stats.new}</span>
-                                    <span className="px-2.5 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full">Contactados: {stats.contacted}</span>
-                                    <span className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full">Cotizados: {stats.proposal}</span>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
+                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-extrabold rounded-full group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        {stats.new + stats.contacted + stats.proposal}
+                                    </span>
                                 </div>
                             </div>
 
@@ -471,12 +472,11 @@ export default function AdminDashboard() {
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Manejo de Post Venta</h3>
                                     <p className="text-gray-500 text-sm mt-2 leading-relaxed">Ventas ganadas, reservas de Disney, plazos de 60 días, pagos pendientes y viajes realizados.</p>
                                 </div>
-                                <div className="mt-6 pt-4 border-t border-gray-50 flex flex-wrap gap-1.5">
-                                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">Ganadas: {stats.won}</span>
-                                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-full">&gt;60d: {stats.reservation_60_plus}</span>
-                                    <span className="px-2 py-0.5 bg-pink-50 text-pink-700 text-[10px] font-bold rounded-full">&lt;=60d: {stats.reservation_60_minus}</span>
-                                    <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 text-[10px] font-bold rounded-full">Disney: {stats.disney_reserved}</span>
-                                    <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded-full">Viajes: {stats.trip_completed}</span>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
+                                    <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-extrabold rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                        {stats.won + stats.reservation_60_plus + stats.reservation_60_minus + stats.disney_reserved + stats.trip_completed}
+                                    </span>
                                 </div>
                             </div>
 
@@ -492,43 +492,13 @@ export default function AdminDashboard() {
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Leads Perdidos</h3>
                                     <p className="text-gray-500 text-sm mt-2 leading-relaxed">Cotizaciones y oportunidades de venta que no se concretaron.</p>
                                 </div>
-                                <div className="mt-6 pt-4 border-t border-gray-50 flex">
-                                    <span className="px-2.5 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full">Perdidos: {stats.lost}</span>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
+                                    <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-extrabold rounded-full group-hover:bg-red-600 group-hover:text-white transition-colors">
+                                        {stats.lost}
+                                    </span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Stage-by-Stage Breakdown Interactive Cards */}
-                    <div>
-                        <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase">Distribución por Etapa (Haz clic para abrir)</h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-4">
-                            {LEAD_STATUSES.map((status) => {
-                                const count = stats[status.value];
-                                // Determine destination board based on stage
-                                const getDestView = (st: LeadStatus) => {
-                                    if (['new', 'contacted', 'proposal'].includes(st)) return 'sales';
-                                    if (st === 'lost') return 'lost';
-                                    return 'post-sales';
-                                };
-                                return (
-                                    <div
-                                        key={status.value}
-                                        onClick={() => {
-                                            const dest = getDestView(status.value);
-                                            setView(dest);
-                                            setActiveTab(status.value);
-                                        }}
-                                        className="bg-white p-4 rounded-2xl border border-gray-200 hover:border-primary/50 shadow-sm hover:shadow-md cursor-pointer transition-all text-center flex flex-col justify-between hover:scale-105 group"
-                                    >
-                                        <span className="text-xs font-bold text-gray-500 truncate block uppercase tracking-wider">{status.label}</span>
-                                        <div className="my-3">
-                                            <span className="text-3xl font-extrabold text-gray-900 group-hover:text-primary transition-colors">{count}</span>
-                                        </div>
-                                        <span className="text-[10px] text-gray-400 italic">Ir a sección →</span>
-                                    </div>
-                                );
-                            })}
                         </div>
                     </div>
                 </div>

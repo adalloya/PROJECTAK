@@ -451,6 +451,25 @@ export default function AdminDashboard() {
         .filter(l => ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'].includes(l.status))
         .reduce((sum, l) => sum + (l.price || l.estimated_sale_amount || 0), 0);
 
+    const urgentLeads = leads.filter(l => {
+        if (!l.check_in || l.status === 'lost') return false;
+        
+        const todayStr = getLocalYYYYMMDD();
+        if (l.check_in < todayStr) return false;
+        
+        const todayTime = new Date(todayStr + 'T00:00:00').getTime();
+        const checkInTime = new Date(l.check_in + 'T00:00:00').getTime();
+        const diffTime = checkInTime - todayTime;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        
+        const hasBookingRef = l.booking_reference && l.booking_reference.trim() !== '';
+        
+        return diffDays <= 60 && !hasBookingRef;
+    }).sort((a, b) => {
+        if (!a.check_in || !b.check_in) return 0;
+        return a.check_in.localeCompare(b.check_in);
+    });
+
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center">Cargando CRM...</div>
     }
@@ -594,6 +613,107 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Urgent Action Section: Upcoming trips without reservation */}
+                    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                                    Atención Requerida: Próximos Viajes sin Confirmar
+                                </h2>
+                                <p className="text-gray-500 text-sm mt-1">Clientes con viaje a menos de 60 días que aún no tienen registrado un número de reserva/booking.</p>
+                            </div>
+                            <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-extrabold rounded-full border border-amber-200/50 self-start sm:self-auto">
+                                {urgentLeads.length} {urgentLeads.length === 1 ? 'cliente' : 'clientes'}
+                            </span>
+                        </div>
+
+                        {urgentLeads.length > 0 ? (
+                            <div className="overflow-x-auto -mx-6 md:mx-0">
+                                <table className="w-full text-left border-collapse text-sm min-w-[600px]">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold">
+                                            <th className="p-4 pl-6 md:pl-4">Cliente</th>
+                                            <th className="p-4">Destino</th>
+                                            <th className="p-4">Fecha Check-in</th>
+                                            <th className="p-4">Días Restantes</th>
+                                            <th className="p-4">Etapa Actual</th>
+                                            <th className="p-4 text-right pr-6 md:pr-4">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {urgentLeads.map((lead) => {
+                                            const todayStr = getLocalYYYYMMDD();
+                                            const todayTime = new Date(todayStr + 'T00:00:00').getTime();
+                                            const checkInTime = new Date(lead.check_in! + 'T00:00:00').getTime();
+                                            const diffTime = checkInTime - todayTime;
+                                            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                                            
+                                            const stageObj = LEAD_STATUSES.find(s => s.value === lead.status);
+
+                                            return (
+                                                <tr key={lead.id} className="hover:bg-gray-50/50 transition-colors">
+                                                    <td className="p-4 pl-6 md:pl-4">
+                                                        <div className="font-bold text-gray-900 cursor-pointer hover:text-primary" onClick={() => setSelectedLead(lead)}>
+                                                            {lead.client_name}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">{lead.email}</div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="font-medium text-gray-700">{lead.destination}</div>
+                                                        <div className="text-xs text-gray-500">{lead.travelers}</div>
+                                                    </td>
+                                                    <td className="p-4 font-semibold text-gray-700">
+                                                        {new Date(lead.check_in! + 'T00:00:00').toLocaleDateString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className={cn(
+                                                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                                                            diffDays <= 30 
+                                                                ? "bg-red-50 text-red-700 border-red-100" 
+                                                                : "bg-amber-50 text-amber-700 border-amber-100"
+                                                        )}>
+                                                            ⏰ {diffDays} {diffDays === 1 ? 'día' : 'días'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className={cn(
+                                                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                                                            stageObj ? `${stageObj.color} border-current/10` : "bg-gray-50 text-gray-600"
+                                                        )}>
+                                                            {stageObj?.label || lead.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-right pr-6 md:pr-4">
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedLead(lead);
+                                                                setIsEditing(true);
+                                                            }}
+                                                            className="px-3 py-1.5 bg-primary text-white hover:bg-primary/90 text-xs font-bold rounded-full transition-colors shadow-sm"
+                                                        >
+                                                            Agregar Reserva
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                                <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-2" />
+                                <h3 className="font-bold text-gray-800 text-sm">¡Al día!</h3>
+                                <p className="text-gray-400 text-xs mt-1">Todos los clientes próximos a viajar tienen su número de reserva asignado.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (

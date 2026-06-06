@@ -130,28 +130,42 @@ export default function AdminDashboard() {
         return `${year}-${month}-${day}`;
     };
 
-    const autoClassifyStatus = (currentStatus: LeadStatus, checkInDate: string | null | undefined): LeadStatus => {
-        if (!checkInDate) return currentStatus;
-
+    const autoClassifyStatus = (
+        currentStatus: LeadStatus, 
+        checkInDate: string | null | undefined,
+        bookingRef: string | null | undefined
+    ): LeadStatus => {
         const postSalesStatuses: LeadStatus[] = ['won', 'reservation_60_plus', 'reservation_60_minus', 'disney_reserved', 'trip_completed'];
         if (!postSalesStatuses.includes(currentStatus)) return currentStatus;
 
         const todayStr = getLocalYYYYMMDD();
 
-        if (checkInDate < todayStr) {
+        // Rule 1: If check-in date is in the past, it always goes to trip_completed
+        if (checkInDate && checkInDate < todayStr) {
             return 'trip_completed';
         }
 
-        const todayTime = new Date(todayStr + 'T00:00:00').getTime();
-        const checkInTime = new Date(checkInDate + 'T00:00:00').getTime();
-        const diffTime = checkInTime - todayTime;
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays <= 60) {
-            return 'reservation_60_minus';
-        } else {
-            return 'reservation_60_plus';
+        // Rule 2: If there is a booking reference, it goes to disney_reserved
+        const hasBookingRef = bookingRef && bookingRef.trim() !== '';
+        if (hasBookingRef) {
+            return 'disney_reserved';
         }
+
+        // Rule 3: Otherwise, base it on the check-in date difference
+        if (checkInDate) {
+            const todayTime = new Date(todayStr + 'T00:00:00').getTime();
+            const checkInTime = new Date(checkInDate + 'T00:00:00').getTime();
+            const diffTime = checkInTime - todayTime;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays <= 60) {
+                return 'reservation_60_minus';
+            } else {
+                return 'reservation_60_plus';
+            }
+        }
+
+        return currentStatus;
     };
 
     useEffect(() => {
@@ -167,7 +181,7 @@ export default function AdminDashboard() {
         if (data) {
             const typedData = data.map(d => {
                 const lead = { ...d, status: d.status as LeadStatus };
-                const targetStatus = autoClassifyStatus(lead.status, lead.check_in);
+                const targetStatus = autoClassifyStatus(lead.status, lead.check_in, lead.booking_reference);
 
                 if (targetStatus !== lead.status) {
                     supabase.from('leads').update({ status: targetStatus }).eq('id', lead.id)
@@ -247,7 +261,7 @@ export default function AdminDashboard() {
 
     const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
         const lead = leads.find(l => l.id === leadId);
-        const statusToApply = autoClassifyStatus(newStatus, lead?.check_in);
+        const statusToApply = autoClassifyStatus(newStatus, lead?.check_in, lead?.booking_reference);
 
         // Optimistic update
         setLeads(leads.map(lead =>
@@ -292,9 +306,10 @@ export default function AdminDashboard() {
         const formData = new FormData(e.currentTarget);
         const check_in = formData.get('check_in') as string;
         const check_out = formData.get('check_out') as string;
+        const booking_reference = formData.get('booking_reference') as string;
 
         let statusInput = formData.get('status') as LeadStatus;
-        const statusToApply = autoClassifyStatus(statusInput, check_in);
+        const statusToApply = autoClassifyStatus(statusInput, check_in, booking_reference);
 
         const updatedFields = {
             client_name: formData.get('client_name') as string,
@@ -312,7 +327,7 @@ export default function AdminDashboard() {
             price: formData.get('price') ? parseFloat(formData.get('price') as string) : null,
             commission: formData.get('commission') ? parseFloat(formData.get('commission') as string) : null,
             payment_status: formData.get('payment_status') as string || null,
-            booking_reference: formData.get('booking_reference') as string || null,
+            booking_reference: booking_reference || null,
             quote_sent_date: formData.get('quote_sent_date') ? formData.get('quote_sent_date') as string : null,
             estimated_sale_amount: formData.get('estimated_sale_amount') ? parseFloat(formData.get('estimated_sale_amount') as string) : null,
             status: statusToApply,

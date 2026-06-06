@@ -1,21 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
-import { LEAD_STATUSES, Lead, LeadStatus } from "@/lib/crm/types";
+import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { supabase } from "@/lib/supabase";
 import { submitLead, deleteLead } from "@/app/actions";
-import { useEffect } from "react";
+const getLocalYYYYMMDD = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 export default function AdminDashboard() {
     const [leads, setLeads] = useState<Lead[]>([]); // Start empty
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [detailModalTab, setDetailModalTab] = useState<'info' | 'tasks'>('info');
     const [isEditing, setIsEditing] = useState(false);
     const [isCreating, setIsCreating] = useState(false); // New state for create modal
     const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +34,185 @@ export default function AdminDashboard() {
 
     type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost';
     const [view, setView] = useState<AdminView>('portal');
+
+    // Tareas (Follow-up Tasks) states
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [isLocalTasksFallback, setIsLocalTasksFallback] = useState(false);
+    const [tasksLoading, setTasksLoading] = useState(true);
+    const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
+    const [taskActiveTab, setTaskActiveTab] = useState<'overdue' | 'today' | 'upcoming' | 'selected'>('today');
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+    const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+    const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+
+    const handlePrevMonth = () => {
+        setCalendarMonth(prev => {
+            if (prev === 0) {
+                setCalendarYear(y => y - 1);
+                return 11;
+            }
+            return prev - 1;
+        });
+    };
+
+    const handleNextMonth = () => {
+        setCalendarMonth(prev => {
+            if (prev === 11) {
+                setCalendarYear(y => y + 1);
+                return 0;
+            }
+            return prev + 1;
+        });
+    };
+
+    const fetchTasks = async () => {
+        try {
+            setTasksLoading(true);
+            const { data, error } = await supabase
+                .from('tasks')
+                .select('*')
+                .order('due_date', { ascending: true });
+
+            if (error) {
+                if (error.code === 'PGRST205' || error.message?.includes('relation "public.tasks" does not exist') || error.message?.includes('does not exist')) {
+                    console.warn("Supabase tasks table not found, falling back to localStorage.");
+                    setIsLocalTasksFallback(true);
+                    const stored = localStorage.getItem('crm_tasks_fallback');
+                    if (stored) {
+                        setTasks(JSON.parse(stored));
+                    }
+                } else {
+                    console.error("Error fetching tasks:", error);
+                }
+            } else if (data) {
+                setTasks(data as Task[]);
+            }
+        } catch (e) {
+            console.error("Failed to fetch tasks from Supabase:", e);
+            setIsLocalTasksFallback(true);
+            const stored = localStorage.getItem('crm_tasks_fallback');
+            if (stored) {
+                setTasks(JSON.parse(stored));
+            }
+        } finally {
+            setTasksLoading(false);
+        }
+    };
+
+    const handleCreateTask = async (taskData: Omit<Task, 'id' | 'created_at'>) => {
+        const tempId = Math.random().toString(36).substring(2, 9);
+        const newTask: Task = {
+            id: tempId,
+            created_at: new Date().toISOString(),
+            ...taskData
+        };
+
+        // Optimistic update
+        setTasks(prev => {
+            const updated = [...prev, newTask];
+            if (isLocalTasksFallback) {
+                localStorage.setItem('crm_tasks_fallback', JSON.stringify(updated));
+            }
+            return updated;
+        });
+
+        if (!isLocalTasksFallback) {
+            const { data, error } = await supabase
+                .from('tasks')
+                .insert([taskData])
+                .select()
+                .single();
+
+            if (error) {
+                console.error("Error creating task in DB:", error);
+                if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+                    setIsLocalTasksFallback(true);
+                    setTasks(prev => {
+                        const updated = prev.map(t => t.id === tempId ? newTask : t);
+                        localStorage.setItem('crm_tasks_fallback', JSON.stringify(updated));
+                        return updated;
+                    });
+                } else {
+                    alert(`Error al crear la tarea: ${error.message}`);
+                    fetchTasks();
+                }
+            } else if (data) {
+                setTasks(prev => prev.map(t => t.id === tempId ? (data as Task) : t));
+            }
+        }
+    };
+
+    const handleUpdateTask = async (taskId: string, updatedFields: Partial<Omit<Task, 'id' | 'created_at'>>) => {
+        // Optimistic update
+        setTasks(prev => {
+            const updated = prev.map(t => t.id === taskId ? { ...t, ...updatedFields } : t);
+            if (isLocalTasksFallback) {
+                localStorage.setItem('crm_tasks_fallback', JSON.stringify(updated));
+            }
+            return updated;
+        });
+
+        if (!isLocalTasksFallback) {
+            const { error } = await supabase
+                .from('tasks')
+                .update(updatedFields)
+                .eq('id', taskId);
+
+            if (error) {
+                console.error("Error updating task in DB:", error);
+                if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+                    setIsLocalTasksFallback(true);
+                    setTasks(prev => {
+                        const updated = prev.map(t => t.id === taskId ? { ...t, ...updatedFields } : t);
+                        localStorage.setItem('crm_tasks_fallback', JSON.stringify(updated));
+                        return updated;
+                    });
+                } else {
+                    alert(`Error al actualizar la tarea: ${error.message}`);
+                    fetchTasks();
+                }
+            }
+        }
+    };
+
+    const handleDeleteTask = async (taskId: string) => {
+        if (!confirm("¿Estás seguro de que quieres eliminar esta tarea?")) {
+            return;
+        }
+
+        // Optimistic update
+        setTasks(prev => {
+            const updated = prev.filter(t => t.id !== taskId);
+            if (isLocalTasksFallback) {
+                localStorage.setItem('crm_tasks_fallback', JSON.stringify(updated));
+            }
+            return updated;
+        });
+
+        if (!isLocalTasksFallback) {
+            const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('id', taskId);
+
+            if (error) {
+                console.error("Error deleting task in DB:", error);
+                if (error.code === 'PGRST205' || error.message?.includes('does not exist')) {
+                    setIsLocalTasksFallback(true);
+                    setTasks(prev => {
+                        const updated = prev.filter(t => t.id !== taskId);
+                        localStorage.setItem('crm_tasks_fallback', JSON.stringify(updated));
+                        return updated;
+                    });
+                } else {
+                    alert(`Error al eliminar la tarea: ${error.message}`);
+                    fetchTasks();
+                }
+            }
+        }
+    };
 
     const handleExportCSV = () => {
         let headers: string[] = [];
@@ -122,13 +308,6 @@ export default function AdminDashboard() {
     };
 
     // Fetch real data on mount
-    const getLocalYYYYMMDD = () => {
-        const d = new Date();
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
 
     const autoClassifyStatus = (
         currentStatus: LeadStatus, 
@@ -170,7 +349,25 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchLeads();
+        fetchTasks();
     }, []);
+
+    useEffect(() => {
+        const todayStr = getLocalYYYYMMDD();
+        const overdueCount = tasks.filter(t => t.due_date < todayStr && t.status !== 'completed').length;
+        if (overdueCount > 0) {
+            setTaskActiveTab('overdue');
+        } else {
+            setTaskActiveTab('today');
+        }
+    }, [tasks]);
+
+    useEffect(() => {
+        if (!selectedLead) {
+            setDetailModalTab('info');
+            setIsEditing(false);
+        }
+    }, [selectedLead]);
 
     const fetchLeads = async () => {
         const { data, error } = await supabase
@@ -529,6 +726,364 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
                                     <CheckCircle2 className="h-6 w-6 text-white" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tareas y Agenda de Seguimiento */}
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase flex items-center gap-2">
+                            <span>📅</span> Agenda de Seguimiento y Tareas
+                            {isLocalTasksFallback && (
+                                <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full lowercase normal-case font-medium">
+                                    modo local (sin persistencia en bd)
+                                </span>
+                            )}
+                        </h2>
+                        
+                        <div className="grid lg:grid-cols-5 gap-6">
+                            {/* Calendario (col-span-2) */}
+                            <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-bold text-gray-905 text-sm tracking-tight capitalize">
+                                            {new Date(calendarYear, calendarMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                                        </h3>
+                                        <div className="flex gap-1">
+                                            <button 
+                                                onClick={handlePrevMonth} 
+                                                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                                                type="button"
+                                            >
+                                                <ChevronLeft className="h-4 w-4 text-gray-600" />
+                                            </button>
+                                            <button 
+                                                onClick={handleNextMonth} 
+                                                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                                                type="button"
+                                            >
+                                                <ChevronRight className="h-4 w-4 text-gray-600" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-gray-400 uppercase tracking-wider mb-2">
+                                        <div>Dom</div>
+                                        <div>Lun</div>
+                                        <div>Mar</div>
+                                        <div>Mié</div>
+                                        <div>Jue</div>
+                                        <div>Vie</div>
+                                        <div>Sáb</div>
+                                    </div>
+
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {(() => {
+                                            const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate();
+                                            const getFirstDayOfMonth = (month: number, year: number) => new Date(year, month, 1).getDay();
+                                            
+                                            const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
+                                            const firstDayIndex = getFirstDayOfMonth(calendarMonth, calendarYear);
+                                            const cells: { dateStr: string | null; dayNum: number | null }[] = [];
+                                            
+                                            for (let i = 0; i < firstDayIndex; i++) {
+                                                cells.push({ dateStr: null, dayNum: null });
+                                            }
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                                cells.push({ dateStr, dayNum: day });
+                                            }
+                                            const totalCells = Math.ceil(cells.length / 7) * 7;
+                                            const remaining = totalCells - cells.length;
+                                            for (let i = 0; i < remaining; i++) {
+                                                cells.push({ dateStr: null, dayNum: null });
+                                            }
+
+                                            return cells.map((cell, index) => {
+                                                if (!cell.dayNum) {
+                                                    return <div key={`empty-${index}`} className="aspect-square bg-gray-50/20 rounded-xl" />;
+                                                }
+
+                                                const dateStr = cell.dateStr!;
+                                                const isSelected = selectedCalendarDate === dateStr;
+                                                const isToday = dateStr === getLocalYYYYMMDD();
+                                                const dayTasks = tasks.filter(t => t.due_date === dateStr);
+                                                
+                                                let dayStatus = null;
+                                                if (dayTasks.length > 0) {
+                                                    const todayStr = getLocalYYYYMMDD();
+                                                    const hasOverdue = dayTasks.some(t => t.due_date < todayStr && t.status !== 'completed');
+                                                    const hasPending = dayTasks.some(t => t.status !== 'completed');
+                                                    dayStatus = hasOverdue ? 'overdue' : hasPending ? 'pending' : 'completed';
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={dateStr}
+                                                        onClick={() => {
+                                                            setSelectedCalendarDate(dateStr);
+                                                            setTaskActiveTab('selected');
+                                                        }}
+                                                        type="button"
+                                                        className={cn(
+                                                            "aspect-square rounded-xl flex flex-col items-center justify-between p-1 transition-all relative border",
+                                                            isSelected 
+                                                                ? "bg-primary text-white border-primary shadow-sm" 
+                                                                : isToday
+                                                                    ? "bg-primary/5 text-primary border-primary/20 font-bold"
+                                                                    : "bg-white text-gray-700 border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+                                                        )}
+                                                    >
+                                                        <span className="text-[10px] font-semibold">{cell.dayNum}</span>
+                                                        {dayTasks.length > 0 && (
+                                                            <span className={cn(
+                                                                "text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 min-w-[15px] text-center mt-1 scale-90",
+                                                                isSelected
+                                                                    ? "bg-white text-primary"
+                                                                    : dayStatus === 'overdue'
+                                                                        ? "bg-red-100 text-red-700"
+                                                                        : dayStatus === 'pending'
+                                                                            ? "bg-amber-100 text-amber-700"
+                                                                            : "bg-green-100 text-green-700"
+                                                            )}>
+                                                                {dayTasks.length}
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Panel de Tareas (col-span-3) */}
+                            <div className="lg:col-span-3 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                    <div>
+                                        <h3 className="text-base font-bold text-gray-900">Tareas Pendientes</h3>
+                                        <p className="text-gray-500 text-xs mt-0.5">Seguimiento de prospectos agrupado por prioridad.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setEditingTask(null);
+                                            setIsCreatingTask(true);
+                                        }}
+                                        type="button"
+                                        className="px-4 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-full transition-colors flex items-center gap-1 shadow-sm self-start sm:self-auto"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Nueva Tarea
+                                    </button>
+                                </div>
+
+                                {/* Tabs */}
+                                <div className="flex border-b border-gray-100 gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
+                                    {(() => {
+                                        const todayStr = getLocalYYYYMMDD();
+                                        const overdueTasks = tasks.filter(t => t.due_date < todayStr && t.status !== 'completed');
+                                        const todayTasks = tasks.filter(t => t.due_date === todayStr);
+                                        const upcomingTasks = tasks.filter(t => t.due_date > todayStr);
+                                        const selectedTasks = selectedCalendarDate ? tasks.filter(t => t.due_date === selectedCalendarDate) : [];
+
+                                        return (
+                                            <>
+                                                <button
+                                                    onClick={() => setTaskActiveTab('overdue')}
+                                                    type="button"
+                                                    className={cn(
+                                                        "pb-2 text-xs font-bold border-b-2 px-2 transition-all whitespace-nowrap",
+                                                        taskActiveTab === 'overdue'
+                                                            ? "border-red-500 text-red-600"
+                                                            : "border-transparent text-gray-455 hover:text-gray-600"
+                                                    )}
+                                                >
+                                                    Vencidas ({overdueTasks.length})
+                                                </button>
+                                                <button
+                                                    onClick={() => setTaskActiveTab('today')}
+                                                    type="button"
+                                                    className={cn(
+                                                        "pb-2 text-xs font-bold border-b-2 px-2 transition-all whitespace-nowrap",
+                                                        taskActiveTab === 'today'
+                                                            ? "border-primary text-primary"
+                                                            : "border-transparent text-gray-455 hover:text-gray-600"
+                                                    )}
+                                                >
+                                                    De Hoy ({todayTasks.length})
+                                                </button>
+                                                <button
+                                                    onClick={() => setTaskActiveTab('upcoming')}
+                                                    type="button"
+                                                    className={cn(
+                                                        "pb-2 text-xs font-bold border-b-2 px-2 transition-all whitespace-nowrap",
+                                                        taskActiveTab === 'upcoming'
+                                                            ? "border-purple-500 text-purple-600"
+                                                            : "border-transparent text-gray-455 hover:text-gray-600"
+                                                    )}
+                                                >
+                                                    Siguientes ({upcomingTasks.length})
+                                                </button>
+                                                {selectedCalendarDate && (
+                                                    <button
+                                                        onClick={() => setTaskActiveTab('selected')}
+                                                        type="button"
+                                                        className={cn(
+                                                            "pb-2 text-xs font-bold border-b-2 px-2 transition-all whitespace-nowrap flex items-center gap-1",
+                                                            taskActiveTab === 'selected'
+                                                                ? "border-teal-500 text-teal-600"
+                                                                : "border-transparent text-gray-455 hover:text-gray-600"
+                                                        )}
+                                                    >
+                                                        Día {new Date(selectedCalendarDate + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} ({selectedTasks.length})
+                                                        <span
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedCalendarDate(null);
+                                                                setTaskActiveTab('today');
+                                                            }}
+                                                            className="p-0.5 hover:bg-gray-100 rounded-full ml-1 cursor-pointer"
+                                                        >
+                                                            <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                                                        </span>
+                                                    </button>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* Task list content */}
+                                <div className="flex-1 overflow-y-auto space-y-3 max-h-[350px] custom-scrollbar pr-1">
+                                    {(() => {
+                                        const todayStr = getLocalYYYYMMDD();
+                                        const overdueTasks = tasks.filter(t => t.due_date < todayStr && t.status !== 'completed');
+                                        const todayTasks = tasks.filter(t => t.due_date === todayStr);
+                                        const upcomingTasks = tasks.filter(t => t.due_date > todayStr);
+                                        const selectedTasks = selectedCalendarDate ? tasks.filter(t => t.due_date === selectedCalendarDate) : [];
+
+                                        const activeListTasks = 
+                                            taskActiveTab === 'overdue' ? overdueTasks :
+                                            taskActiveTab === 'today' ? todayTasks :
+                                            taskActiveTab === 'upcoming' ? upcomingTasks :
+                                            selectedTasks;
+
+                                        if (activeListTasks.length === 0) {
+                                            return (
+                                                <div className="text-center py-12 border border-dashed border-gray-150 rounded-2xl bg-gray-50/30">
+                                                    <Check className="h-6 w-6 text-green-500 mx-auto mb-2" />
+                                                    <h4 className="font-bold text-gray-700 text-xs">¡No hay tareas pendientes!</h4>
+                                                    <p className="text-gray-400 text-[10px] mt-0.5">Todo al día en esta sección.</p>
+                                                </div>
+                                            );
+                                        }
+
+                                        return activeListTasks.map(task => {
+                                            const associatedLead = leads.find(l => l.id === task.lead_id);
+                                            const statusObj = TASK_STATUSES.find(s => s.value === task.status);
+
+                                            return (
+                                                <div
+                                                    key={task.id}
+                                                    className={cn(
+                                                        "p-3.5 rounded-2xl border bg-white hover:shadow-md transition-all flex items-start gap-3 relative group",
+                                                        task.status === 'completed'
+                                                            ? "bg-gray-50/50 border-gray-100 opacity-75"
+                                                            : taskActiveTab === 'overdue'
+                                                                ? "border-red-100 hover:border-red-200 bg-red-50/5"
+                                                                : "border-gray-100 hover:border-gray-200"
+                                                    )}
+                                                >
+                                                    {/* Complete Checkbox */}
+                                                    <button
+                                                        onClick={() => handleUpdateTask(task.id, { status: task.status === 'completed' ? 'not_started' : 'completed' })}
+                                                        type="button"
+                                                        className="mt-0.5 text-gray-400 hover:text-green-600 transition-colors shrink-0"
+                                                    >
+                                                        {task.status === 'completed' ? (
+                                                            <CheckCircle2 className="h-5 w-5 text-green-500 fill-green-50" />
+                                                        ) : (
+                                                            <div className="h-5 w-5 rounded-full border-2 border-gray-300 hover:border-green-500 transition-all" />
+                                                        )}
+                                                    </button>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <h4 className={cn(
+                                                                "font-bold text-gray-950 text-sm line-clamp-1",
+                                                                task.status === 'completed' ? "line-through text-gray-400" : ""
+                                                            )}>
+                                                                {task.title}
+                                                            </h4>
+                                                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-auto bg-white pl-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setEditingTask(task);
+                                                                        setIsCreatingTask(true);
+                                                                    }}
+                                                                    type="button"
+                                                                    className="p-1 hover:bg-gray-150 rounded text-gray-500 hover:text-primary transition-all"
+                                                                    title="Editar"
+                                                                >
+                                                                    <Edit className="h-3.5 w-3.5" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteTask(task.id)}
+                                                                    type="button"
+                                                                    className="p-1 hover:bg-red-50 rounded text-gray-500 hover:text-red-600 transition-all"
+                                                                    title="Eliminar"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {task.description && (
+                                                            <p className={cn(
+                                                                "text-gray-500 text-xs mt-1.5 leading-relaxed line-clamp-2",
+                                                                task.status === 'completed' ? "text-gray-400" : ""
+                                                            )}>
+                                                                {task.description}
+                                                            </p>
+                                                        )}
+
+                                                        <div className="flex flex-wrap items-center gap-2 mt-3 text-[10px]">
+                                                            {associatedLead && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedLead(associatedLead);
+                                                                        setIsEditing(false);
+                                                                    }}
+                                                                    type="button"
+                                                                    className="inline-flex items-center gap-1 font-extrabold text-blue-605 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full hover:underline"
+                                                                >
+                                                                    👤 Lead: {associatedLead.client_name}
+                                                                </button>
+                                                            )}
+                                                            
+                                                            <span className={cn(
+                                                                "inline-flex items-center font-bold px-2 py-0.5 rounded-full border gap-1",
+                                                                task.status === 'completed'
+                                                                    ? "bg-green-50 text-green-700 border-green-100"
+                                                                    : taskActiveTab === 'overdue'
+                                                                        ? "bg-red-50 text-red-700 border-red-100"
+                                                                        : "bg-gray-50 text-gray-500 border-gray-100"
+                                                            )}>
+                                                                ⏰ {new Date(task.due_date + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                                            </span>
+
+                                                            <span className={cn(
+                                                                "inline-flex items-center font-bold px-2 py-0.5 rounded-full border",
+                                                                statusObj ? `${statusObj.color} border-current/15` : "bg-gray-50 text-gray-500"
+                                                            )}>
+                                                                {statusObj?.label || task.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        });
+                                    })()}
                                 </div>
                             </div>
                         </div>
@@ -1045,6 +1600,37 @@ export default function AdminDashboard() {
                                     <X className="h-6 w-6 text-gray-400" />
                                 </button>
                             </div>
+
+                            {/* Tab selection in Read Mode */}
+                            {!isEditing && (
+                                <div className="flex border-b border-gray-100 px-6 bg-white shrink-0">
+                                    <button
+                                        onClick={() => setDetailModalTab('info')}
+                                        className={cn(
+                                            "py-3 text-sm font-bold border-b-2 px-4 transition-all",
+                                            detailModalTab === 'info'
+                                                ? "border-primary text-primary"
+                                                : "border-transparent text-gray-500 hover:text-gray-700"
+                                        )}
+                                        type="button"
+                                    >
+                                        Información General
+                                    </button>
+                                    <button
+                                        onClick={() => setDetailModalTab('tasks')}
+                                        className={cn(
+                                            "py-3 text-sm font-bold border-b-2 px-4 transition-all flex items-center gap-1.5",
+                                            detailModalTab === 'tasks'
+                                                ? "border-primary text-primary"
+                                                : "border-transparent text-gray-500 hover:text-gray-700"
+                                        )}
+                                        type="button"
+                                    >
+                                        Seguimiento ({tasks.filter(t => t.lead_id === selectedLead.id).length})
+                                    </button>
+                                </div>
+                            )}
+
                             {isEditing ? (
                                 <form onSubmit={handleSaveEdit} className="flex flex-col min-h-0">
                                     {/* Edit Mode Body */}
@@ -1178,8 +1764,137 @@ export default function AdminDashboard() {
                                 </form>
                             ) : (
                                 <>
-                                    {/* Read Mode Body */}
-                                    <div className="p-6 space-y-8">
+                                    {detailModalTab === 'tasks' ? (
+                                        /* Tasks Tab in Modal */
+                                        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+                                            <div className="flex justify-between items-center pb-2 border-b">
+                                                <h3 className="font-bold text-gray-900 text-sm">Tareas de Seguimiento</h3>
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingTask(null);
+                                                        setIsCreatingTask(true);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-primary text-white hover:bg-primary/90 text-xs font-bold rounded-full transition-colors flex items-center gap-1 shadow-sm"
+                                                    type="button"
+                                                >
+                                                    <Plus className="h-3.5 w-3.5" /> Nueva Tarea
+                                                </button>
+                                            </div>
+
+                                            {(() => {
+                                                const clientTasks = tasks.filter(t => t.lead_id === selectedLead.id);
+                                                if (clientTasks.length === 0) {
+                                                    return (
+                                                        <div className="text-center py-10 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                                                            <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                                            <h4 className="font-bold text-gray-700 text-xs">Sin tareas asignadas</h4>
+                                                            <p className="text-gray-400 text-[10px] mt-0.5">Agrega una tarea de seguimiento para este cliente.</p>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        {clientTasks.map(task => {
+                                                            const statusObj = TASK_STATUSES.find(s => s.value === task.status);
+                                                            const todayStr = getLocalYYYYMMDD();
+                                                            const isOverdue = task.due_date < todayStr && task.status !== 'completed';
+
+                                                            return (
+                                                                <div
+                                                                    key={task.id}
+                                                                    className={cn(
+                                                                        "p-3.5 rounded-xl border transition-all flex items-start gap-3 relative group bg-white text-left",
+                                                                        task.status === 'completed'
+                                                                            ? "bg-gray-50/50 border-gray-100 opacity-75"
+                                                                            : isOverdue
+                                                                                ? "border-red-100 hover:border-red-200 bg-red-50/5"
+                                                                                : "border-gray-100 hover:border-gray-200"
+                                                                    )}
+                                                                >
+                                                                    {/* Complete Checkbox */}
+                                                                    <button
+                                                                        onClick={() => handleUpdateTask(task.id, { status: task.status === 'completed' ? 'not_started' : 'completed' })}
+                                                                        type="button"
+                                                                        className="mt-0.5 text-gray-400 hover:text-green-600 transition-colors shrink-0"
+                                                                    >
+                                                                        {task.status === 'completed' ? (
+                                                                            <CheckCircle2 className="h-5 w-5 text-green-500 fill-green-50" />
+                                                                        ) : (
+                                                                            <div className="h-5 w-5 rounded-full border-2 border-gray-300 hover:border-green-500 transition-all" />
+                                                                        )}
+                                                                    </button>
+
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-start justify-between gap-2">
+                                                                            <h4 className={cn(
+                                                                                "font-bold text-gray-950 text-sm line-clamp-1",
+                                                                                task.status === 'completed' ? "line-through text-gray-400" : ""
+                                                                            )}>
+                                                                                {task.title}
+                                                                            </h4>
+                                                                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-auto bg-white pl-2">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setEditingTask(task);
+                                                                                        setIsCreatingTask(true);
+                                                                                    }}
+                                                                                    type="button"
+                                                                                    className="p-1 hover:bg-gray-100 rounded text-gray-550 hover:text-primary transition-all"
+                                                                                    title="Editar"
+                                                                                >
+                                                                                    <Edit className="h-3.5 w-3.5" />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleDeleteTask(task.id)}
+                                                                                    type="button"
+                                                                                    className="p-1 hover:bg-red-50 rounded text-gray-550 hover:text-red-650 transition-all"
+                                                                                    title="Eliminar"
+                                                                                >
+                                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {task.description && (
+                                                                            <p className={cn(
+                                                                                "text-gray-500 text-xs mt-1.5 leading-relaxed",
+                                                                                task.status === 'completed' ? "text-gray-400" : ""
+                                                                            )}>
+                                                                                {task.description}
+                                                                            </p>
+                                                                        )}
+
+                                                                        <div className="flex items-center gap-2 mt-3 text-[10px]">
+                                                                            <span className={cn(
+                                                                                "inline-flex items-center font-bold px-2 py-0.5 rounded-full border gap-0.5",
+                                                                                task.status === 'completed'
+                                                                                    ? "bg-green-50 text-green-700 border-green-100"
+                                                                                    : isOverdue
+                                                                                        ? "bg-red-50 text-red-700 border-red-100"
+                                                                                        : "bg-gray-50 text-gray-500 border-gray-100"
+                                                                            )}>
+                                                                                ⏰ {new Date(task.due_date + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                                                            </span>
+
+                                                                            <span className={cn(
+                                                                                "inline-flex items-center font-bold px-2 py-0.5 rounded-full border",
+                                                                                statusObj ? `${statusObj.color} border-current/15` : "bg-gray-50 text-gray-500"
+                                                                            )}>
+                                                                                {statusObj?.label || task.status}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    ) : (
+                                        /* Read Mode Body */
+                                        <div className="p-6 space-y-8 flex-1 overflow-y-auto">
                                         {/* Status Selector */}
                                         <div>
                                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Etapa del Lead</label>
@@ -1353,6 +2068,7 @@ export default function AdminDashboard() {
                                             </div>
                                         </div>
                                     </div>
+                                )}
 
                                     {/* Read Mode Footer */}
                                     <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-between gap-3 rounded-b-3xl mt-auto">
@@ -1496,6 +2212,163 @@ export default function AdminDashboard() {
                                 <div className="pt-4">
                                     <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all">
                                         Crear Lead
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Task Create/Edit Modal */}
+            <AnimatePresence>
+                {isCreatingTask && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+                                <h3 className="text-base font-bold text-gray-900">
+                                    {editingTask ? "Editar Tarea de Seguimiento" : "Nueva Tarea de Seguimiento"}
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        setIsCreatingTask(false);
+                                        setEditingTask(null);
+                                    }}
+                                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                                    type="button"
+                                >
+                                    <X className="h-5 w-5 text-gray-400" />
+                                </button>
+                            </div>
+                            <form
+                                onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.currentTarget);
+                                    const title = formData.get('task_title') as string;
+                                    const description = formData.get('task_desc') as string;
+                                    const due_date = formData.get('task_due_date') as string;
+                                    const status = formData.get('task_status') as TaskStatus;
+                                    const lead_id = formData.get('task_lead_id') as string;
+
+                                    if (editingTask) {
+                                        await handleUpdateTask(editingTask.id, {
+                                            title,
+                                            description: description || null,
+                                            due_date,
+                                            status,
+                                            lead_id
+                                        });
+                                    } else {
+                                        await handleCreateTask({
+                                            title,
+                                            description: description || null,
+                                            due_date,
+                                            status,
+                                            lead_id
+                                        });
+                                    }
+                                    setIsCreatingTask(false);
+                                    setEditingTask(null);
+                                }}
+                                className="p-6 space-y-4 text-sm text-left"
+                            >
+                                {/* Lead Selector */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Cliente / Lead *</label>
+                                    {selectedLead ? (
+                                        <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-100 font-bold text-gray-700">
+                                            {selectedLead.client_name}
+                                            <input type="hidden" name="task_lead_id" value={selectedLead.id} />
+                                        </div>
+                                    ) : (
+                                        <select
+                                            name="task_lead_id"
+                                            required
+                                            defaultValue={editingTask ? editingTask.lead_id : ""}
+                                            className="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                                        >
+                                            <option value="" disabled>Selecciona un cliente...</option>
+                                            {leads.map(lead => (
+                                                <option key={lead.id} value={lead.id}>
+                                                    {lead.client_name} ({lead.destination || 'Sin destino'})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                {/* Title */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Título / Asunto *</label>
+                                    <input
+                                        type="text"
+                                        name="task_title"
+                                        required
+                                        placeholder="Ej. Llamar para definir hotel"
+                                        defaultValue={editingTask ? editingTask.title : ""}
+                                        className="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                                    />
+                                </div>
+
+                                {/* Due Date */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Fecha de Seguimiento *</label>
+                                    <input
+                                        type="date"
+                                        name="task_due_date"
+                                        required
+                                        defaultValue={editingTask ? editingTask.due_date : getLocalYYYYMMDD()}
+                                        className="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                                    />
+                                </div>
+
+                                {/* Status */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Estado de la Tarea</label>
+                                    <select
+                                        name="task_status"
+                                        defaultValue={editingTask ? editingTask.status : "not_started"}
+                                        className="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                                    >
+                                        <option value="not_started">No iniciada</option>
+                                        <option value="in_process">En proceso</option>
+                                        <option value="completed">Terminada</option>
+                                    </select>
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Detalles / Notas de Seguimiento</label>
+                                    <textarea
+                                        name="task_desc"
+                                        rows={3}
+                                        placeholder="Detalles de lo acordado o por hacer..."
+                                        defaultValue={editingTask && editingTask.description ? editingTask.description : ""}
+                                        className="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                                    />
+                                </div>
+
+                                <div className="pt-4 flex justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsCreatingTask(false);
+                                            setEditingTask(null);
+                                        }}
+                                        className="px-4 py-2 border border-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-50 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-5 py-2 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-md"
+                                    >
+                                        {editingTask ? "Guardar" : "Crear Tarea"}
                                     </button>
                                 </div>
                             </form>

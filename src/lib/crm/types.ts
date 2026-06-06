@@ -44,3 +44,21 @@ export const LEAD_STATUSES: { value: LeadStatus; label: string; color: string }[
     { value: 'trip_completed', label: 'Viaje Realizado', color: 'bg-teal-100 text-teal-800' },
     { value: 'lost', label: 'Perdida', color: 'bg-red-100 text-red-800' },
 ];
+
+export type TaskStatus = 'not_started' | 'in_process' | 'completed';
+
+export interface Task {
+    id: string;
+    created_at: string;
+    lead_id: string;
+    title: string;
+    description?: string | null;
+    due_date: string;
+    status: TaskStatus;
+}
+
+export const TASK_STATUSES: { value: TaskStatus; label: string; color: string }[] = [
+    { value: 'not_started', label: 'No iniciada', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+    { value: 'in_process', label: 'En proceso', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+    { value: 'completed', label: 'Terminada', color: 'bg-green-100 text-green-800 border-green-200' },
+];

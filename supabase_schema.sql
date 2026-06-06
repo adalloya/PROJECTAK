@@ -85,3 +85,30 @@ ADD COLUMN IF NOT EXISTS payment_status text,
 ADD COLUMN IF NOT EXISTS booking_reference text,
 ADD COLUMN IF NOT EXISTS quote_sent_date date,
 ADD COLUMN IF NOT EXISTS estimated_sale_amount numeric;
+
+-- Create tasks table for client follow-ups
+CREATE TABLE IF NOT EXISTS public.tasks (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  lead_id uuid REFERENCES public.leads(id) ON DELETE CASCADE NOT NULL,
+  title text NOT NULL,
+  description text,
+  due_date date NOT NULL,
+  status text DEFAULT 'not_started' NOT NULL CHECK (status IN ('not_started', 'in_process', 'completed'))
+);
+
+-- Enable RLS
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+
+-- Policies for tasks
+CREATE POLICY "Enable read access for all users" ON public.tasks
+  FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert access for all users" ON public.tasks
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Enable update access for all users" ON public.tasks
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Enable delete access for all users" ON public.tasks
+  FOR DELETE USING (true);

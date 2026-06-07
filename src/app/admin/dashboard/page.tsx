@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign, Lock, Upload, Eye, Sliders, Star } from "lucide-react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign, Lock, Upload, Eye, Sliders, Star, HelpCircle, BookOpen } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
 import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES, ResourceItem } from "@/lib/crm/types";
 import { destinationsData, Destination } from "@/lib/destinations";
@@ -34,8 +34,9 @@ export default function AdminDashboard() {
     const [sortBy, setSortBy] = useState<SortOption>('created_at');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost' | 'resources_config' | 'site_config';
+    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost' | 'resources_config' | 'site_config' | 'help';
     const [view, setView] = useState<AdminView>('portal');
+    const [activeHelpChapter, setActiveHelpChapter] = useState<'sales_strategy' | 'leads_pipeline' | 'tasks_org' | 'resources_center' | 'cms_editor'>('sales_strategy');
 
     const DEFAULT_RESOURCES: ResourceItem[] = [
         { id: 'wdw_mde', title: 'GUÍA MY DISNEY EXPERIENCE', category: 'wdw', pdf_url: null },
@@ -1383,12 +1384,20 @@ export default function AdminDashboard() {
                                 <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Portal de Administración</h1>
                                 <p className="text-gray-500 mt-1.5 text-base">Resumen general de tus prospectos, cotizaciones y ventas de viaje.</p>
                             </div>
-                            <button
-                                onClick={() => setIsCreating(true)}
-                                className="px-6 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 shadow-md shrink-0 self-start md:self-auto"
-                            >
-                                <span className="text-xl leading-none font-bold">+</span> Crear Lead Manual
-                            </button>
+                            <div className="flex flex-wrap gap-3 shrink-0 self-start md:self-auto">
+                                <button
+                                    onClick={() => setView('help')}
+                                    className="px-5 py-3 bg-white hover:bg-slate-50 border border-gray-200 text-gray-750 font-bold rounded-full transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
+                                >
+                                    <HelpCircle className="h-4 w-4 text-primary" /> Ayuda & Manual
+                                </button>
+                                <button
+                                    onClick={() => setIsCreating(true)}
+                                    className="px-6 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 shadow-md"
+                                >
+                                    <span className="text-xl leading-none font-bold">+</span> Crear Lead Manual
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -2037,6 +2046,251 @@ export default function AdminDashboard() {
                                 <Sliders className="h-4 w-4 text-amber-500" />
                                 Configurar Sitio (CMS)
                             </button>
+                        </div>
+                    </div>
+                </div>
+            ) : view === 'help' ? (
+                /* HELP & USER MANUAL VIEW */
+                <div className="space-y-8 animate-in fade-in duration-300">
+                    <button
+                        onClick={() => setView('portal')}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors bg-white px-3 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Volver al Portal
+                    </button>
+
+                    <div className="bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 p-8 rounded-3xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
+                                <BookOpen className="h-8 w-8 text-primary" />
+                                Manual de Usuario & Ayuda
+                            </h1>
+                            <p className="text-gray-500 mt-1.5 text-base">Guía completa para sacarle el máximo provecho a Here We Go Advisor y optimizar tus ventas.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                        {/* Sidebar Navigation */}
+                        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4 space-y-1 lg:sticky lg:top-24">
+                            {[
+                                { id: 'sales_strategy', label: '🚀 Estrategia de Ventas', desc: 'CRM, Tiempos y Conversión' },
+                                { id: 'leads_pipeline', label: '💼 Gestión de Leads', desc: 'Uso del Pipeline / Estados' },
+                                { id: 'tasks_org', label: '📅 Tareas y Organización', desc: 'Calendario y Recordatorios' },
+                                { id: 'resources_center', label: '🔒 Centro de Recursos', desc: 'PIN de Clientes y PDFs' },
+                                { id: 'cms_editor', label: '🌐 Editor del Sitio', desc: 'Galería, Blog, Reviews y CMS' }
+                            ].map((chapter) => (
+                                <button
+                                    key={chapter.id}
+                                    onClick={() => setActiveHelpChapter(chapter.id as any)}
+                                    className={cn(
+                                        "w-full text-left p-3.5 rounded-2xl transition-all flex flex-col gap-1 border",
+                                        activeHelpChapter === chapter.id
+                                            ? "bg-primary text-white border-primary shadow-sm hover:bg-primary"
+                                            : "bg-white text-gray-700 border-transparent hover:bg-gray-50 hover:border-gray-150"
+                                    )}
+                                >
+                                    <span className="font-bold text-sm">{chapter.label}</span>
+                                    <span className={cn(
+                                        "text-[10px] font-medium",
+                                        activeHelpChapter === chapter.id ? "text-white/80" : "text-gray-400"
+                                    )}>{chapter.desc}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="lg:col-span-3 bg-white rounded-3xl border border-gray-200 shadow-sm p-8 md:p-10 min-h-[500px]">
+                            {activeHelpChapter === 'sales_strategy' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 pb-3 border-b border-gray-100 flex items-center gap-2">
+                                        🚀 Estrategia de Ventas: Gestión del Tiempo y Seguimiento
+                                    </h2>
+                                    <p className="text-gray-600 leading-relaxed text-sm">
+                                        El éxito de Here We Go Advisor depende de la confianza y de una experiencia de cliente sin fricción. Este sistema está diseñado para ayudarte a responder con rapidez y realizar un seguimiento inteligente.
+                                    </p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                                        <div className="p-5 rounded-2xl bg-amber-50/50 border border-amber-100">
+                                            <h4 className="font-bold text-amber-900 text-sm flex items-center gap-1.5">
+                                                ⏱️ La Regla de Oro de los 15 Minutos
+                                            </h4>
+                                            <p className="text-xs text-amber-800 mt-2 leading-relaxed">
+                                                Las estadísticas de ventas de viajes demuestran que un lead que es contactado en los primeros 15 minutos tiene **un 300% más de probabilidad de concretar su reserva**. Cuando veas un lead en <span className="font-bold">Nuevos Leads</span>, mándale un correo o un mensaje de WhatsApp inicial rápido de inmediato.
+                                            </p>
+                                        </div>
+                                        <div className="p-5 rounded-2xl bg-violet-50/50 border border-violet-100">
+                                            <h4 className="font-bold text-violet-900 text-sm flex items-center gap-1.5">
+                                                🛎️ La Regla Crítica de los 60 días
+                                            </h4>
+                                            <p className="text-xs text-violet-850 mt-2 leading-relaxed">
+                                                En viajes a Disney, el día 60 antes del viaje es crucial para que el cliente reserve restaurantes con personajes y acceda a las mejores tarifas de comida. Si un cliente está a menos de 60 días y no tiene guardado un código de reserva, se activará en tu tablero de <span className="font-bold">Atención Requerida</span>. ¡Consigue esa clave y agrégala al lead!
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <h3 className="font-bold text-gray-800 text-base mt-6">Cómo aumentar tu tasa de conversión:</h3>
+                                    <ul className="space-y-3 pl-5 list-disc text-gray-600 text-xs leading-relaxed">
+                                        <li><strong>No dejes leads en "Nuevos" por más de 24 horas:</strong> Si no se puede avanzar inmediatamente, pásalo a "Contactado" indicando que ya le has escrito.</li>
+                                        <li><strong>Configura tareas para cada lead:</strong> Siempre que envíes una cotización, crea una tarea con vencimiento a los 3 días que diga "Seguimiento de cotización". Esto evita que olvides leads.</li>
+                                        <li><strong>Aprovecha el Centro de Recursos como valor agregado:</strong> Habilita el acceso y genera un PIN de seguridad. Explícale al cliente que este es un servicio Concierge exclusivo y gratuito para ellos.</li>
+                                    </ul>
+                                </div>
+                            )}
+
+                            {activeHelpChapter === 'leads_pipeline' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 pb-3 border-b border-gray-100">
+                                        💼 Gestión de Leads y Estados del CRM
+                                    </h2>
+                                    <p className="text-gray-650 leading-relaxed text-sm">
+                                        El CRM está organizado en tableros visuales divididos en tres etapas lógicas para simplificar tu trabajo diario.
+                                    </p>
+
+                                    <div className="space-y-6 mt-4">
+                                        <div className="border-l-4 border-blue-500 pl-4 py-1">
+                                            <h3 className="font-bold text-gray-900 text-sm">1. Manejo de Ventas (Fase de Prospección)</h3>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                Contiene leads que aún no han pagado su reserva. Tu objetivo aquí es la persuasión y el diseño del viaje.
+                                            </p>
+                                            <ul className="text-xs text-gray-600 mt-2 list-disc pl-5 space-y-1">
+                                                <li><strong>Nuevo:</strong> Solicitudes entrantes desde el formulario de contacto o llamadas iniciales. Requieren llamada inmediata.</li>
+                                                <li><strong>Contactado:</strong> El lead ha respondido o ya está en comunicación contigo (WhatsApp/Llamada).</li>
+                                                <li><strong>Cotización Enviada:</strong> Le has enviado una propuesta de viaje de forma detallada. Programa una tarea de seguimiento en 2-3 días.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="border-l-4 border-emerald-500 pl-4 py-1">
+                                            <h3 className="font-bold text-gray-900 text-sm">2. Manejo de Post Venta (Fase de Reserva y Operación)</h3>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                ¡Ventas cerradas! Aquí organizas la logística de viaje y te aseguras de cumplir los plazos de Disney/Universal.
+                                            </p>
+                                            <ul className="text-xs text-gray-600 mt-2 list-disc pl-5 space-y-1">
+                                                <li><strong>Ganado:</strong> Depósito inicial realizado. El viaje está confirmado.</li>
+                                                <li><strong>Disney Reservado:</strong> Tienen número de booking registrado en su perfil. Habilítales el acceso al Centro de Recursos.</li>
+                                                <li><strong>Viaje Completado:</strong> El cliente regresó de su viaje. Envía el link para que escriba su testimonio.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="border-l-4 border-red-500 pl-4 py-1">
+                                            <h3 className="font-bold text-gray-900 text-sm">3. Leads Perdidos (Archivo)</h3>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                Clientes que no compraron por presupuesto, fecha u otras razones. Mantenerlos aquí limpia tu flujo de trabajo principal.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeHelpChapter === 'tasks_org' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 pb-3 border-b border-gray-100">
+                                        📅 Gestión de Tareas y Calendario
+                                    </h2>
+                                    <p className="text-gray-650 leading-relaxed text-sm">
+                                        El organizador de tareas integrado te ayuda a planificar tu día y hacer seguimiento exacto para no perder oportunidades de venta.
+                                    </p>
+
+                                    <div className="bg-slate-50 border border-gray-150 rounded-2xl p-5 space-y-4">
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                                                ✏️ Creación y Vínculo
+                                            </h4>
+                                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                                Al crear una tarea, puedes **vincularla a un cliente específico (Lead)**. Esto asocia directamente la tarea a su expediente.
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                                                📆 Calendario Interactivo
+                                            </h4>
+                                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                                El mini-calendario de la izquierda muestra indicadores de colores en los días con tareas pendientes. Haz clic en cualquier día para filtrar la lista.
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                                                🚨 Tareas Vencidas
+                                            </h4>
+                                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                                Aparecen en la pestaña **Vencidas** con un borde rojo llamativo. Resuélvelas primero cada mañana para no perder leads calientes.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeHelpChapter === 'resources_center' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 pb-3 border-b border-gray-100">
+                                        🔒 Centro de Recursos y Control de Acceso
+                                    </h2>
+                                    <p className="text-gray-650 leading-relaxed text-sm">
+                                        El Centro de Recursos es un portal privado donde tus clientes visualizan sus guías de viaje (en PDF) de forma protegida para evitar descargas o impresiones no autorizadas.
+                                    </p>
+
+                                    <h3 className="font-bold text-gray-800 text-base mt-4">Cómo dar acceso a un cliente:</h3>
+                                    <ol className="space-y-3 list-decimal pl-5 text-gray-600 text-xs leading-relaxed">
+                                        <li>Ve a tu lista de leads y haz clic en el nombre del cliente para abrir sus detalles.</li>
+                                        <li>Busca la sección **Centro de Recursos (PIN)**.</li>
+                                        <li>Activa el interruptor <span className="font-bold text-green-600">Habilitar Centro de Recursos</span>.</li>
+                                        <li>Haz clic en <span className="font-bold text-primary">Generar PIN</span> para asignar un código numérico único de 4 dígitos.</li>
+                                        <li>Marca las casillas correspondientes a las categorías de viaje que tiene habilitadas (Walt Disney World, Disneyland, Disney Cruise Line). Solo podrá ver las guías asociadas a estas casillas.</li>
+                                        <li>Haz clic en **Guardar**. El acceso del cliente **caducará automáticamente** en cuanto llegue la fecha de su checkout registrado.</li>
+                                    </ol>
+
+                                    <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 mt-4">
+                                        <h4 className="font-bold text-violet-900 text-xs">📂 Administración de archivos PDF:</h4>
+                                        <p className="text-xs text-violet-800 mt-1.5 leading-relaxed">
+                                            Usa el botón **Configurar PDFs** al pie del portal de administración para subir nuevos archivos, cambiar los títulos de las guías, o borrar guías obsoletas de forma dinámica.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeHelpChapter === 'cms_editor' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 pb-3 border-b border-gray-100">
+                                        🌐 Editor del Sitio (CMS - Gestor de Contenido)
+                                    </h2>
+                                    <p className="text-gray-650 leading-relaxed text-sm">
+                                        No necesitas programar para actualizar el diseño de la página de Here We Go Advisor. Todo se hace de forma visual desde la pestaña **Configurar Sitio (CMS)** en el pie del panel administrativo.
+                                    </p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                        <div className="p-4 rounded-xl border border-gray-150">
+                                            <h4 className="font-bold text-gray-900 text-xs">📸 Galería del Home</h4>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                Sube fotos directamente. Puedes hacer clic en **Editar** en el overlay de cualquier foto para modificar su texto alternativo (alt text) para SEO o hacer clic en **Eliminar** para removerla.
+                                            </p>
+                                        </div>
+                                        <div className="p-4 rounded-xl border border-gray-150">
+                                            <h4 className="font-bold text-gray-900 text-xs">⭐ Reseñas</h4>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                Las opiniones que los clientes envían se listan aquí. Puedes activarlas, desactivarlas para que no se muestren, o redactar testimonios manuales que recibas por WhatsApp.
+                                            </p>
+                                        </div>
+                                        <div className="p-4 rounded-xl border border-gray-150">
+                                            <h4 className="font-bold text-gray-900 text-xs">✍️ Sobre Mí</h4>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                Modifica la biografía de Anna Karen, el saludo, tu rol certificado, la cita inspiradora y sube retratos de graduación o de cuerpo completo de forma instantánea.
+                                            </p>
+                                        </div>
+                                        <div className="p-4 rounded-xl border border-gray-150">
+                                            <h4 className="font-bold text-gray-900 text-xs">✈️ Destinos</h4>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                Personaliza el overview, los puntos destacados (highlights), imperdibles (must-dos) y consejos (tips) de Walt Disney World, Disneyland, Disney Cruise y Universal.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl border border-gray-150 mt-4">
+                                        <h4 className="font-bold text-gray-900 text-xs">📝 Posts del Blog</h4>
+                                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                            Crea artículos. Puedes agregar títulos, categorías, resúmenes atractivos (excerpts), el tiempo estimado de lectura y escribir el cuerpo del post usando HTML o texto normal. Puedes cargar la imagen de portada y guardar.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

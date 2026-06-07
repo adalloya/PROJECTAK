@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Star, Sparkles, Map, Film, Trees, Globe, Utensils, Ticket } from "lucide-react";
-import { destinationsData } from "@/lib/destinations";
+import { destinationsData, Destination } from "@/lib/destinations";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
 // Helper to map string icon names to Lucide components
 const IconMap: Record<string, any> = {
@@ -34,7 +35,34 @@ export function generateStaticParams() {
 // Next.js 15+ requires params to be awaited
 export default async function DestinationPage({ params }: DestinationPageProps) {
     const { slug } = await params;
-    const destination = destinationsData[slug];
+    
+    let destination: Destination | null = null;
+    try {
+        const { data: dbDest } = await supabase
+            .from('destinations')
+            .select('*')
+            .eq('slug', slug)
+            .single();
+            
+        if (dbDest) {
+            destination = {
+                slug: dbDest.slug,
+                title: dbDest.title,
+                subtitle: dbDest.subtitle || "",
+                heroImage: dbDest.hero_image,
+                overview: dbDest.overview,
+                highlights: Array.isArray(dbDest.highlights) ? dbDest.highlights : [],
+                mustDos: Array.isArray(dbDest.must_dos) ? dbDest.must_dos : [],
+                tips: Array.isArray(dbDest.tips) ? dbDest.tips : []
+            };
+        }
+    } catch (e) {
+        console.error("Error querying destination from Supabase, falling back to static lookup:", e);
+    }
+
+    if (!destination) {
+        destination = destinationsData[slug];
+    }
 
     if (!destination) {
         notFound();

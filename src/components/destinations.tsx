@@ -3,11 +3,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 
-const destinations = [
+const defaultDestinations = [
     {
         id: 1,
         title: "Walt Disney World",
@@ -43,7 +44,32 @@ const destinations = [
 ];
 
 export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
-    const [active, setActive] = useState(0);
+    const [destList, setDestList] = useState(defaultDestinations);
+
+    useEffect(() => {
+        async function fetchDestinations() {
+            try {
+                const { data, error } = await supabase
+                    .from('destinations')
+                    .select('slug, title, subtitle, hero_image')
+                    .order('title', { ascending: true });
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setDestList(data.map((item, idx) => ({
+                        id: idx + 1,
+                        title: item.title,
+                        description: item.subtitle || "",
+                        image: item.hero_image,
+                        href: `/destinations/${item.slug}`,
+                        color: "from-primary/90"
+                    })));
+                }
+            } catch (err) {
+                console.error("Error fetching destinations from Supabase, falling back to static:", err);
+            }
+        }
+        fetchDestinations();
+    }, []);
 
     return (
         <section id="destinations" className="py-12 md:py-24 bg-background overflow-hidden relative">
@@ -69,7 +95,7 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                 <div>
                     {/* Desktop Grid (Restored) */}
                     <div className="hidden lg:grid grid-cols-4 gap-6 mb-16">
-                        {destinations.map((dest, index) => (
+                        {destList.map((dest, index) => (
                             <Link href={dest.href} key={dest.id} className="block group relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer">
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
@@ -100,7 +126,7 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
 
                     {/* Mobile Swiper (Kept as is) */}
                     <div className="lg:hidden w-full overflow-x-auto snap-x snap-mandatory flex gap-4 pb-8 scrollbar-hide px-4 -mx-4">
-                        {destinations.map((dest) => (
+                        {destList.map((dest) => (
                             <Link
                                 key={dest.id}
                                 href={dest.href}

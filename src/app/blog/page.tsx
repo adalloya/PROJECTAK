@@ -1,14 +1,44 @@
 "use client";
 
 import { Navbar } from "@/components/navbar";
-
 import { blogPosts } from "@/lib/blog";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function BlogPage() {
+    const [postsList, setPostsList] = useState<any[]>(blogPosts);
+
+    useEffect(() => {
+        async function fetchPosts() {
+            try {
+                const { data, error } = await supabase
+                    .from('blog_posts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setPostsList(data.map(item => ({
+                        id: item.id,
+                        slug: item.slug,
+                        title: item.title,
+                        excerpt: item.excerpt,
+                        content: item.content,
+                        date: item.date,
+                        readTime: item.read_time,
+                        image: item.image,
+                        category: item.category
+                    })));
+                }
+            } catch (err) {
+                console.error("Error fetching blog posts from Supabase, falling back to static:", err);
+            }
+        }
+        fetchPosts();
+    }, []);
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
@@ -36,7 +66,7 @@ export default function BlogPage() {
                 {/* Grid */}
                 <div className="container px-4 mx-auto">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {blogPosts.map((post, index) => (
+                        {postsList.map((post, index) => (
                             <motion.article
                                 key={post.id}
                                 initial={{ opacity: 0, y: 20 }}

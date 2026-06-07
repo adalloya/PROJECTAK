@@ -5,12 +5,50 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Calendar, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export function LatestBlogPosts() {
-    const latestPosts = blogPosts.slice(0, 4); // Show top 4
+    const [latestPosts, setLatestPosts] = useState<any[]>(blogPosts.slice(0, 4));
     const [active, setActive] = useState(0);
+
+    useEffect(() => {
+        async function fetchLatestPosts() {
+            try {
+                const { data, error } = await supabase
+                    .from('blog_posts')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(4);
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setLatestPosts(data.map(item => ({
+                        id: item.id,
+                        slug: item.slug,
+                        title: item.title,
+                        excerpt: item.excerpt,
+                        content: item.content,
+                        date: item.date,
+                        readTime: item.read_time,
+                        image: item.image,
+                        category: item.category
+                    })));
+                }
+            } catch (err) {
+                console.error("Error fetching latest blog posts from Supabase, falling back to static:", err);
+            }
+        }
+        fetchLatestPosts();
+    }, []);
+
+    useEffect(() => {
+        if (active >= latestPosts.length) {
+            setActive(0);
+        }
+    }, [latestPosts.length, active]);
+
+    if (latestPosts.length === 0) return null;
 
     return (
         <section className="py-12 md:py-24 bg-secondary/5 relative overflow-hidden">

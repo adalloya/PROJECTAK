@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign, Lock, Upload, Eye } from "lucide-react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign, Lock, Upload, Eye, Sliders, Star } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
 import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES, ResourceItem } from "@/lib/crm/types";
+import { destinationsData, Destination } from "@/lib/destinations";
+import { blogPosts, BlogPost } from "@/lib/blog";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -32,7 +34,7 @@ export default function AdminDashboard() {
     const [sortBy, setSortBy] = useState<SortOption>('created_at');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost' | 'resources_config';
+    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost' | 'resources_config' | 'site_config';
     const [view, setView] = useState<AdminView>('portal');
 
     const DEFAULT_RESOURCES: ResourceItem[] = [
@@ -57,6 +59,429 @@ export default function AdminDashboard() {
     const [selectedFiles, setSelectedFiles] = useState<Record<string, File>>({});
     const [newResourceTitle, setNewResourceTitle] = useState("");
     const [newResourceFile, setNewResourceFile] = useState<File | null>(null);
+
+    // CMS CONFIGURATION STATES
+    // 1. Gallery
+    interface GalleryItem {
+        id: string;
+        image_url: string;
+        alt: string;
+        sort_order?: number;
+    }
+    const DEFAULT_GALLERY: GalleryItem[] = [
+        { id: "g1", image_url: "/images/gallery/1.jpg", alt: "Familia feliz en Magic Kingdom" },
+        { id: "g2", image_url: "/images/gallery/2.jpg", alt: "Disfrutando Disney Cruise Line" },
+        { id: "g3", image_url: "/images/gallery/3.jpg", alt: "Café temático Disney" },
+        { id: "g4", image_url: "/images/gallery/4.jpg", alt: "Relax en la cubierta del crucero" },
+        { id: "g5", image_url: "/images/gallery/5.jpg", alt: "Andy's Room en Disney's Oceaneer Club" },
+        { id: "g6", image_url: "/images/gallery/6.jpg", alt: "Diversión en Andy's Room" },
+        { id: "g7", image_url: "/images/gallery/7.jpg", alt: "Momentos inolvidables en familia" },
+        { id: "g8", image_url: "/images/gallery/8.jpg", alt: "Noche mágica en Disney" },
+    ];
+    const [galleryList, setGalleryList] = useState<GalleryItem[]>([]);
+    const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+    
+    // 2. Reviews
+    interface ReviewItemCMS {
+        id: number;
+        name: string;
+        role: string;
+        content: string;
+        rating: number;
+        is_approved: boolean;
+        image_url?: string | null;
+        created_at?: string;
+    }
+    const [reviewsList, setReviewsList] = useState<ReviewItemCMS[]>([]);
+    const [isSavingReview, setIsSavingReview] = useState(false);
+    const [editingReview, setEditingReview] = useState<ReviewItemCMS | null>(null);
+    const [isCreatingReview, setIsCreatingReview] = useState(false);
+    
+    // 3. About Me
+    const [aboutMeData, setAboutMeData] = useState<Record<string, string>>({
+        about_me_title: "¿Quién Soy?",
+        about_me_greeting: "¡Hola! Soy Anna Karen.",
+        about_me_role: "Creadora de Here We Go Advisor y Agente Certificada Disney.",
+        about_me_paragraphs: JSON.stringify([
+            "Mi amor por Disney comenzó desde pequeña, tuve la oportunidad de trabajar en Walt Disney World a través del programa Disney College Program. Ahí descubrí que lo que más disfruto es organizar, planear y ayudar a que cada familia viva su propia versión de la magia.",
+            "Here We Go Advisor nació con una idea muy sencilla: la magia se disfruta más cuando la planeación no te quita tiempo, energía ni ilusión.",
+            "Hoy me dedico a diseñar experiencias personalizadas para que tú solamente te preocupes por sonreír y crear recuerdos. Conozco los secretos que hacen la diferencia: desde el mejor lugar para ver los fuegos artificiales hasta esos detalles que elevan cualquier itinerario.",
+            "No solo reservo viajes: transformo tus sueños Disney en momentos inolvidables."
+        ]),
+        about_me_quote: '"Here We Go Advisor nació con una idea muy sencilla: la magia se disfruta más cuando la planeación no te quita tiempo, energía ni ilusión."',
+        about_me_image_grads: "/images/about-grads.jpg",
+        about_me_image_solo: "/images/about-solo.jpg"
+    });
+    const [isSavingAboutMe, setIsSavingAboutMe] = useState(false);
+
+    // 4. Destinations
+    const [destinationsList, setDestinationsList] = useState<Destination[]>([]);
+    const [isSavingDestination, setIsSavingDestination] = useState(false);
+    const [editingDestination, setEditingDestination] = useState<Destination | null>(null);
+    const [isCreatingDestination, setIsCreatingDestination] = useState(false);
+
+    // 5. Blog
+    const [blogPostsList, setBlogPostsList] = useState<BlogPost[]>([]);
+    const [isSavingBlogPost, setIsSavingBlogPost] = useState(false);
+    const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
+    const [isCreatingBlogPost, setIsCreatingBlogPost] = useState(false);
+
+    // Sidebar active tab inside site_config
+    const [activeConfigTab, setActiveConfigTab] = useState<'gallery' | 'reviews' | 'about' | 'destinations' | 'blog'>('gallery');
+
+    const fetchCmsData = async () => {
+        // 1. Gallery
+        try {
+            const { data } = await supabase.from('homepage_gallery').select('*').order('sort_order', { ascending: true });
+            if (data && data.length > 0) {
+                setGalleryList(data);
+                localStorage.setItem('cms_gallery_fallback', JSON.stringify(data));
+            } else {
+                const local = localStorage.getItem('cms_gallery_fallback');
+                const list = local ? JSON.parse(local) : DEFAULT_GALLERY;
+                setGalleryList(list);
+            }
+        } catch (e) {
+            const local = localStorage.getItem('cms_gallery_fallback');
+            setGalleryList(local ? JSON.parse(local) : DEFAULT_GALLERY);
+        }
+
+        // 2. Reviews
+        try {
+            const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+            if (data && data.length > 0) {
+                setReviewsList(data);
+                localStorage.setItem('cms_reviews_fallback', JSON.stringify(data));
+            } else {
+                const local = localStorage.getItem('cms_reviews_fallback');
+                const defaultRev = [
+                    { id: 1, name: "María G.", role: "Mamá de 3", content: "¡Ana Karen hizo que nuestro viaje fuera perfecto! No tuvimos que preocuparnos por nada, solo disfrutar.", rating: 5, is_approved: true }
+                ];
+                setReviewsList(local ? JSON.parse(local) : defaultRev);
+            }
+        } catch (e) {
+            const local = localStorage.getItem('cms_reviews_fallback');
+            setReviewsList(local ? JSON.parse(local) : []);
+        }
+
+        // 3. About Me (Site Settings)
+        try {
+            const { data } = await supabase.from('site_settings').select('*');
+            if (data && data.length > 0) {
+                const settings: Record<string, string> = {};
+                data.forEach(item => { settings[item.key] = item.value; });
+                const merged = {
+                    about_me_title: settings.about_me_title || "¿Quién Soy?",
+                    about_me_greeting: settings.about_me_greeting || "¡Hola! Soy Anna Karen.",
+                    about_me_role: settings.about_me_role || "Creadora de Here We Go Advisor y Agente Certificada Disney.",
+                    about_me_paragraphs: settings.about_me_paragraphs || JSON.stringify([
+                        "Mi amor por Disney comenzó desde pequeña, tuve la oportunidad de trabajar en Walt Disney World a través del programa Disney College Program. Ahí descubrí que lo que más disfruto es organizar, planear y ayudar a que cada familia viva su propia versión de la magia.",
+                        "Here We Go Advisor nació con una idea muy sencilla: la magia se disfruta más cuando la planeación no te quita tiempo, energía ni ilusión.",
+                        "Hoy me dedico a diseñar experiencias personalizadas para que tú solamente te preocupes por sonreír y crear recuerdos. Conozco los secretos que hacen la diferencia: desde el mejor lugar para ver los fuegos artificiales hasta esos detalles que elevan cualquier itinerario.",
+                        "No solo reservo viajes: transformo tus sueños Disney en momentos inolvidables."
+                    ]),
+                    about_me_quote: settings.about_me_quote || '"Here We Go Advisor nació con una idea muy sencilla: la magia se disfruta más cuando la planeación no te quita tiempo, energía ni ilusión."',
+                    about_me_image_grads: settings.about_me_image_grads || "/images/about-grads.jpg",
+                    about_me_image_solo: settings.about_me_image_solo || "/images/about-solo.jpg"
+                };
+                setAboutMeData(merged);
+                localStorage.setItem('cms_about_me_fallback', JSON.stringify(merged));
+            } else {
+                const local = localStorage.getItem('cms_about_me_fallback');
+                if (local) setAboutMeData(JSON.parse(local));
+            }
+        } catch (e) {
+            const local = localStorage.getItem('cms_about_me_fallback');
+            if (local) setAboutMeData(JSON.parse(local));
+        }
+
+        // 4. Destinations
+        try {
+            const { data } = await supabase.from('destinations').select('*').order('title', { ascending: true });
+            if (data && data.length > 0) {
+                // Map db values highlights/must_dos/tips back to highlights/mustDos/tips camelCase properties
+                const mapped = data.map(d => ({
+                    slug: d.slug,
+                    title: d.title,
+                    subtitle: d.subtitle,
+                    heroImage: d.hero_image,
+                    overview: d.overview,
+                    highlights: typeof d.highlights === 'string' ? JSON.parse(d.highlights) : d.highlights,
+                    mustDos: typeof d.must_dos === 'string' ? JSON.parse(d.must_dos) : d.must_dos,
+                    tips: typeof d.tips === 'string' ? JSON.parse(d.tips) : d.tips
+                }));
+                setDestinationsList(mapped);
+                localStorage.setItem('cms_destinations_fallback', JSON.stringify(mapped));
+            } else {
+                const local = localStorage.getItem('cms_destinations_fallback');
+                setDestinationsList(local ? JSON.parse(local) : Object.values(destinationsData));
+            }
+        } catch (e) {
+            const local = localStorage.getItem('cms_destinations_fallback');
+            setDestinationsList(local ? JSON.parse(local) : Object.values(destinationsData));
+        }
+
+        // 5. Blog Posts
+        try {
+            const { data } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
+            if (data && data.length > 0) {
+                const mapped = data.map(p => ({
+                    id: p.id,
+                    slug: p.slug,
+                    title: p.title,
+                    excerpt: p.excerpt,
+                    content: p.content,
+                    date: p.date,
+                    readTime: p.read_time,
+                    image: p.image,
+                    category: p.category
+                }));
+                setBlogPostsList(mapped);
+                localStorage.setItem('cms_blog_posts_fallback', JSON.stringify(mapped));
+            } else {
+                const local = localStorage.getItem('cms_blog_posts_fallback');
+                setBlogPostsList(local ? JSON.parse(local) : blogPosts);
+            }
+        } catch (e) {
+            const local = localStorage.getItem('cms_blog_posts_fallback');
+            setBlogPostsList(local ? JSON.parse(local) : blogPosts);
+        }
+    };
+
+    const handleAddGalleryImage = async (file: File, alt: string) => {
+        setIsUploadingGallery(true);
+        const newId = `g_${Math.random().toString(36).substring(2, 9)}`;
+        let imageUrl = "";
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${newId}_${Date.now()}.${fileExt}`;
+            const { data } = await supabase.storage.from('gallery').upload(fileName, file);
+            if (data) {
+                const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName);
+                imageUrl = publicUrl;
+            }
+        } catch (e) {
+            console.error("Storage upload failed for gallery, trying base64 fallback", e);
+        }
+
+        const saveItem = async (imgUrlVal: string) => {
+            const newItem = {
+                id: newId,
+                image_url: imgUrlVal,
+                alt: alt || "Imagen de la galería",
+                sort_order: galleryList.length
+            };
+            try {
+                await supabase.from('homepage_gallery').insert([newItem]);
+            } catch (e) {}
+            
+            setGalleryList(prev => {
+                const updated = [...prev, newItem];
+                localStorage.setItem('cms_gallery_fallback', JSON.stringify(updated));
+                return updated;
+            });
+            alert("Imagen agregada a la galería.");
+        };
+
+        if (!imageUrl) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target?.result as string;
+                saveItem(base64);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            await saveItem(imageUrl);
+        }
+        setIsUploadingGallery(false);
+    };
+
+    const handleDeleteGalleryImage = async (id: string) => {
+        if (!confirm("¿Deseas eliminar esta imagen de la galería?")) return;
+        try {
+            await supabase.from('homepage_gallery').delete().eq('id', id);
+        } catch (e) {}
+
+        setGalleryList(prev => {
+            const updated = prev.filter(img => img.id !== id);
+            localStorage.setItem('cms_gallery_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        alert("Imagen eliminada de la galería.");
+    };
+
+    const handleSaveReview = async (review: ReviewItemCMS) => {
+        setIsSavingReview(true);
+        try {
+            if (review.id && review.id > 10) { 
+                await supabase.from('reviews').upsert(review);
+            } else {
+                const { id, ...insertData } = review;
+                await supabase.from('reviews').insert([insertData]);
+            }
+        } catch (e) {}
+        
+        await fetchCmsData();
+        alert("Reseña guardada exitosamente.");
+        setIsSavingReview(false);
+    };
+
+    const handleDeleteReview = async (id: number) => {
+        if (!confirm("¿Deseas eliminar esta reseña?")) return;
+        try {
+            await supabase.from('reviews').delete().eq('id', id);
+        } catch (e) {}
+
+        setReviewsList(prev => {
+            const updated = prev.filter(r => r.id !== id);
+            localStorage.setItem('cms_reviews_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        alert("Reseña eliminada.");
+    };
+
+    const handleSaveAboutMe = async (data: Record<string, string>) => {
+        setIsSavingAboutMe(true);
+        try {
+            const promises = Object.entries(data).map(([key, val]) => {
+                return supabase.from('site_settings').upsert({ key, value: val });
+            });
+            await Promise.all(promises);
+        } catch (e) {}
+
+        setAboutMeData(data);
+        localStorage.setItem('cms_about_me_fallback', JSON.stringify(data));
+        alert("Configuración de 'Sobre Mí' guardada exitosamente.");
+        setIsSavingAboutMe(false);
+    };
+
+    const handleSaveDestination = async (dest: Destination, heroFile: File | null) => {
+        setIsSavingDestination(true);
+        let finalHeroUrl = dest.heroImage;
+
+        if (heroFile) {
+            try {
+                const fileExt = heroFile.name.split('.').pop();
+                const fileName = `dest_${dest.slug}_${Date.now()}.${fileExt}`;
+                const { data } = await supabase.storage.from('gallery').upload(fileName, heroFile);
+                if (data) {
+                    const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName);
+                    finalHeroUrl = publicUrl;
+                }
+            } catch (e) {
+                console.error("Failed to upload destination hero image", e);
+            }
+        }
+
+        const updatedDest = {
+            ...dest,
+            heroImage: finalHeroUrl,
+            updated_at: new Date().toISOString()
+        };
+
+        const dbData = {
+            slug: updatedDest.slug,
+            title: updatedDest.title,
+            subtitle: updatedDest.subtitle,
+            hero_image: updatedDest.heroImage,
+            overview: updatedDest.overview,
+            highlights: updatedDest.highlights,
+            must_dos: updatedDest.mustDos,
+            tips: updatedDest.tips,
+            updated_at: updatedDest.updated_at
+        };
+
+        try {
+            await supabase.from('destinations').upsert(dbData);
+        } catch (e) {}
+
+        setDestinationsList(prev => {
+            const exists = prev.some(d => d.slug === dest.slug);
+            const updated = exists 
+                ? prev.map(d => d.slug === dest.slug ? updatedDest : d)
+                : [...prev, updatedDest];
+            localStorage.setItem('cms_destinations_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        
+        alert("Destino guardado exitosamente.");
+        setIsSavingDestination(false);
+    };
+
+    const handleDeleteDestination = async (slug: string) => {
+        if (!confirm("¿Deseas eliminar este destino por completo?")) return;
+        try {
+            await supabase.from('destinations').delete().eq('slug', slug);
+        } catch (e) {}
+
+        setDestinationsList(prev => {
+            const updated = prev.filter(d => d.slug !== slug);
+            localStorage.setItem('cms_destinations_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        alert("Destino eliminado.");
+    };
+
+    const handleSaveBlogPost = async (post: BlogPost, imageFile: File | null) => {
+        setIsSavingBlogPost(true);
+        let finalImageUrl = post.image;
+
+        if (imageFile) {
+            try {
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `blog_${post.slug}_${Date.now()}.${fileExt}`;
+                const { data } = await supabase.storage.from('blog').upload(fileName, imageFile);
+                if (data) {
+                    const { data: { publicUrl } } = supabase.storage.from('blog').getPublicUrl(fileName);
+                    finalImageUrl = publicUrl;
+                }
+            } catch (e) {
+                console.error("Failed to upload blog header image", e);
+            }
+        }
+
+        const updatedPost = {
+            ...post,
+            id: post.id || `b_${Math.random().toString(36).substring(2, 9)}`,
+            image: finalImageUrl
+        };
+
+        const dbData = {
+            id: updatedPost.id.startsWith('b_') ? undefined : updatedPost.id, // Generate new UUID on DB insert
+            slug: updatedPost.slug,
+            title: updatedPost.title,
+            excerpt: updatedPost.excerpt,
+            content: updatedPost.content,
+            date: updatedPost.date,
+            read_time: updatedPost.readTime,
+            image: updatedPost.image,
+            category: updatedPost.category,
+            created_at: new Date().toISOString()
+        };
+
+        try {
+            await supabase.from('blog_posts').upsert(dbData);
+        } catch (e) {}
+
+        await fetchCmsData();
+        alert("Artículo de blog guardado exitosamente.");
+        setIsSavingBlogPost(false);
+    };
+
+    const handleDeleteBlogPost = async (id: string) => {
+        if (!confirm("¿Deseas eliminar este artículo de blog?")) return;
+        try {
+            await supabase.from('blog_posts').delete().eq('id', id);
+        } catch (e) {}
+
+        setBlogPostsList(prev => {
+            const updated = prev.filter(p => p.id !== id);
+            localStorage.setItem('cms_blog_posts_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        alert("Artículo de blog eliminado.");
+    };
 
     const fetchAdminResources = async () => {
         let dbList: ResourceItem[] = [];
@@ -562,6 +987,7 @@ export default function AdminDashboard() {
         fetchLeads();
         fetchTasks();
         fetchAdminResources();
+        fetchCmsData();
     }, []);
 
     useEffect(() => {
@@ -1396,7 +1822,7 @@ export default function AdminDashboard() {
                     {/* Primary Section Buttons */}
                     <div>
                         <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase">Secciones de Gestión</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                             {/* Section 1: Manejo de Ventas */}
                             <div
                                 onClick={() => setView('sales')}
@@ -1484,13 +1910,36 @@ export default function AdminDashboard() {
                                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Centro de Recursos</h3>
                                     <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Administrar y subir las guías PDF del Centro de Recursos del Viajero.</p>
                                     <div className="flex">
-                                        <span className="px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-bold rounded-full">13 Guías en Total</span>
+                                        <span className="px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-bold rounded-full">Recursos PDF</span>
                                     </div>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
                                     <span className="text-gray-500 font-medium text-xs">Acciones:</span>
                                     <span className="px-3 py-1 bg-violet-50 text-violet-700 text-xs font-extrabold rounded-full group-hover:bg-violet-600 group-hover:text-white transition-colors">
                                         Configurar PDFs
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Section 5: Configuración del Sitio */}
+                            <div
+                                onClick={() => setView('site_config')}
+                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                                        <Sliders className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Configuración</h3>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Administrar galería de fotos, reseñas, sobre mí, destinos y posts de blog.</p>
+                                    <div className="flex">
+                                        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">Gestor de Contenido</span>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <span className="text-gray-500 font-medium text-xs">Acciones:</span>
+                                    <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-extrabold rounded-full group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                                        Editar Contenido
                                     </span>
                                 </div>
                             </div>
@@ -1800,6 +2249,803 @@ export default function AdminDashboard() {
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            ) : view === 'site_config' ? (
+                /* Site Config CMS View */
+                <div className="space-y-8 animate-in fade-in duration-300">
+                    <button
+                        onClick={() => setView('portal')}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors bg-white px-3 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Volver al Portal
+                    </button>
+
+                    <div className="bg-gradient-to-r from-amber-500/10 to-pink-500/10 p-8 rounded-3xl border border-amber-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Configuración del Sitio (CMS)</h1>
+                            <p className="text-gray-500 mt-1.5 text-base">Modifica y administra el contenido visual, textos, destinos y posts del blog de Here We Go Advisor.</p>
+                        </div>
+                    </div>
+
+                    {/* Tabs navigation */}
+                    <div className="flex border-b border-gray-200 gap-4 overflow-x-auto pb-px">
+                        {[
+                            { id: 'gallery', label: '📸 Galería Home' },
+                            { id: 'reviews', label: '⭐ Cintillo de Reseñas' },
+                            { id: 'about', label: '✨ Página Sobre Mí' },
+                            { id: 'destinations', label: '🗺️ Destinos' },
+                            { id: 'blog', label: '✍️ Blog' }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveConfigTab(tab.id as any)}
+                                className={cn(
+                                    "px-4 py-2.5 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer",
+                                    activeConfigTab === tab.id
+                                        ? "border-primary text-primary"
+                                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                )}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Tab contents */}
+                    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+                        {activeConfigTab === 'gallery' && (
+                            /* GALLERY PANEL */
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+                                    <h3 className="font-bold text-gray-800 text-lg">Galería del Home</h3>
+                                    <label className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm inline-flex items-center gap-1.5">
+                                        <Plus className="h-3.5 w-3.5" /> Agregar Imagen
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={isUploadingGallery}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const alt = prompt("Ingresa una breve descripción (texto alternativo) para esta foto:") || "Imagen de la galería";
+                                                    handleAddGalleryImage(file, alt);
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                </div>
+
+                                {isUploadingGallery && (
+                                    <div className="flex items-center justify-center p-8 bg-gray-50 rounded-2xl">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    {galleryList.map((item) => (
+                                        <div key={item.id} className="group relative aspect-square rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center shadow-sm animate-in fade-in duration-200">
+                                            <img
+                                                src={item.image_url}
+                                                alt={item.alt}
+                                                className="object-cover w-full h-full"
+                                            />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4 text-white">
+                                                <p className="text-xs font-semibold line-clamp-3">{item.alt}</p>
+                                                <button
+                                                    onClick={() => handleDeleteGalleryImage(item.id)}
+                                                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors shadow-md self-end flex items-center gap-1"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeConfigTab === 'reviews' && (
+                            /* REVIEWS PANEL */
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+                                    <h3 className="font-bold text-gray-800 text-lg">Reseñas y Testimonios</h3>
+                                    <button
+                                        onClick={() => {
+                                            setEditingReview({ id: 0, name: "", role: "", content: "", rating: 5, is_approved: true });
+                                            setIsCreatingReview(true);
+                                        }}
+                                        className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm inline-flex items-center gap-1.5"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Agregar Reseña
+                                    </button>
+                                </div>
+
+                                {/* Review form overlay / block */}
+                                {(isCreatingReview || editingReview) && (
+                                    <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl animate-in slide-in-from-top duration-200 space-y-4 mb-6">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-gray-800 text-sm">{editingReview?.id === 0 ? "Nueva Reseña" : "Editar Reseña"}</h4>
+                                            <button onClick={() => { setEditingReview(null); setIsCreatingReview(false); }} className="text-gray-400 hover:text-gray-600">
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Nombre del Cliente</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingReview?.name || ""}
+                                                    onChange={(e) => setEditingReview(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: María G."
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Rol / Etiqueta</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingReview?.role || ""}
+                                                    onChange={(e) => setEditingReview(prev => prev ? { ...prev, role: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: Mamá de 3 / Luna de Miel"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Calificación (Estrellas)</label>
+                                                <select
+                                                    value={editingReview?.rating || 5}
+                                                    onChange={(e) => setEditingReview(prev => prev ? { ...prev, rating: parseInt(e.target.value) } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-bold"
+                                                >
+                                                    {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} estrellas</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Contenido del Testimonio</label>
+                                            <textarea
+                                                value={editingReview?.content || ""}
+                                                onChange={(e) => setEditingReview(prev => prev ? { ...prev, content: e.target.value } : null)}
+                                                className="w-full p-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium h-24 resize-none"
+                                                placeholder="Escribe el testimonio del cliente..."
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="review_is_approved"
+                                                checked={editingReview?.is_approved ?? true}
+                                                onChange={(e) => setEditingReview(prev => prev ? { ...prev, is_approved: e.target.checked } : null)}
+                                                className="rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="review_is_approved" className="text-xs font-bold text-gray-600 cursor-pointer select-none">Mostrar públicamente en el cintillo (Aprobado)</label>
+                                        </div>
+                                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                                            <button
+                                                onClick={() => { setEditingReview(null); setIsCreatingReview(false); }}
+                                                className="px-4 py-2 text-slate-500 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 text-xs font-bold rounded-xl"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!editingReview?.name || !editingReview.content) {
+                                                        alert("El nombre y contenido de la reseña son requeridos.");
+                                                        return;
+                                                    }
+                                                    await handleSaveReview(editingReview);
+                                                    setEditingReview(null);
+                                                    setIsCreatingReview(false);
+                                                }}
+                                                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl shadow-sm"
+                                            >
+                                                Guardar Reseña
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="divide-y divide-gray-150 border border-gray-200 rounded-2xl overflow-hidden bg-white">
+                                    {reviewsList.length === 0 ? (
+                                        <div className="p-8 text-center text-gray-400 text-xs font-semibold">No hay reseñas registradas aún.</div>
+                                    ) : (
+                                        reviewsList.map((rev) => (
+                                            <div key={rev.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-gray-800 text-sm">{rev.name}</span>
+                                                        <span className="text-[10px] text-gray-400 font-medium">({rev.role})</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-600 line-clamp-2 italic">"{rev.content}"</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex text-amber-400">
+                                                            {[...Array(rev.rating)].map((_, i) => (
+                                                                <Star key={i} className="h-3 w-3 fill-current" />
+                                                            ))}
+                                                        </div>
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded-full text-[9px] font-bold border",
+                                                            rev.is_approved ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-amber-50 text-amber-700 border-amber-100"
+                                                        )}>
+                                                            {rev.is_approved ? "Aprobada" : "Oculta"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 self-end sm:self-auto">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingReview(rev);
+                                                        }}
+                                                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <Edit className="h-3.5 w-3.5" /> Editar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteReview(rev.id)}
+                                                        className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeConfigTab === 'about' && (
+                            /* ABOUT ME PANEL */
+                            <div className="space-y-6">
+                                <h3 className="font-bold text-gray-800 text-lg pb-4 border-b border-gray-100">Editar Página Sobre Mí</h3>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Título de la Página</label>
+                                            <input
+                                                type="text"
+                                                value={aboutMeData.about_me_title || ""}
+                                                onChange={(e) => setAboutMeData(prev => ({ ...prev, about_me_title: e.target.value }))}
+                                                className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-semibold animate-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Saludo de Bienvenida</label>
+                                            <input
+                                                type="text"
+                                                value={aboutMeData.about_me_greeting || ""}
+                                                onChange={(e) => setAboutMeData(prev => ({ ...prev, about_me_greeting: e.target.value }))}
+                                                className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-semibold"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Rol / Subtítulo</label>
+                                            <input
+                                                type="text"
+                                                value={aboutMeData.about_me_role || ""}
+                                                onChange={(e) => setAboutMeData(prev => ({ ...prev, about_me_role: e.target.value }))}
+                                                className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-semibold"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Frase o Cita de Firma</label>
+                                            <input
+                                                type="text"
+                                                value={aboutMeData.about_me_quote || ""}
+                                                onChange={(e) => setAboutMeData(prev => ({ ...prev, about_me_quote: e.target.value }))}
+                                                className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 italic font-semibold"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Párrafos Sobre Mí (JSON o Texto)</label>
+                                            <span className="text-[10px] text-gray-400 block pb-1">Ingresa los párrafos de tu biografía, separados por dos saltos de línea (una línea vacía en medio).</span>
+                                            <textarea
+                                                value={(() => {
+                                                    try {
+                                                        const arr = JSON.parse(aboutMeData.about_me_paragraphs);
+                                                        return Array.isArray(arr) ? arr.join('\n\n') : aboutMeData.about_me_paragraphs;
+                                                    } catch (e) {
+                                                        return aboutMeData.about_me_paragraphs;
+                                                    }
+                                                })()}
+                                                onChange={(e) => {
+                                                    const lines = e.target.value.split('\n\n').filter(l => l.trim());
+                                                    setAboutMeData(prev => ({ ...prev, about_me_paragraphs: JSON.stringify(lines) }));
+                                                }}
+                                                className="w-full p-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium h-60 resize-none leading-relaxed"
+                                                placeholder="Escribe cada párrafo separado por una línea en blanco..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-bold text-gray-500">Imagen de Graduación Disney (Izq.)</label>
+                                        <div className="flex items-center gap-4">
+                                            <img src={aboutMeData.about_me_image_grads} alt="Grads preview" className="w-16 h-20 object-cover rounded-lg border border-gray-200" />
+                                            <label className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-gray-300 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm inline-flex items-center gap-1">
+                                                <Upload className="h-3.5 w-3.5" /> Subir Nueva Imagen
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const newId = `grads_${Date.now()}`;
+                                                            try {
+                                                                const { data } = await supabase.storage.from('gallery').upload(newId, file);
+                                                                if (data) {
+                                                                    const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(newId);
+                                                                    setAboutMeData(prev => ({ ...prev, about_me_image_grads: publicUrl }));
+                                                                }
+                                                            } catch (err) {
+                                                                const r = new FileReader();
+                                                                r.onload = (ev) => {
+                                                                    setAboutMeData(prev => ({ ...prev, about_me_image_grads: ev.target?.result as string }));
+                                                                };
+                                                                r.readAsDataURL(file);
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-bold text-gray-500">Imagen Retrato Principal (Der.)</label>
+                                        <div className="flex items-center gap-4">
+                                            <img src={aboutMeData.about_me_image_solo} alt="Solo preview" className="w-16 h-20 object-cover rounded-lg border border-gray-200" />
+                                            <label className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-gray-300 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm inline-flex items-center gap-1">
+                                                <Upload className="h-3.5 w-3.5" /> Subir Nueva Imagen
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const newId = `solo_${Date.now()}`;
+                                                            try {
+                                                                const { data } = await supabase.storage.from('gallery').upload(newId, file);
+                                                                if (data) {
+                                                                    const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(newId);
+                                                                    setAboutMeData(prev => ({ ...prev, about_me_image_solo: publicUrl }));
+                                                                }
+                                                            } catch (err) {
+                                                                const r = new FileReader();
+                                                                r.onload = (ev) => {
+                                                                    setAboutMeData(prev => ({ ...prev, about_me_image_solo: ev.target?.result as string }));
+                                                                };
+                                                                r.readAsDataURL(file);
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                                    <button
+                                        onClick={async () => {
+                                            await handleSaveAboutMe(aboutMeData);
+                                        }}
+                                        disabled={isSavingAboutMe}
+                                        className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        {isSavingAboutMe ? "Guardando..." : "Guardar Cambios"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeConfigTab === 'destinations' && (
+                            /* DESTINATIONS PANEL */
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+                                    <h3 className="font-bold text-gray-800 text-lg">Administrar Destinos</h3>
+                                    <button
+                                        onClick={() => {
+                                            setEditingDestination({ slug: "", title: "", subtitle: "", heroImage: "", overview: "", highlights: [], mustDos: [], tips: [] });
+                                            setIsCreatingDestination(true);
+                                        }}
+                                        className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm inline-flex items-center gap-1.5"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Agregar Destino
+                                    </button>
+                                </div>
+
+                                {/* Destination edit form overlay / block */}
+                                {(isCreatingDestination || editingDestination) && (
+                                    <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl animate-in slide-in-from-top duration-200 space-y-4 mb-6">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-gray-800 text-sm">{isCreatingDestination ? "Nuevo Destino" : `Editar Destino: ${editingDestination?.title}`}</h4>
+                                            <button onClick={() => { setEditingDestination(null); setIsCreatingDestination(false); }} className="text-gray-400 hover:text-gray-600">
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Slug (Ruta / ID)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingDestination?.slug || ""}
+                                                    onChange={(e) => setEditingDestination(prev => prev ? { ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: disney-world"
+                                                    disabled={!isCreatingDestination}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Título</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingDestination?.title || ""}
+                                                    onChange={(e) => setEditingDestination(prev => prev ? { ...prev, title: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: Walt Disney World"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Subtítulo</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingDestination?.subtitle || ""}
+                                                    onChange={(e) => setEditingDestination(prev => prev ? { ...prev, subtitle: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: El lugar más mágico de la Tierra"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2 space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Overview / Resumen</label>
+                                                <textarea
+                                                    value={editingDestination?.overview || ""}
+                                                    onChange={(e) => setEditingDestination(prev => prev ? { ...prev, overview: e.target.value } : null)}
+                                                    className="w-full p-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium h-24 resize-none"
+                                                    placeholder="Describe el destino brevemente..."
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Imagen de Portada (Hero Image)</label>
+                                                <div className="flex items-center gap-2">
+                                                    {editingDestination?.heroImage && (
+                                                        <img src={editingDestination.heroImage} className="w-12 h-12 object-cover rounded-xl border" />
+                                                    )}
+                                                    <label className="flex-1 h-10 px-3.5 rounded-xl border border-gray-300 border-dashed hover:border-violet-450 transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white">
+                                                        <Upload className="h-3.5 w-3.5 text-gray-400" />
+                                                        <span className="text-xs text-gray-500 font-medium truncate">Seleccionar imagen</span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    setSelectedFiles(prev => ({ ...prev, [`dest_${editingDestination?.slug}`]: file }));
+                                                                    const r = new FileReader();
+                                                                    r.onload = (ev) => {
+                                                                        setEditingDestination(prev => prev ? { ...prev, heroImage: ev.target?.result as string } : null);
+                                                                    };
+                                                                    r.readAsDataURL(file);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Highlight, tips, must-dos lists fields inside form */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-200 pt-4">
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-bold text-gray-500">Imperdibles (Uno por línea)</label>
+                                                <textarea
+                                                    value={editingDestination?.mustDos.join('\n') || ""}
+                                                    onChange={(e) => setEditingDestination(prev => prev ? { ...prev, mustDos: e.target.value.split('\n').filter(s => s.trim()) } : null)}
+                                                    className="w-full p-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium h-40"
+                                                    placeholder="Espectáculo de fuegos artificiales..."
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-bold text-gray-500">Tips Expertos (Uno por línea)</label>
+                                                <textarea
+                                                    value={editingDestination?.tips.join('\n') || ""}
+                                                    onChange={(e) => setEditingDestination(prev => prev ? { ...prev, tips: e.target.value.split('\n').filter(s => s.trim()) } : null)}
+                                                    className="w-full p-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium h-40"
+                                                    placeholder="Reserva tus pases a las 7 AM..."
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-bold text-gray-500">Destacados (JSON highlights)</label>
+                                                <span className="text-[10px] text-gray-400 block pb-1">Configurado como array. Escribe un título y descripción general.</span>
+                                                <textarea
+                                                    value={JSON.stringify(editingDestination?.highlights, null, 2) || "[]"}
+                                                    onChange={(e) => {
+                                                        try {
+                                                            const arr = JSON.parse(e.target.value);
+                                                            if (Array.isArray(arr)) {
+                                                                setEditingDestination(prev => prev ? { ...prev, highlights: arr } : null);
+                                                            }
+                                                        } catch (err) {}
+                                                    }}
+                                                    className="w-full p-3.5 rounded-xl border border-gray-300 font-mono text-[10px] text-gray-800 h-40"
+                                                    placeholder='[\n  {\n    "title": "Magic Kingdom",\n    "description": "Detalle",\n    "icon": "castle"\n  }\n]'
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                                            <button
+                                                onClick={() => { setEditingDestination(null); setIsCreatingDestination(false); }}
+                                                className="px-4 py-2 text-slate-500 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 text-xs font-bold rounded-xl"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!editingDestination?.slug || !editingDestination.title) {
+                                                        alert("El slug y título del destino son requeridos.");
+                                                        return;
+                                                    }
+                                                    const imageFile = selectedFiles[`dest_${editingDestination.slug}`] || null;
+                                                    await handleSaveDestination(editingDestination, imageFile);
+                                                    setEditingDestination(null);
+                                                    setIsCreatingDestination(false);
+                                                }}
+                                                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl shadow-sm"
+                                            >
+                                                Guardar Destino
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                    {destinationsList.map((dest) => (
+                                        <div key={dest.slug} className="bg-slate-50 border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between group">
+                                            <div className="relative h-36 bg-gray-200 overflow-hidden">
+                                                <img src={dest.heroImage} alt={dest.title} className="object-cover w-full h-full" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                                <div className="absolute bottom-3 left-3 text-white">
+                                                    <h4 className="font-bold text-sm">{dest.title}</h4>
+                                                    <p className="text-[10px] text-white/80">{dest.subtitle}</p>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-grow flex flex-col justify-between">
+                                                <p className="text-xs text-gray-500 line-clamp-3 mb-4 leading-relaxed">{dest.overview}</p>
+                                                
+                                                <div className="flex items-center justify-between border-t border-gray-200/80 pt-3 mt-auto">
+                                                    <span className="text-[10px] text-gray-400 font-mono">slug: /{dest.slug}</span>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={() => setEditingDestination(dest)}
+                                                            className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-bold transition-all text-xs cursor-pointer"
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteDestination(dest.slug)}
+                                                            className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-600 font-bold transition-all text-xs cursor-pointer"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeConfigTab === 'blog' && (
+                            /* BLOG PANEL */
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+                                    <h3 className="font-bold text-gray-800 text-lg">Publicaciones del Blog</h3>
+                                    <button
+                                        onClick={() => {
+                                            setEditingBlogPost({ id: "", slug: "", title: "", excerpt: "", content: "", date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }), readTime: "5 min de lectura", image: "", category: "Tips" });
+                                            setIsCreatingBlogPost(true);
+                                        }}
+                                        className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm inline-flex items-center gap-1.5"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Agregar Artículo
+                                    </button>
+                                </div>
+
+                                {/* Blog edit form overlay / block */}
+                                {(isCreatingBlogPost || editingBlogPost) && (
+                                    <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl animate-in slide-in-from-top duration-200 space-y-4 mb-6">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-gray-800 text-sm">{isCreatingBlogPost ? "Nuevo Artículo" : `Editar Artículo: ${editingBlogPost?.title}`}</h4>
+                                            <button onClick={() => { setEditingBlogPost(null); setIsCreatingBlogPost(false); }} className="text-gray-400 hover:text-gray-600">
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Slug único (Ruta / URL)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingBlogPost?.slug || ""}
+                                                    onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: mi-guia-magica"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Título del Artículo</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingBlogPost?.title || ""}
+                                                    onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, title: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: Cómo ahorrar en tu viaje"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Categoría</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingBlogPost?.category || ""}
+                                                    onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, category: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: Tips Expertos"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Fecha de Publicación</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingBlogPost?.date || ""}
+                                                    onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, date: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: 10 Dic, 2025"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Tiempo de Lectura</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingBlogPost?.readTime || ""}
+                                                    onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, readTime: e.target.value } : null)}
+                                                    className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                    placeholder="Ej: 5 min de lectura"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-gray-500">Imagen de Cabecera</label>
+                                                <div className="flex items-center gap-2">
+                                                    {editingBlogPost?.image && (
+                                                        <img src={editingBlogPost.image} className="w-12 h-12 object-cover rounded-xl border" />
+                                                    )}
+                                                    <label className="flex-1 h-10 px-3.5 rounded-xl border border-gray-300 border-dashed hover:border-violet-450 transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white">
+                                                        <Upload className="h-3.5 w-3.5 text-gray-400" />
+                                                        <span className="text-xs text-gray-500 font-medium truncate">Seleccionar portada</span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    setSelectedFiles(prev => ({ ...prev, [`blog_${editingBlogPost?.slug}`]: file }));
+                                                                    const r = new FileReader();
+                                                                    r.onload = (ev) => {
+                                                                        setEditingBlogPost(prev => prev ? { ...prev, image: ev.target?.result as string } : null);
+                                                                    };
+                                                                    r.readAsDataURL(file);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Extracto / Descripción Corta</label>
+                                            <input
+                                                type="text"
+                                                value={editingBlogPost?.excerpt || ""}
+                                                onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, excerpt: e.target.value } : null)}
+                                                className="w-full h-10 px-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-medium"
+                                                placeholder="Un breve resumen de una sola línea sobre lo que trata el post..."
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-gray-500">Contenido del Artículo (Cuerpo HTML)</label>
+                                            <span className="text-[10px] text-gray-400 block pb-1">Puedes escribir etiquetas HTML como &lt;p&gt;, &lt;h3&gt;, &lt;strong&gt;, etc. para dar formato al artículo.</span>
+                                            <textarea
+                                                value={editingBlogPost?.content || ""}
+                                                onChange={(e) => setEditingBlogPost(prev => prev ? { ...prev, content: e.target.value } : null)}
+                                                className="w-full p-3.5 rounded-xl border border-gray-300 text-xs text-gray-800 font-mono h-60"
+                                                placeholder="<p>Escribe el contenido de tu post aquí...</p>"
+                                            />
+                                        </div>
+
+                                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                                            <button
+                                                onClick={() => { setEditingBlogPost(null); setIsCreatingBlogPost(false); }}
+                                                className="px-4 py-2 text-slate-500 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 text-xs font-bold rounded-xl"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!editingBlogPost?.slug || !editingBlogPost.title || !editingBlogPost.content) {
+                                                        alert("El slug, título y contenido del post son requeridos.");
+                                                        return;
+                                                    }
+                                                    const imageFile = selectedFiles[`blog_${editingBlogPost.slug}`] || null;
+                                                    await handleSaveBlogPost(editingBlogPost, imageFile);
+                                                    setEditingBlogPost(null);
+                                                    setIsCreatingBlogPost(false);
+                                                }}
+                                                className="px-4 py-2 bg-violet-600 hover:bg-violet-750 text-white text-xs font-bold rounded-xl shadow-sm"
+                                            >
+                                                Guardar Artículo
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {blogPostsList.map((post) => (
+                                        <div key={post.slug} className="bg-slate-50 border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between group animate-in fade-in duration-200">
+                                            <div className="relative h-36 bg-gray-200 overflow-hidden">
+                                                <img src={post.image} alt={post.title} className="object-cover w-full h-full" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                                <div className="absolute bottom-3 left-3 text-white">
+                                                    <span className="bg-primary/20 text-white text-[9px] px-2 py-0.5 rounded-full font-bold uppercase mr-2">{post.category}</span>
+                                                    <h4 className="font-bold text-sm mt-1">{post.title}</h4>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-grow flex flex-col justify-between">
+                                                <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed">{post.excerpt}</p>
+                                                
+                                                <div className="flex items-center justify-between border-t border-gray-200/80 pt-3 mt-auto">
+                                                    <span className="text-[10px] text-gray-400">{post.date} • {post.readTime}</span>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={() => setEditingBlogPost(post)}
+                                                            className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-bold transition-all text-xs cursor-pointer"
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteBlogPost(post.id)}
+                                                            className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-600 font-bold transition-all text-xs cursor-pointer"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (

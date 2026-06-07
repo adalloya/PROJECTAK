@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { X, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const images = [
     { src: "/images/gallery/1.jpg", alt: "Familia feliz en Magic Kingdom" },
@@ -43,23 +44,54 @@ const swipePower = (offset: number, velocity: number) => {
 };
 
 export function Gallery() {
+    const [galleryImages, setGalleryImages] = useState<{ src: string; alt: string }[]>(images);
     const [current, setCurrent] = useState(0);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [direction, setDirection] = useState(0);
 
     const paginate = useCallback((newDirection: number) => {
+        if (galleryImages.length === 0) return;
         setDirection(newDirection);
-        setCurrent((prev) => (prev + newDirection + images.length) % images.length);
+        setCurrent((prev) => (prev + newDirection + galleryImages.length) % galleryImages.length);
+    }, [galleryImages.length]);
+
+    // Fetch from Supabase, falling back to static
+    useEffect(() => {
+        async function fetchImages() {
+            try {
+                const { data, error } = await supabase
+                    .from('homepage_gallery')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setGalleryImages(data.map(item => ({
+                        src: item.image_url,
+                        alt: item.alt || "Imagen de la galería"
+                    })));
+                }
+            } catch (err) {
+                console.error("Error fetching gallery from Supabase, falling back to static images:", err);
+            }
+        }
+        fetchImages();
     }, []);
+
+    // Reset current if out of bounds (e.g. data length changed)
+    useEffect(() => {
+        if (current >= galleryImages.length) {
+            setCurrent(0);
+        }
+    }, [galleryImages.length, current]);
 
     // Auto-rotation logic
     useEffect(() => {
-        if (isLightboxOpen) return;
+        if (isLightboxOpen || galleryImages.length === 0) return;
         const timer = setInterval(() => {
             paginate(1);
         }, 4000);
         return () => clearInterval(timer);
-    }, [isLightboxOpen, paginate]);
+    }, [isLightboxOpen, paginate, galleryImages.length]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -72,6 +104,8 @@ export function Gallery() {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isLightboxOpen, paginate]);
+
+    if (galleryImages.length === 0) return null;
 
     return (
         <section className="py-12 md:py-24 bg-background overflow-hidden">
@@ -95,7 +129,7 @@ export function Gallery() {
 
                         {/* Thumbnails Selector (Hidden on Mobile, Visible on Desktop) */}
                         <div className="hidden lg:grid grid-cols-3 gap-3">
-                            {images.map((img, index) => (
+                            {galleryImages.map((img, index) => (
                                 <button
                                     key={index}
                                     onClick={() => {
@@ -143,8 +177,8 @@ export function Gallery() {
                                     className="absolute inset-0"
                                 >
                                     <Image
-                                        src={images[current].src}
-                                        alt={images[current].alt}
+                                        src={galleryImages[current].src}
+                                        alt={galleryImages[current].alt}
                                         fill
                                         className="object-cover"
                                         priority
@@ -152,7 +186,7 @@ export function Gallery() {
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6 md:p-8">
                                         <p className="text-white text-lg md:text-xl font-medium drop-shadow-md">
-                                            {images[current].alt}
+                                            {galleryImages[current].alt}
                                         </p>
                                     </div>
 
@@ -165,7 +199,7 @@ export function Gallery() {
 
                             {/* Mobile Indicators */}
                             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 lg:hidden z-10">
-                                {images.map((_, idx) => (
+                                {galleryImages.map((_, idx) => (
                                     <div
                                         key={idx}
                                         className={cn(
@@ -194,7 +228,7 @@ export function Gallery() {
                         {/* Top Controls */}
                         <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
                             <span className="text-white/80 font-medium ml-2">
-                                {current + 1} / {images.length}
+                                {current + 1} / {galleryImages.length}
                             </span>
                             <button
                                 className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -247,8 +281,8 @@ export function Gallery() {
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <Image
-                                    src={images[current].src}
-                                    alt={images[current].alt}
+                                    src={galleryImages[current].src}
+                                    alt={galleryImages[current].alt}
                                     fill
                                     className="object-contain"
                                     priority
@@ -256,7 +290,7 @@ export function Gallery() {
                                     sizes="(max-width: 1200px) 100vw, 1152px"
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-center pb-12">
-                                    <p className="text-xl md:text-2xl font-bold tracking-tight">{images[current].alt}</p>
+                                    <p className="text-xl md:text-2xl font-bold tracking-tight">{galleryImages[current].alt}</p>
                                 </div>
                             </motion.div>
                         </div>
@@ -264,7 +298,7 @@ export function Gallery() {
                         {/* Bottom Thumbnails */}
                         <div className="absolute bottom-4 left-0 right-0 z-50 px-4">
                             <div className="flex justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
-                                {images.map((img, index) => (
+                                {galleryImages.map((img, index) => (
                                     <button
                                         key={index}
                                         onClick={(e) => {

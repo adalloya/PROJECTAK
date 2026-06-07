@@ -1822,7 +1822,7 @@ export default function AdminDashboard() {
                     {/* Primary Section Buttons */}
                     <div>
                         <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase">Secciones de Gestión</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Section 1: Manejo de Ventas */}
                             <div
                                 onClick={() => setView('sales')}
@@ -1894,52 +1894,6 @@ export default function AdminDashboard() {
                                     <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
                                     <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-extrabold rounded-full group-hover:bg-red-600 group-hover:text-white transition-colors">
                                         {stats.lost}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Section 4: Centro de Recursos */}
-                            <div
-                                onClick={() => setView('resources_config')}
-                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
-                            >
-                                <div>
-                                    <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4 group-hover:bg-violet-600 group-hover:text-white transition-colors">
-                                        <Lock className="h-6 w-6" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Centro de Recursos</h3>
-                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Administrar y subir las guías PDF del Centro de Recursos del Viajero.</p>
-                                    <div className="flex">
-                                        <span className="px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-bold rounded-full">Recursos PDF</span>
-                                    </div>
-                                </div>
-                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
-                                    <span className="text-gray-500 font-medium text-xs">Acciones:</span>
-                                    <span className="px-3 py-1 bg-violet-50 text-violet-700 text-xs font-extrabold rounded-full group-hover:bg-violet-600 group-hover:text-white transition-colors">
-                                        Configurar PDFs
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Section 5: Configuración del Sitio */}
-                            <div
-                                onClick={() => setView('site_config')}
-                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
-                            >
-                                <div>
-                                    <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                                        <Sliders className="h-6 w-6" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Configuración</h3>
-                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Administrar galería de fotos, reseñas, sobre mí, destinos y posts de blog.</p>
-                                    <div className="flex">
-                                        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">Gestor de Contenido</span>
-                                    </div>
-                                </div>
-                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
-                                    <span className="text-gray-500 font-medium text-xs">Acciones:</span>
-                                    <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-extrabold rounded-full group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                                        Editar Contenido
                                     </span>
                                 </div>
                             </div>
@@ -2045,6 +1999,30 @@ export default function AdminDashboard() {
                                 <p className="text-gray-400 text-xs mt-1">Todos los clientes próximos a viajar tienen su número de reserva asignado.</p>
                             </div>
                         )}
+                    </div>
+
+                    {/* Site Settings & Resource Config Quick Actions */}
+                    <div className="bg-slate-50 border border-slate-200/60 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 mt-8 shadow-sm">
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-900">Configuraciones del Sistema</h3>
+                            <p className="text-xs text-slate-500 mt-1">Herramientas administrativas y de edición de contenido para el sitio.</p>
+                        </div>
+                        <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                            <button
+                                onClick={() => setView('resources_config')}
+                                className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50 text-xs font-bold text-gray-700 rounded-xl transition-all shadow-sm hover:shadow-md"
+                            >
+                                <Lock className="h-4 w-4 text-violet-500" />
+                                Configurar PDFs
+                            </button>
+                            <button
+                                onClick={() => setView('site_config')}
+                                className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 text-xs font-bold text-gray-700 rounded-xl transition-all shadow-sm hover:shadow-md"
+                            >
+                                <Sliders className="h-4 w-4 text-amber-500" />
+                                Configurar Sitio (CMS)
+                            </button>
+                        </div>
                     </div>
                 </div>
             ) : view === 'resources_config' ? (

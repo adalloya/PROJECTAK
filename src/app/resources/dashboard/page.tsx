@@ -114,51 +114,9 @@ export default function ResourceDashboardPage() {
     }
 
     // Filter resources by category
-    const wdwGuides = resources.filter(r => r.category === "wdw");
-    const dlGuides = resources.filter(r => r.category === "dl");
-    const dclGuides = resources.filter(r => r.category === "dcl");
-
-    // Static list fallback in case DB table is empty (pre-migration)
-    const getGuidesForCategory = (cat: "wdw" | "dl" | "dcl", dbList: ResourceItem[]) => {
-        const defaultTitles: Record<string, string[]> = {
-            wdw: [
-                "GUÍA MY DISNEY EXPERIENCE",
-                "GUÍA RESERVAS Lightning Lane",
-                "GUÍA Overview Disney World",
-                "Guía Dining Plan",
-                "Restaurantes - Experiencias con personajes",
-                "Restaurantes - Requieren reservacion"
-            ],
-            dl: [
-                "GUÍA Disneyland APP",
-                "GUÍA RESERVAS Lightning Lane",
-                "GUÍA Overview Disneyland",
-                "Restaurantes - Experiencias con personajes",
-                "Restaurantes - Requieren reservacion"
-            ],
-            dcl: [
-                "Overview",
-                "Deck Plan"
-            ]
-        };
-
-        const list = dbList.length > 0 ? dbList : [];
-        const titles = defaultTitles[cat];
-
-        return titles.map((title, i) => {
-            const dbItem = list.find(item => item.title.toLowerCase().trim() === title.toLowerCase().trim() && item.category === cat);
-            return {
-                id: dbItem?.id || `${cat}_fallback_${i}`,
-                title,
-                category: cat,
-                pdf_url: dbItem?.pdf_url || null
-            };
-        });
-    };
-
-    const finalWdwGuides = getGuidesForCategory("wdw", wdwGuides);
-    const finalDlGuides = getGuidesForCategory("dl", dlGuides);
-    const finalDclGuides = getGuidesForCategory("dcl", dclGuides);
+    const finalWdwGuides = resources.filter(r => r.category === "wdw");
+    const finalDlGuides = resources.filter(r => r.category === "dl");
+    const finalDclGuides = resources.filter(r => r.category === "dcl");
 
     const hasAnyAccess = lead.resource_wdw || lead.resource_dl || lead.resource_dcl;
 
@@ -299,16 +257,22 @@ export default function ResourceDashboardPage() {
                                     <div className="h-2 w-2 rounded-full bg-violet-400" />
                                     <h2 className="text-2xl font-bold tracking-tight text-violet-300">Walt Disney World (Orlando)</h2>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {finalWdwGuides.map((guide, idx) => (
-                                        <GuideCard 
-                                            key={guide.id}
-                                            guide={guide}
-                                            index={idx}
-                                            onView={(title, url) => setSelectedPdf({ title, url })}
-                                        />
-                                    ))}
-                                </div>
+                                {finalWdwGuides.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {finalWdwGuides.map((guide, idx) => (
+                                            <GuideCard 
+                                                key={guide.id}
+                                                guide={guide}
+                                                index={idx}
+                                                onView={(title, url) => setSelectedPdf({ title, url })}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-6 text-center text-slate-500 text-xs font-semibold">
+                                        Próximamente disponible - Tu asesor está preparando tus guías mágicas.
+                                    </div>
+                                )}
                             </motion.section>
                         )}
 
@@ -323,16 +287,22 @@ export default function ResourceDashboardPage() {
                                     <div className="h-2 w-2 rounded-full bg-fuchsia-400" />
                                     <h2 className="text-2xl font-bold tracking-tight text-fuchsia-300">Disneyland California</h2>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {finalDlGuides.map((guide, idx) => (
-                                        <GuideCard 
-                                            key={guide.id}
-                                            guide={guide}
-                                            index={idx}
-                                            onView={(title, url) => setSelectedPdf({ title, url })}
-                                        />
-                                    ))}
-                                </div>
+                                {finalDlGuides.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {finalDlGuides.map((guide, idx) => (
+                                            <GuideCard 
+                                                key={guide.id}
+                                                guide={guide}
+                                                index={idx}
+                                                onView={(title, url) => setSelectedPdf({ title, url })}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-6 text-center text-slate-500 text-xs font-semibold">
+                                        Próximamente disponible - Tu asesor está preparando tus guías mágicas.
+                                    </div>
+                                )}
                             </motion.section>
                         )}
 
@@ -347,16 +317,22 @@ export default function ResourceDashboardPage() {
                                     <div className="h-2 w-2 rounded-full bg-indigo-400" />
                                     <h2 className="text-2xl font-bold tracking-tight text-indigo-300">Disney Cruise Line</h2>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {finalDclGuides.map((guide, idx) => (
-                                        <GuideCard 
-                                            key={guide.id}
-                                            guide={guide}
-                                            index={idx}
-                                            onView={(title, url) => setSelectedPdf({ title, url })}
-                                        />
-                                    ))}
-                                </div>
+                                {finalDclGuides.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {finalDclGuides.map((guide, idx) => (
+                                            <GuideCard 
+                                                key={guide.id}
+                                                guide={guide}
+                                                index={idx}
+                                                onView={(title, url) => setSelectedPdf({ title, url })}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-6 text-center text-slate-500 text-xs font-semibold">
+                                        Próximamente disponible - Tu asesor está preparando tus guías mágicas.
+                                    </div>
+                                )}
                             </motion.section>
                         )}
                     </div>
@@ -429,7 +405,7 @@ export default function ResourceDashboardPage() {
 
 // Subcomponent: Guide Card
 interface GuideCardProps {
-    guide: { id: string; title: string; pdf_url: string | null };
+    guide: ResourceItem;
     index: number;
     onView: (title: string, url: string) => void;
 }

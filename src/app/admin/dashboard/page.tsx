@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign, Lock, Upload, Eye } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
-import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES } from "@/lib/crm/types";
+import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES, ResourceItem } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -35,47 +35,129 @@ export default function AdminDashboard() {
     type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost' | 'resources_config';
     const [view, setView] = useState<AdminView>('portal');
 
-    const RESOURCE_SLOTS = [
-        { id: 'wdw_mde', title: 'GUÍA MY DISNEY EXPERIENCE', category: 'wdw' },
-        { id: 'wdw_ll', title: 'GUÍA RESERVAS Lightning Lane', category: 'wdw' },
-        { id: 'wdw_overview', title: 'GUÍA Overview Disney World', category: 'wdw' },
-        { id: 'wdw_dining', title: 'Guía Dining Plan', category: 'wdw' },
-        { id: 'wdw_dining_char', title: 'Restaurantes - Experiencias con personajes', category: 'wdw' },
-        { id: 'wdw_dining_req', title: 'Restaurantes - Requieren reservacion', category: 'wdw' },
-        { id: 'dl_app', title: 'GUÍA Disneyland APP', category: 'dl' },
-        { id: 'dl_ll', title: 'GUÍA RESERVAS Lightning Lane', category: 'dl' },
-        { id: 'dl_overview', title: 'GUÍA Overview Disneyland', category: 'dl' },
-        { id: 'dl_dining_char', title: 'Restaurantes - Experiencias con personajes', category: 'dl' },
-        { id: 'dl_dining_req', title: 'Restaurantes - Requieren reservacion', category: 'dl' },
-        { id: 'dcl_overview', title: 'Overview', category: 'dcl' },
-        { id: 'dcl_deck', title: 'Deck Plan', category: 'dcl' }
+    const DEFAULT_RESOURCES: ResourceItem[] = [
+        { id: 'wdw_mde', title: 'GUÍA MY DISNEY EXPERIENCE', category: 'wdw', pdf_url: null },
+        { id: 'wdw_ll', title: 'GUÍA RESERVAS Lightning Lane', category: 'wdw', pdf_url: null },
+        { id: 'wdw_overview', title: 'GUÍA Overview Disney World', category: 'wdw', pdf_url: null },
+        { id: 'wdw_dining', title: 'Guía Dining Plan', category: 'wdw', pdf_url: null },
+        { id: 'wdw_dining_char', title: 'Restaurantes - Experiencias con personajes', category: 'wdw', pdf_url: null },
+        { id: 'wdw_dining_req', title: 'Restaurantes - Requieren reservacion', category: 'wdw', pdf_url: null },
+        { id: 'dl_app', title: 'GUÍA Disneyland APP', category: 'dl', pdf_url: null },
+        { id: 'dl_ll', title: 'GUÍA RESERVAS Lightning Lane', category: 'dl', pdf_url: null },
+        { id: 'dl_overview', title: 'GUÍA Overview Disneyland', category: 'dl', pdf_url: null },
+        { id: 'dl_dining_char', title: 'Restaurantes - Experiencias con personajes', category: 'dl', pdf_url: null },
+        { id: 'dl_dining_req', title: 'Restaurantes - Requieren reservacion', category: 'dl', pdf_url: null },
+        { id: 'dcl_overview', title: 'Overview', category: 'dcl', pdf_url: null },
+        { id: 'dcl_deck', title: 'Deck Plan', category: 'dcl', pdf_url: null }
     ];
 
-    const [adminResources, setAdminResources] = useState<Record<string, string>>({});
+    const [resourcesList, setResourcesList] = useState<ResourceItem[]>([]);
     const [uploadingResourceId, setUploadingResourceId] = useState<string | null>(null);
+    const [activeAddCategory, setActiveAddCategory] = useState<'wdw' | 'dl' | 'dcl' | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<Record<string, File>>({});
+    const [newResourceTitle, setNewResourceTitle] = useState("");
+    const [newResourceFile, setNewResourceFile] = useState<File | null>(null);
 
     const fetchAdminResources = async () => {
+        let dbList: ResourceItem[] = [];
         try {
             const { data, error } = await supabase
                 .from('resources')
-                .select('*');
-            if (data) {
-                const mapping: Record<string, string> = {};
-                data.forEach((r: any) => {
-                    if (r.pdf_url) mapping[r.id] = r.pdf_url;
-                });
-                setAdminResources(mapping);
+                .select('*')
+                .order('updated_at', { ascending: true });
+            if (data && data.length > 0) {
+                dbList = data as ResourceItem[];
             }
         } catch (e) {
             console.error("Failed to fetch admin resources:", e);
         }
-        // Always merge with localStorage fallback
-        const local = localStorage.getItem('crm_resources_fallback');
+
+        // Merge with local storage fallback
+        let localList: ResourceItem[] = [];
+        const local = localStorage.getItem('crm_resources_list_fallback');
         if (local) {
             try {
-                const parsed = JSON.parse(local);
-                setAdminResources(prev => ({ ...prev, ...parsed }));
+                localList = JSON.parse(local) as ResourceItem[];
             } catch (e) {}
+        }
+
+        const combined = [...dbList];
+        localList.forEach(l => {
+            if (!combined.some(c => c.id === l.id)) {
+                combined.push(l);
+            }
+        });
+
+        if (combined.length === 0) {
+            setResourcesList(DEFAULT_RESOURCES);
+            localStorage.setItem('crm_resources_list_fallback', JSON.stringify(DEFAULT_RESOURCES));
+        } else {
+            setResourcesList(combined);
+        }
+    };
+
+    const handleAddResource = async (category: 'wdw' | 'dl' | 'dcl', title: string, file: File | null) => {
+        const newId = `${category}_${Math.random().toString(36).substring(2, 9)}`;
+        let pdfUrl = "";
+
+        if (file) {
+            setUploadingResourceId(newId);
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${newId}_${Date.now()}.${fileExt}`;
+                const { data, error: uploadError } = await supabase.storage
+                    .from('resources')
+                    .upload(fileName, file);
+
+                if (data) {
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('resources')
+                        .getPublicUrl(fileName);
+                    pdfUrl = publicUrl;
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+            } finally {
+                setUploadingResourceId(null);
+            }
+        }
+
+        const saveItem = async (urlVal: string | null) => {
+            const newItem: ResourceItem = {
+                id: newId,
+                title,
+                category,
+                pdf_url: urlVal,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('resources')
+                    .insert([newItem]);
+                if (error) {
+                    console.warn("DB insert failed, using fallback.", error);
+                }
+            } catch (e) {}
+
+            setResourcesList(prev => {
+                const updated = [...prev, newItem];
+                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(updated));
+                return updated;
+            });
+            alert("Guía agregada exitosamente.");
+            fetchAdminResources();
+        };
+
+        if (file && !pdfUrl) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target?.result as string;
+                saveItem(base64);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            saveItem(pdfUrl || null);
         }
     };
 
@@ -90,7 +172,7 @@ export default function AdminDashboard() {
                 .from('resources')
                 .upload(fileName, file);
 
-            if (uploadError) {
+            if (uploadError && !uploadError.message?.includes("already exists")) {
                 console.warn("Storage upload failed, attempting fallback to local Base64.", uploadError);
             } else if (data) {
                 const { data: { publicUrl: url } } = supabase.storage
@@ -99,28 +181,36 @@ export default function AdminDashboard() {
                 publicUrl = url;
             }
 
-            if (publicUrl) {
-                const { error: dbError } = await supabase
-                    .from('resources')
-                    .update({ pdf_url: publicUrl, updated_at: new Date().toISOString() })
-                    .eq('id', resourceId);
-
-                if (dbError) {
-                    console.warn("DB update failed, using fallback.", dbError);
-                }
-            }
-
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const base64 = e.target?.result as string;
                 const finalUrl = publicUrl || base64;
-                
-                setAdminResources(prev => {
-                    const updated = { ...prev, [resourceId]: finalUrl };
-                    localStorage.setItem('crm_resources_fallback', JSON.stringify(updated));
+
+                try {
+                    const existingItem = resourcesList.find(r => r.id === resourceId);
+                    const upsertData = {
+                        id: resourceId,
+                        title: existingItem?.title || "Guía",
+                        category: existingItem?.category || "wdw",
+                        pdf_url: finalUrl,
+                        updated_at: new Date().toISOString()
+                    };
+                    await supabase
+                        .from('resources')
+                        .upsert(upsertData);
+                } catch (dbErr) {
+                    console.error("Database upsert failed:", dbErr);
+                }
+
+                setResourcesList(prev => {
+                    const updated = prev.map(item => 
+                        item.id === resourceId ? { ...item, pdf_url: finalUrl, updated_at: new Date().toISOString() } : item
+                    );
+                    localStorage.setItem('crm_resources_list_fallback', JSON.stringify(updated));
                     return updated;
                 });
-                alert("Guía subida exitosamente.");
+
+                alert("Archivo PDF cargado exitosamente.");
             };
             reader.readAsDataURL(file);
 
@@ -133,22 +223,24 @@ export default function AdminDashboard() {
     };
 
     const handleDeleteResource = async (resourceId: string) => {
-        if (!confirm("¿Estás seguro de que quieres eliminar esta guía?")) return;
+        if (!confirm("¿Estás seguro de que quieres eliminar esta guía por completo?")) return;
         
         try {
-            await supabase
+            const { error } = await supabase
                 .from('resources')
-                .update({ pdf_url: null, updated_at: new Date().toISOString() })
+                .delete()
                 .eq('id', resourceId);
+            if (error) {
+                console.warn("DB delete failed, using local fallback", error);
+            }
         } catch (e) {}
 
-        setAdminResources(prev => {
-            const updated = { ...prev };
-            delete updated[resourceId];
-            localStorage.setItem('crm_resources_fallback', JSON.stringify(updated));
+        setResourcesList(prev => {
+            const updated = prev.filter(item => item.id !== resourceId);
+            localStorage.setItem('crm_resources_list_fallback', JSON.stringify(updated));
             return updated;
         });
-        alert("Guía eliminada.");
+        alert("Guía eliminada exitosamente.");
     };
 
 
@@ -1527,7 +1619,14 @@ export default function AdminDashboard() {
                         {['wdw', 'dl', 'dcl'].map(category => {
                             const catLabel = category === 'wdw' ? 'Walt Disney World (Orlando)' : category === 'dl' ? 'Disneyland California' : 'Disney Cruise Line';
                             const colorClass = category === 'wdw' ? 'text-violet-600 bg-violet-50 border-violet-100' : category === 'dl' ? 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100';
-                            const categorySlots = RESOURCE_SLOTS.filter(s => s.category === category);
+                            
+                            const btnColorClass = category === 'wdw' 
+                                ? 'bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white focus:ring-violet-500/20' 
+                                : category === 'dl' 
+                                ? 'bg-fuchsia-600 hover:bg-fuchsia-700 active:bg-fuchsia-800 text-white focus:ring-fuchsia-500/20' 
+                                : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white focus:ring-indigo-500/20';
+
+                            const categorySlots = resourcesList.filter(s => s.category === category);
 
                             return (
                                 <div key={category} className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
@@ -1537,70 +1636,166 @@ export default function AdminDashboard() {
                                                 {catLabel}
                                             </span>
                                         </div>
+                                        {activeAddCategory !== category && (
+                                            <button
+                                                onClick={() => {
+                                                    setActiveAddCategory(category as 'wdw' | 'dl' | 'dcl');
+                                                    setNewResourceTitle("");
+                                                    setNewResourceFile(null);
+                                                }}
+                                                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${btnColorClass}`}
+                                            >
+                                                <Plus className="h-3.5 w-3.5" /> Agregar Guía
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="p-6 divide-y divide-gray-100">
-                                        {categorySlots.map(slot => {
-                                            const pdfUrl = adminResources[slot.id];
-                                            const isUploading = uploadingResourceId === slot.id;
-
-                                            return (
-                                                <div key={slot.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                    <div>
-                                                        <h4 className="font-bold text-gray-800 text-sm">{slot.title}</h4>
-                                                        <span className="text-xs text-gray-400">ID: {slot.id}</span>
+                                        {activeAddCategory === category && (
+                                            <div className="mb-6 p-5 bg-slate-50 border border-slate-200 rounded-2xl animate-in slide-in-from-top duration-200 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h5 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Nueva Guía - {catLabel}</h5>
+                                                    <button
+                                                        onClick={() => setActiveAddCategory(null)}
+                                                        className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="block text-xs font-bold text-gray-500">Título de la Guía</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Ej: Guía de Lightning Lane Multi Pass"
+                                                            value={newResourceTitle}
+                                                            onChange={(e) => setNewResourceTitle(e.target.value)}
+                                                            className="w-full h-10 px-3.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-xs bg-white text-gray-800 font-medium"
+                                                        />
                                                     </div>
-
-                                                    <div className="flex items-center gap-3">
-                                                        {pdfUrl ? (
-                                                            <>
-                                                                <a
-                                                                    href={pdfUrl}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
-                                                                >
-                                                                    <Eye className="h-3.5 w-3.5" /> Ver PDF
-                                                                </a>
+                                                    <div className="space-y-1">
+                                                        <label className="block text-xs font-bold text-gray-500">Archivo PDF (Opcional)</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <label className="flex-1 h-10 px-3.5 rounded-xl border border-gray-300 border-dashed hover:border-violet-450 transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white">
+                                                                <Upload className="h-3.5 w-3.5 text-gray-400" />
+                                                                <span className="text-xs text-gray-500 font-medium truncate">
+                                                                    {newResourceFile ? newResourceFile.name : "Seleccionar archivo .pdf"}
+                                                                </span>
+                                                                <input
+                                                                    type="file"
+                                                                    accept=".pdf"
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) setNewResourceFile(file);
+                                                                    }}
+                                                                />
+                                                            </label>
+                                                            {newResourceFile && (
                                                                 <button
-                                                                    onClick={() => handleDeleteResource(slot.id)}
-                                                                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                                    type="button"
+                                                                    onClick={() => setNewResourceFile(null)}
+                                                                    className="h-10 w-10 border border-gray-300 hover:border-red-300 text-red-500 hover:bg-red-50 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
                                                                 >
-                                                                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                                                    <Trash2 className="h-4 w-4" />
                                                                 </button>
-                                                            </>
-                                                        ) : (
-                                                            <div className="flex items-center">
-                                                                <label className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5">
-                                                                    {isUploading ? (
-                                                                        <>
-                                                                            <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                                                            </svg>
-                                                                            <span>Subiendo...</span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <Upload className="h-3.5 w-3.5" /> Subir Guía PDF
-                                                                        </>
-                                                                    )}
-                                                                    <input
-                                                                        type="file"
-                                                                        accept=".pdf"
-                                                                        className="hidden"
-                                                                        disabled={isUploading}
-                                                                        onChange={(e) => {
-                                                                            const file = e.target.files?.[0];
-                                                                            if (file) handleUploadResource(slot.id, file);
-                                                                        }}
-                                                                    />
-                                                                </label>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
+                                                <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                                                    <button
+                                                        onClick={() => setActiveAddCategory(null)}
+                                                        className="px-4 py-2 text-slate-500 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!newResourceTitle.trim()) {
+                                                                alert("Por favor, ingresa un título para la guía.");
+                                                                return;
+                                                            }
+                                                            await handleAddResource(category as 'wdw' | 'dl' | 'dcl', newResourceTitle, newResourceFile);
+                                                            setNewResourceTitle("");
+                                                            setNewResourceFile(null);
+                                                            setActiveAddCategory(null);
+                                                        }}
+                                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm ${btnColorClass}`}
+                                                    >
+                                                        Guardar Guía
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {categorySlots.length === 0 ? (
+                                            <div className="text-center py-8 text-gray-400 text-xs font-medium">
+                                                No hay guías configuradas para esta sección. Haz clic en &quot;Agregar Guía&quot; para crear la primera.
+                                            </div>
+                                        ) : (
+                                            categorySlots.map(slot => {
+                                                const pdfUrl = slot.pdf_url;
+                                                const isUploading = uploadingResourceId === slot.id;
+
+                                                return (
+                                                    <div key={slot.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                        <div>
+                                                            <h4 className="font-bold text-gray-800 text-sm">{slot.title}</h4>
+                                                            <span className="text-xs text-gray-400">ID: {slot.id}</span>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-3">
+                                                            {pdfUrl ? (
+                                                                <>
+                                                                    <a
+                                                                        href={pdfUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                                                                    >
+                                                                        <Eye className="h-3.5 w-3.5" /> Ver PDF
+                                                                    </a>
+                                                                    <button
+                                                                        onClick={() => handleDeleteResource(slot.id)}
+                                                                        className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <div className="flex items-center">
+                                                                    <label className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5">
+                                                                        {isUploading ? (
+                                                                            <>
+                                                                                <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                                                </svg>
+                                                                                <span>Subiendo...</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Upload className="h-3.5 w-3.5" /> Subir Guía PDF
+                                                                            </>
+                                                                        )}
+                                                                        <input
+                                                                            type="file"
+                                                                            accept=".pdf"
+                                                                            className="hidden"
+                                                                            disabled={isUploading}
+                                                                            onChange={(e) => {
+                                                                                const file = e.target.files?.[0];
+                                                                                if (file) handleUploadResource(slot.id, file);
+                                                                            }}
+                                                                        />
+                                                                    </label>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
                                     </div>
                                 </div>
                             );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign } from "lucide-react";
+import { Search, Filter, Phone, Mail, Calendar, User, FileText, CheckCircle2, XCircle, Clock, Save, X, Trash2, ArrowLeft, ChevronLeft, Plus, Edit, ChevronRight, AlertTriangle, Check, DollarSign, Lock, Upload, Eye } from "lucide-react";
 import { MOCK_LEADS } from "@/lib/crm/mock-data";
 import { LEAD_STATUSES, Lead, LeadStatus, Task, TaskStatus, TASK_STATUSES } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
@@ -32,8 +32,125 @@ export default function AdminDashboard() {
     const [sortBy, setSortBy] = useState<SortOption>('created_at');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost';
+    type AdminView = 'portal' | 'sales' | 'post-sales' | 'lost' | 'resources_config';
     const [view, setView] = useState<AdminView>('portal');
+
+    const RESOURCE_SLOTS = [
+        { id: 'wdw_mde', title: 'GUÍA MY DISNEY EXPERIENCE', category: 'wdw' },
+        { id: 'wdw_ll', title: 'GUÍA RESERVAS Lightning Lane', category: 'wdw' },
+        { id: 'wdw_overview', title: 'GUÍA Overview Disney World', category: 'wdw' },
+        { id: 'wdw_dining', title: 'Guía Dining Plan', category: 'wdw' },
+        { id: 'wdw_dining_char', title: 'Restaurantes - Experiencias con personajes', category: 'wdw' },
+        { id: 'wdw_dining_req', title: 'Restaurantes - Requieren reservacion', category: 'wdw' },
+        { id: 'dl_app', title: 'GUÍA Disneyland APP', category: 'dl' },
+        { id: 'dl_ll', title: 'GUÍA RESERVAS Lightning Lane', category: 'dl' },
+        { id: 'dl_overview', title: 'GUÍA Overview Disneyland', category: 'dl' },
+        { id: 'dl_dining_char', title: 'Restaurantes - Experiencias con personajes', category: 'dl' },
+        { id: 'dl_dining_req', title: 'Restaurantes - Requieren reservacion', category: 'dl' },
+        { id: 'dcl_overview', title: 'Overview', category: 'dcl' },
+        { id: 'dcl_deck', title: 'Deck Plan', category: 'dcl' }
+    ];
+
+    const [adminResources, setAdminResources] = useState<Record<string, string>>({});
+    const [uploadingResourceId, setUploadingResourceId] = useState<string | null>(null);
+
+    const fetchAdminResources = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('resources')
+                .select('*');
+            if (data) {
+                const mapping: Record<string, string> = {};
+                data.forEach((r: any) => {
+                    if (r.pdf_url) mapping[r.id] = r.pdf_url;
+                });
+                setAdminResources(mapping);
+            }
+        } catch (e) {
+            console.error("Failed to fetch admin resources:", e);
+        }
+        // Always merge with localStorage fallback
+        const local = localStorage.getItem('crm_resources_fallback');
+        if (local) {
+            try {
+                const parsed = JSON.parse(local);
+                setAdminResources(prev => ({ ...prev, ...parsed }));
+            } catch (e) {}
+        }
+    };
+
+    const handleUploadResource = async (resourceId: string, file: File) => {
+        setUploadingResourceId(resourceId);
+        try {
+            let publicUrl = "";
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${resourceId}_${Date.now()}.${fileExt}`;
+            
+            const { data, error: uploadError } = await supabase.storage
+                .from('resources')
+                .upload(fileName, file);
+
+            if (uploadError) {
+                console.warn("Storage upload failed, attempting fallback to local Base64.", uploadError);
+            } else if (data) {
+                const { data: { publicUrl: url } } = supabase.storage
+                    .from('resources')
+                    .getPublicUrl(fileName);
+                publicUrl = url;
+            }
+
+            if (publicUrl) {
+                const { error: dbError } = await supabase
+                    .from('resources')
+                    .update({ pdf_url: publicUrl, updated_at: new Date().toISOString() })
+                    .eq('id', resourceId);
+
+                if (dbError) {
+                    console.warn("DB update failed, using fallback.", dbError);
+                }
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target?.result as string;
+                const finalUrl = publicUrl || base64;
+                
+                setAdminResources(prev => {
+                    const updated = { ...prev, [resourceId]: finalUrl };
+                    localStorage.setItem('crm_resources_fallback', JSON.stringify(updated));
+                    return updated;
+                });
+                alert("Guía subida exitosamente.");
+            };
+            reader.readAsDataURL(file);
+
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Error al subir el archivo.");
+        } finally {
+            setUploadingResourceId(null);
+        }
+    };
+
+    const handleDeleteResource = async (resourceId: string) => {
+        if (!confirm("¿Estás seguro de que quieres eliminar esta guía?")) return;
+        
+        try {
+            await supabase
+                .from('resources')
+                .update({ pdf_url: null, updated_at: new Date().toISOString() })
+                .eq('id', resourceId);
+        } catch (e) {}
+
+        setAdminResources(prev => {
+            const updated = { ...prev };
+            delete updated[resourceId];
+            localStorage.setItem('crm_resources_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        alert("Guía eliminada.");
+    };
+
 
     // Tareas (Follow-up Tasks) states
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -352,6 +469,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         fetchLeads();
         fetchTasks();
+        fetchAdminResources();
     }, []);
 
     useEffect(() => {
@@ -530,6 +648,11 @@ export default function AdminDashboard() {
             quote_sent_date: formData.get('quote_sent_date') ? formData.get('quote_sent_date') as string : null,
             estimated_sale_amount: formData.get('estimated_sale_amount') ? parseFloat(formData.get('estimated_sale_amount') as string) : null,
             status: statusToApply,
+            resource_access_enabled: formData.get('resource_access_enabled') === 'on',
+            resource_pin: formData.get('resource_pin') as string || null,
+            resource_wdw: formData.get('resource_wdw') === 'on',
+            resource_dl: formData.get('resource_dl') === 'on',
+            resource_dcl: formData.get('resource_dcl') === 'on',
         };
 
         const updatedLead = { ...selectedLead, ...updatedFields };
@@ -1181,7 +1304,7 @@ export default function AdminDashboard() {
                     {/* Primary Section Buttons */}
                     <div>
                         <h2 className="text-lg font-bold text-gray-800 mb-5 tracking-tight uppercase">Secciones de Gestión</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {/* Section 1: Manejo de Ventas */}
                             <div
                                 onClick={() => setView('sales')}
@@ -1253,6 +1376,29 @@ export default function AdminDashboard() {
                                     <span className="text-gray-500 font-medium text-xs">Total de registros:</span>
                                     <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-extrabold rounded-full group-hover:bg-red-600 group-hover:text-white transition-colors">
                                         {stats.lost}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Section 4: Centro de Recursos */}
+                            <div
+                                onClick={() => setView('resources_config')}
+                                className="bg-white p-6 rounded-3xl border border-gray-200 hover:border-primary/40 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4 group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                                        <Lock className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">Centro de Recursos</h3>
+                                    <p className="text-gray-500 text-sm mt-2 leading-relaxed mb-4">Administrar y subir las guías PDF del Centro de Recursos del Viajero.</p>
+                                    <div className="flex">
+                                        <span className="px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-bold rounded-full">13 Guías en Total</span>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <span className="text-gray-500 font-medium text-xs">Acciones:</span>
+                                    <span className="px-3 py-1 bg-violet-50 text-violet-700 text-xs font-extrabold rounded-full group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                                        Configurar PDFs
                                     </span>
                                 </div>
                             </div>
@@ -1358,6 +1504,107 @@ export default function AdminDashboard() {
                                 <p className="text-gray-400 text-xs mt-1">Todos los clientes próximos a viajar tienen su número de reserva asignado.</p>
                             </div>
                         )}
+                    </div>
+                </div>
+            ) : view === 'resources_config' ? (
+                /* Resource Config View */
+                <div className="space-y-8 animate-in fade-in duration-300">
+                    <button
+                        onClick={() => setView('portal')}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors bg-white px-3 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Volver al Portal
+                    </button>
+
+                    <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 p-8 rounded-3xl border border-violet-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Configurar Recursos del Viajero</h1>
+                            <p className="text-gray-500 mt-1.5 text-base">Administra y sube los documentos guías en PDF que verán los clientes en sus portales.</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        {['wdw', 'dl', 'dcl'].map(category => {
+                            const catLabel = category === 'wdw' ? 'Walt Disney World (Orlando)' : category === 'dl' ? 'Disneyland California' : 'Disney Cruise Line';
+                            const colorClass = category === 'wdw' ? 'text-violet-600 bg-violet-50 border-violet-100' : category === 'dl' ? 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100';
+                            const categorySlots = RESOURCE_SLOTS.filter(s => s.category === category);
+
+                            return (
+                                <div key={category} className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${colorClass}`}>
+                                                {catLabel}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-6 divide-y divide-gray-100">
+                                        {categorySlots.map(slot => {
+                                            const pdfUrl = adminResources[slot.id];
+                                            const isUploading = uploadingResourceId === slot.id;
+
+                                            return (
+                                                <div key={slot.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-800 text-sm">{slot.title}</h4>
+                                                        <span className="text-xs text-gray-400">ID: {slot.id}</span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3">
+                                                        {pdfUrl ? (
+                                                            <>
+                                                                <a
+                                                                    href={pdfUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                                                                >
+                                                                    <Eye className="h-3.5 w-3.5" /> Ver PDF
+                                                                </a>
+                                                                <button
+                                                                    onClick={() => handleDeleteResource(slot.id)}
+                                                                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex items-center">
+                                                                <label className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5">
+                                                                    {isUploading ? (
+                                                                        <>
+                                                                            <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                                            </svg>
+                                                                            <span>Subiendo...</span>
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Upload className="h-3.5 w-3.5" /> Subir Guía PDF
+                                                                        </>
+                                                                    )}
+                                                                    <input
+                                                                        type="file"
+                                                                        accept=".pdf"
+                                                                        className="hidden"
+                                                                        disabled={isUploading}
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files?.[0];
+                                                                            if (file) handleUploadResource(slot.id, file);
+                                                                        }}
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             ) : (
@@ -1832,6 +2079,85 @@ export default function AdminDashboard() {
                                                 <textarea name="admin_notes" rows={4} defaultValue={selectedLead.admin_notes || ''} className="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white" placeholder="Notas internas..." />
                                             </div>
                                         </div>
+
+                                        {/* Centro de Recursos Config */}
+                                        <div className="bg-gray-50 p-5 rounded-2xl border border-gray-200 space-y-4 mt-6">
+                                            <h3 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+                                                🔒 Centro de Recursos
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="flex items-center gap-3">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        name="resource_access_enabled" 
+                                                        id="resource_access_enabled"
+                                                        defaultChecked={selectedLead.resource_access_enabled}
+                                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                    />
+                                                    <label htmlFor="resource_access_enabled" className="text-sm font-semibold text-slate-700">
+                                                        Habilitar Centro de Recursos
+                                                    </label>
+                                                </div>
+                                                <div className="flex gap-2 items-center">
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs font-medium text-gray-500 mb-1">PIN de Acceso (4 dígitos)</label>
+                                                        <input 
+                                                            type="text" 
+                                                            name="resource_pin" 
+                                                            id="edit_resource_pin"
+                                                            maxLength={4}
+                                                            placeholder="Ej. 1234"
+                                                            defaultValue={selectedLead.resource_pin || ''}
+                                                            className="w-full p-2 border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white text-sm font-mono tracking-widest"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+                                                            const pinInput = document.getElementById('edit_resource_pin') as HTMLInputElement;
+                                                            if (pinInput) pinInput.value = newPin;
+                                                        }}
+                                                        className="mt-5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-xl shadow-sm transition-colors cursor-pointer"
+                                                    >
+                                                        Generar PIN
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Secciones Permitidas</span>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <label className="flex items-center gap-2 p-2 bg-white rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="resource_wdw" 
+                                                            defaultChecked={selectedLead.resource_wdw}
+                                                            className="h-4 w-4 text-primary focus:ring-primary rounded" 
+                                                        />
+                                                        <span className="text-xs font-bold text-gray-700">Disney World</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 p-2 bg-white rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="resource_dl" 
+                                                            defaultChecked={selectedLead.resource_dl}
+                                                            className="h-4 w-4 text-primary focus:ring-primary rounded" 
+                                                        />
+                                                        <span className="text-xs font-bold text-gray-700">Disneyland</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 p-2 bg-white rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="resource_dcl" 
+                                                            defaultChecked={selectedLead.resource_dcl}
+                                                            className="h-4 w-4 text-primary focus:ring-primary rounded" 
+                                                        />
+                                                        <span className="text-xs font-bold text-gray-700">Disney Cruise</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Edit Mode Footer */}
@@ -2078,6 +2404,53 @@ export default function AdminDashboard() {
                                                                 <span className="text-gray-500 block text-xs">Fecha Envío Cotización</span>
                                                                 <span className="font-medium">{selectedLead.quote_sent_date}</span>
                                                             </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Centro de Recursos status card */}
+                                                <div className="bg-gray-50/80 p-5 rounded-2xl border border-gray-100">
+                                                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                                        🔒 Centro de Recursos
+                                                    </h3>
+                                                    <div className="space-y-3 text-sm">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-500 text-xs">Acceso Habilitado</span>
+                                                            <span className={cn(
+                                                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border",
+                                                                selectedLead.resource_access_enabled 
+                                                                    ? "bg-green-50 text-green-700 border-green-200" 
+                                                                    : "bg-red-50 text-red-700 border-red-200"
+                                                            )}>
+                                                                {selectedLead.resource_access_enabled ? "Sí" : "No"}
+                                                            </span>
+                                                        </div>
+                                                        {selectedLead.resource_access_enabled && (
+                                                            <>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-gray-500 text-xs">PIN de Acceso</span>
+                                                                    <span className="font-mono font-bold text-slate-800 bg-white border px-2 py-0.5 rounded text-xs select-all">
+                                                                        {selectedLead.resource_pin || "Sin PIN"}
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-gray-500 text-xs block mb-1">Secciones Activas</span>
+                                                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                                                        {selectedLead.resource_wdw && (
+                                                                            <span className="px-2 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-100 text-[10px] font-bold">Disney World</span>
+                                                                        )}
+                                                                        {selectedLead.resource_dl && (
+                                                                            <span className="px-2 py-0.5 rounded bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-100 text-[10px] font-bold">Disneyland</span>
+                                                                        )}
+                                                                        {selectedLead.resource_dcl && (
+                                                                            <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold">Disney Cruise</span>
+                                                                        )}
+                                                                        {!selectedLead.resource_wdw && !selectedLead.resource_dl && !selectedLead.resource_dcl && (
+                                                                            <span className="text-xs text-gray-400 italic">Ninguna sección activa</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </>
                                                         )}
                                                     </div>
                                                 </div>

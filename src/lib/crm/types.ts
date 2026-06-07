@@ -31,6 +31,19 @@ export interface Lead {
     booking_reference?: string | null;
     quote_sent_date?: string | null;
     estimated_sale_amount?: number | null;
+    resource_access_enabled?: boolean;
+    resource_pin?: string | null;
+    resource_wdw?: boolean;
+    resource_dl?: boolean;
+    resource_dcl?: boolean;
+}
+
+export interface ResourceItem {
+    id: string;
+    title: string;
+    category: 'wdw' | 'dl' | 'dcl';
+    pdf_url?: string | null;
+    updated_at?: string;
 }
 
 export const LEAD_STATUSES: { value: LeadStatus; label: string; color: string }[] = [

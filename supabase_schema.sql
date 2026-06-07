@@ -112,3 +112,73 @@ CREATE POLICY "Enable update access for all users" ON public.tasks
 
 CREATE POLICY "Enable delete access for all users" ON public.tasks
   FOR DELETE USING (true);
+
+-- Create resources table for Customer Resource Center
+CREATE TABLE IF NOT EXISTS public.resources (
+  id text PRIMARY KEY,
+  title text NOT NULL,
+  category text NOT NULL CHECK (category IN ('wdw', 'dl', 'dcl')),
+  pdf_url text,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for resources
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
+
+-- Policies for resources
+CREATE POLICY "Enable read access for all users" ON public.resources
+  FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert access for all users" ON public.resources
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Enable update access for all users" ON public.resources
+  FOR UPDATE USING (true);
+
+-- Seed initial resources config
+INSERT INTO public.resources (id, title, category) VALUES
+  ('wdw_mde', 'GUÍA MY DISNEY EXPERIENCE', 'wdw'),
+  ('wdw_ll', 'GUÍA RESERVAS Lightning Lane', 'wdw'),
+  ('wdw_overview', 'GUÍA Overview Disney World', 'wdw'),
+  ('wdw_dining', 'Guía Dining Plan', 'wdw'),
+  ('wdw_dining_char', 'Restaurantes - Experiencias con personajes', 'wdw'),
+  ('wdw_dining_req', 'Restaurantes - Requieren reservacion', 'wdw'),
+  ('dl_app', 'GUÍA Disneyland APP', 'dl'),
+  ('dl_ll', 'GUÍA RESERVAS Lightning Lane', 'dl'),
+  ('dl_overview', 'GUÍA Overview Disneyland', 'dl'),
+  ('dl_dining_char', 'Restaurantes - Experiencias con personajes', 'dl'),
+  ('dl_dining_req', 'Restaurantes - Requieren reservacion', 'dl'),
+  ('dcl_overview', 'Overview', 'dcl'),
+  ('dcl_deck', 'Deck Plan', 'dcl')
+ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, category = EXCLUDED.category;
+
+-- Migration: Add new fields for resource access in leads
+ALTER TABLE public.leads
+ADD COLUMN IF NOT EXISTS resource_access_enabled boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS resource_pin text DEFAULT null,
+ADD COLUMN IF NOT EXISTS resource_wdw boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS resource_dl boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS resource_dcl boolean DEFAULT false;
+
+-- Create Storage Bucket for Resources
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('resources', 'resources', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage Policies for Resources
+CREATE POLICY "Public Access Resources"
+ON storage.objects FOR select
+USING ( bucket_id = 'resources' );
+
+CREATE POLICY "Public Upload Resources"
+ON storage.objects FOR insert
+WITH CHECK ( bucket_id = 'resources' );
+
+CREATE POLICY "Public Update Resources"
+ON storage.objects FOR update
+WITH CHECK ( bucket_id = 'resources' );
+
+CREATE POLICY "Public Delete Resources"
+ON storage.objects FOR delete
+USING ( bucket_id = 'resources' );
+

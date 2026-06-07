@@ -35,6 +35,7 @@ export function Navbar() {
         { name: "Mis Servicios", href: "/services" },
         { name: "Blog", href: "/blog" },
         { name: "FAQ", href: "/faq" },
+        { name: "Recursos", href: "/resources/login" },
     ];
 
     return (

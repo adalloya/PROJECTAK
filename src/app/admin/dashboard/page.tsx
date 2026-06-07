@@ -311,6 +311,21 @@ export default function AdminDashboard() {
         alert("Imagen eliminada de la galería.");
     };
 
+    const handleUpdateGalleryImageAlt = async (id: string, newAlt: string) => {
+        try {
+            await supabase.from('homepage_gallery').update({ alt: newAlt }).eq('id', id);
+        } catch (e) {
+            console.error("Error updating image alt in Supabase:", e);
+        }
+
+        setGalleryList(prev => {
+            const updated = prev.map(img => img.id === id ? { ...img, alt: newAlt } : img);
+            localStorage.setItem('cms_gallery_fallback', JSON.stringify(updated));
+            return updated;
+        });
+        alert("Descripción de la imagen actualizada.");
+    };
+
     const handleSaveReview = async (review: ReviewItemCMS) => {
         setIsSavingReview(true);
         try {
@@ -2311,12 +2326,25 @@ export default function AdminDashboard() {
                                             />
                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4 text-white">
                                                 <p className="text-xs font-semibold line-clamp-3">{item.alt}</p>
-                                                <button
-                                                    onClick={() => handleDeleteGalleryImage(item.id)}
-                                                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors shadow-md self-end flex items-center gap-1"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                                                </button>
+                                                <div className="flex gap-2 w-full justify-between items-center mt-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            const newAlt = prompt("Edita el texto alternativo / descripción de esta foto:", item.alt);
+                                                            if (newAlt !== null && newAlt.trim() !== "") {
+                                                                handleUpdateGalleryImageAlt(item.id, newAlt);
+                                                            }
+                                                        }}
+                                                        className="p-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[10px] font-bold transition-colors shadow-md flex items-center gap-1 flex-1 justify-center"
+                                                    >
+                                                        <Edit className="h-3 w-3" /> Editar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteGalleryImage(item.id)}
+                                                        className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold transition-colors shadow-md flex items-center gap-1 flex-1 justify-center"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" /> Eliminar
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

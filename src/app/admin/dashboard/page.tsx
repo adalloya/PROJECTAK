@@ -1164,7 +1164,7 @@ export default function AdminDashboard() {
 
         const updatedFields = {
             client_name: formData.get('client_name') as string,
-            email: formData.get('email') as string,
+            email: (formData.get('email') as string)?.trim(),
             phone: formData.get('phone') as string,
             destination: formData.get('destination') as string,
             dates: check_in && check_out ? `In: ${check_in} | Out: ${check_out}` : (selectedLead.dates || ''),
@@ -1251,7 +1251,7 @@ export default function AdminDashboard() {
         const check_out = formData.get('check_out') as string;
         const newLead = {
             client_name: formData.get('client_name') as string,
-            email: formData.get('email') as string,
+            email: (formData.get('email') as string)?.trim(),
             phone: formData.get('phone') as string,
             destination: formData.get('destination') as string,
             dates: check_in && check_out ? `In: ${check_in} | Out: ${check_out}` : '',
@@ -3681,7 +3681,7 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
-                                                    <input required name="email" type="email" defaultValue={selectedLead.email} className="w-full p-2 border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white" />
+                                                    <input required name="email" type="text" defaultValue={selectedLead.email} className="w-full p-2 border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 bg-white" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-500 mb-1">Teléfono</label>
@@ -4293,7 +4293,7 @@ export default function AdminDashboard() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                                        <input required name="email" type="email" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="juan@email.com" />
+                                        <input required name="email" type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="juan@email.com" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>

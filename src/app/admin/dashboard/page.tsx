@@ -1052,17 +1052,19 @@ export default function AdminDashboard() {
     // Filter and Sort leads
     const filteredAndSortedLeads = [...leads]
         .filter(lead =>
-            lead.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+            (lead.client_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (lead.email || '').toLowerCase().includes(searchTerm.toLowerCase())
         )
         .sort((a, b) => {
             let comparison = 0;
             if (sortBy === 'created_at') {
-                comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                comparison = (isNaN(dateA) ? 0 : dateA) - (isNaN(dateB) ? 0 : dateB);
             } else if (sortBy === 'check_in') {
                 const dateA = a.check_in ? new Date(a.check_in).getTime() : 0;
                 const dateB = b.check_in ? new Date(b.check_in).getTime() : 0;
-                comparison = dateA - dateB;
+                comparison = (isNaN(dateA) ? 0 : dateA) - (isNaN(dateB) ? 0 : dateB);
             } else if (sortBy === 'probability') {
                 const probA = a.probability || 0;
                 const probB = b.probability || 0;
@@ -1099,8 +1101,10 @@ export default function AdminDashboard() {
                 if (!a.check_in) return 1;
                 if (!b.check_in) return -1;
 
-                const diffA = Math.abs(new Date(a.check_in + 'T00:00:00').getTime() - todayTime);
-                const diffB = Math.abs(new Date(b.check_in + 'T00:00:00').getTime() - todayTime);
+                const timeA = new Date(a.check_in + 'T00:00:00').getTime();
+                const timeB = new Date(b.check_in + 'T00:00:00').getTime();
+                const diffA = isNaN(timeA) ? Infinity : Math.abs(timeA - todayTime);
+                const diffB = isNaN(timeB) ? Infinity : Math.abs(timeB - todayTime);
                 return diffA - diffB;
             });
         }
@@ -1956,7 +1960,7 @@ export default function AdminDashboard() {
                                         {urgentLeads.map((lead) => {
                                             const todayStr = getLocalYYYYMMDD();
                                             const todayTime = new Date(todayStr + 'T00:00:00').getTime();
-                                            const checkInTime = new Date(lead.check_in! + 'T00:00:00').getTime();
+                                            const checkInTime = lead.check_in ? new Date(lead.check_in + 'T00:00:00').getTime() : 0;
                                             const diffTime = checkInTime - todayTime;
                                             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
                                             
@@ -1966,20 +1970,20 @@ export default function AdminDashboard() {
                                                 <tr key={lead.id} className="hover:bg-gray-50/50 transition-colors">
                                                     <td className="p-4 pl-6 md:pl-4">
                                                         <div className="font-bold text-gray-900 cursor-pointer hover:text-primary" onClick={() => setSelectedLead(lead)}>
-                                                            {lead.client_name}
+                                                            {lead.client_name || 'Sin nombre'}
                                                         </div>
-                                                        <div className="text-xs text-gray-500">{lead.email}</div>
+                                                        <div className="text-xs text-gray-500">{lead.email || 'Sin correo'}</div>
                                                     </td>
                                                     <td className="p-4">
-                                                        <div className="font-medium text-gray-700">{lead.destination}</div>
+                                                        <div className="font-medium text-gray-700">{lead.destination || 'Sin destino'}</div>
                                                         <div className="text-xs text-gray-500">{lead.travelers}</div>
                                                     </td>
                                                     <td className="p-4 font-semibold text-gray-700">
-                                                        {new Date(lead.check_in! + 'T00:00:00').toLocaleDateString(undefined, {
+                                                        {lead.check_in ? new Date(lead.check_in + 'T00:00:00').toLocaleDateString(undefined, {
                                                             year: 'numeric',
                                                             month: 'long',
                                                             day: 'numeric'
-                                                        })}
+                                                        }) : 'Sin fecha'}
                                                     </td>
                                                     <td className="p-4">
                                                         <span className={cn(

@@ -27,9 +27,9 @@ export default async function Home() {
     <main className="flex min-h-screen flex-col justify-between">
       <Hero />
       <Destinations />
+      <Testimonials reviews={reviews} />
       <Gallery />
       <LatestBlogPosts />
-      <Testimonials reviews={reviews} />
     </main>
   );
 }

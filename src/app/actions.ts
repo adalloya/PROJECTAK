@@ -164,3 +164,14 @@ export async function deleteLead(leadId: string) {
         return { success: false, message: 'Internal Server Error' };
     }
 }
+
+export async function revalidateHomePage() {
+    try {
+        revalidatePath('/');
+        return { success: true };
+    } catch (e) {
+        console.error('Error revalidating home path:', e);
+        return { success: false };
+    }
+}
+

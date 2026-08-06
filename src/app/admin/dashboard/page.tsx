@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { supabase } from "@/lib/supabase";
-import { submitLead, deleteLead } from "@/app/actions";
+import { submitLead, deleteLead, revalidateHomePage } from "@/app/actions";
 const getLocalYYYYMMDD = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -340,6 +340,7 @@ export default function AdminDashboard() {
         }
         
         await fetchCmsData();
+        await revalidateHomePage();
         alert("Reseña guardada exitosamente.");
         setIsSavingReview(false);
     };
@@ -358,6 +359,7 @@ export default function AdminDashboard() {
             localStorage.setItem('cms_reviews_fallback', JSON.stringify(updated));
             return updated;
         });
+        await revalidateHomePage();
         alert("Reseña eliminada.");
     };
 

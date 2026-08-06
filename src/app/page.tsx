@@ -5,8 +5,7 @@ import { Gallery } from "@/components/gallery";
 import { LatestBlogPosts } from "@/components/latest-blog-posts";
 import { supabase } from "@/lib/supabase";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60; // Cache on Vercel CDN for 60s (ISR) to reduce Supabase queries
 
 export default async function Home() {
   let reviews: any[] | null = null;

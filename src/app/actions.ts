@@ -175,3 +175,65 @@ export async function revalidateHomePage() {
     }
 }
 
+export async function deleteAdminReview(reviewId: number) {
+    try {
+        const { error } = await supabase
+            .from('reviews')
+            .delete()
+            .eq('id', reviewId);
+
+        if (error) {
+            console.error('Error deleting review in Supabase:', error);
+            return { success: false, message: error.message };
+        }
+
+        revalidatePath('/');
+        revalidatePath('/admin/dashboard');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Server Action deleteAdminReview error:', e);
+        return { success: false, message: e?.message || 'Server error' };
+    }
+}
+
+export async function saveAdminReview(reviewData: any) {
+    try {
+        if (reviewData.id && Number(reviewData.id) > 0) {
+            const { error } = await supabase
+                .from('reviews')
+                .update({
+                    name: reviewData.name,
+                    role: reviewData.role,
+                    content: reviewData.content,
+                    rating: reviewData.rating,
+                    is_approved: reviewData.is_approved,
+                    image_url: reviewData.image_url || null
+                })
+                .eq('id', reviewData.id);
+
+            if (error) {
+                console.error('Error updating review in Supabase:', error);
+                return { success: false, message: error.message };
+            }
+        } else {
+            const { id, ...insertData } = reviewData;
+            const { error } = await supabase
+                .from('reviews')
+                .insert([insertData]);
+
+            if (error) {
+                console.error('Error inserting review in Supabase:', error);
+                return { success: false, message: error.message };
+            }
+        }
+
+        revalidatePath('/');
+        revalidatePath('/admin/dashboard');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Server Action saveAdminReview error:', e);
+        return { success: false, message: e?.message || 'Server error' };
+    }
+}
+
+

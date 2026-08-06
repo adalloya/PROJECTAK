@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { supabase } from "@/lib/supabase";
-import { submitLead, deleteLead, revalidateHomePage } from "@/app/actions";
+import { submitLead, deleteLead, revalidateHomePage, deleteAdminReview, saveAdminReview } from "@/app/actions";
 const getLocalYYYYMMDD = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -326,41 +326,25 @@ export default function AdminDashboard() {
 
     const handleSaveReview = async (review: ReviewItemCMS) => {
         setIsSavingReview(true);
-        try {
-            if (review.id && review.id > 0) { 
-                const { error } = await supabase.from('reviews').upsert(review);
-                if (error) console.error("Error upserting review:", error);
-            } else {
-                const { id, ...insertData } = review;
-                const { error } = await supabase.from('reviews').insert([insertData]);
-                if (error) console.error("Error inserting review:", error);
-            }
-        } catch (e) {
-            console.error("Error saving review:", e);
+        const res = await saveAdminReview(review);
+        if (!res.success) {
+            alert(`Error al guardar reseña: ${res.message || 'Error en servidor'}`);
+        } else {
+            await fetchCmsData();
+            alert("Reseña guardada exitosamente.");
         }
-        
-        await fetchCmsData();
-        await revalidateHomePage();
-        alert("Reseña guardada exitosamente.");
         setIsSavingReview(false);
     };
 
     const handleDeleteReview = async (id: number) => {
         if (!confirm("¿Deseas eliminar esta reseña?")) return;
-        try {
-            const { error } = await supabase.from('reviews').delete().eq('id', id);
-            if (error) console.error("Error deleting review in Supabase:", error);
-        } catch (e) {
-            console.error("Error deleting review:", e);
+        const res = await deleteAdminReview(id);
+        if (!res.success) {
+            alert(`Error al eliminar reseña: ${res.message || 'Error en servidor'}`);
+        } else {
+            await fetchCmsData();
+            alert("Reseña eliminada.");
         }
-
-        setReviewsList(prev => {
-            const updated = prev.filter(r => r.id !== id);
-            localStorage.setItem('cms_reviews_fallback', JSON.stringify(updated));
-            return updated;
-        });
-        await revalidateHomePage();
-        alert("Reseña eliminada.");
     };
 
     const handleSaveAboutMe = async (data: Record<string, string>) => {

@@ -25,11 +25,22 @@ const defaultTestimonials: Review[] = [
 ];
 
 interface TestimonialsProps {
-    reviews?: Review[];
+    reviews?: Review[] | null;
 }
 
-export function Testimonials({ reviews = [] }: TestimonialsProps) {
-    const displayReviews = reviews.length > 0 ? reviews : defaultTestimonials;
+export function Testimonials({ reviews }: TestimonialsProps) {
+    const listToDisplay = Array.isArray(reviews) ? reviews : defaultTestimonials;
+
+    if (listToDisplay.length === 0) {
+        return null; // Don't render section if admin deleted or unapproved all reviews
+    }
+
+    // Multiply items if array is small so marquee animation loops seamlessly
+    let itemsToRepeat = [...listToDisplay];
+    while (itemsToRepeat.length < 6) {
+        itemsToRepeat = [...itemsToRepeat, ...listToDisplay];
+    }
+    const marqueeItems = [...itemsToRepeat, ...itemsToRepeat];
 
     return (
         <section className="py-24 bg-secondary/30 overflow-hidden">
@@ -59,14 +70,13 @@ export function Testimonials({ reviews = [] }: TestimonialsProps) {
                             x: {
                                 repeat: Infinity,
                                 repeatType: "loop",
-                                duration: 40,
+                                duration: Math.max(25, marqueeItems.length * 5),
                                 ease: "linear",
                             },
                         }}
                         style={{ width: "fit-content" }}
                     >
-                        {/* Render list twice for seamless loop */}
-                        {[...displayReviews, ...displayReviews].map((t, index) => (
+                        {marqueeItems.map((t, index) => (
                             <div
                                 key={`${t.id}-${index}`}
                                 className="flex-shrink-0 w-[400px] bg-background/60 backdrop-blur-md p-8 rounded-3xl border border-border/50 shadow-sm hover:border-primary/20 transition-colors"

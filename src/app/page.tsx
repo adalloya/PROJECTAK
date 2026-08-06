@@ -5,16 +5,24 @@ import { Gallery } from "@/components/gallery";
 import { LatestBlogPosts } from "@/components/latest-blog-posts";
 import { supabase } from "@/lib/supabase";
 
-export const dynamic = 'force-dynamic'; // Force no-cache on Vercel
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function Home() {
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('*')
-    .eq('is_approved', true) // Only approved reviews
-    .order('created_at', { ascending: false })
-    .limit(10);
+  let reviews: any[] | null = null;
+  try {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+
+    if (!error && data !== null) {
+      reviews = data;
+    }
+  } catch (e) {
+    console.error("Error fetching reviews for homepage:", e);
+  }
 
   return (
     <main className="flex min-h-screen flex-col justify-between">
@@ -22,7 +30,7 @@ export default async function Home() {
       <Destinations />
       <Gallery />
       <LatestBlogPosts />
-      <Testimonials reviews={reviews || []} />
+      <Testimonials reviews={reviews} />
     </main>
   );
 }

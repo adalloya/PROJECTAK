@@ -149,16 +149,13 @@ export default function AdminDashboard() {
 
         // 2. Reviews
         try {
-            const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
-            if (data && data.length > 0) {
+            const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+            if (!error && data !== null) {
                 setReviewsList(data);
                 localStorage.setItem('cms_reviews_fallback', JSON.stringify(data));
             } else {
                 const local = localStorage.getItem('cms_reviews_fallback');
-                const defaultRev = [
-                    { id: 1, name: "María G.", role: "Mamá de 3", content: "¡Ana Karen hizo que nuestro viaje fuera perfecto! No tuvimos que preocuparnos por nada, solo disfrutar.", rating: 5, is_approved: true }
-                ];
-                setReviewsList(local ? JSON.parse(local) : defaultRev);
+                setReviewsList(local ? JSON.parse(local) : []);
             }
         } catch (e) {
             const local = localStorage.getItem('cms_reviews_fallback');
@@ -330,13 +327,17 @@ export default function AdminDashboard() {
     const handleSaveReview = async (review: ReviewItemCMS) => {
         setIsSavingReview(true);
         try {
-            if (review.id && review.id > 10) { 
-                await supabase.from('reviews').upsert(review);
+            if (review.id && review.id > 0) { 
+                const { error } = await supabase.from('reviews').upsert(review);
+                if (error) console.error("Error upserting review:", error);
             } else {
                 const { id, ...insertData } = review;
-                await supabase.from('reviews').insert([insertData]);
+                const { error } = await supabase.from('reviews').insert([insertData]);
+                if (error) console.error("Error inserting review:", error);
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Error saving review:", e);
+        }
         
         await fetchCmsData();
         alert("Reseña guardada exitosamente.");
@@ -346,8 +347,11 @@ export default function AdminDashboard() {
     const handleDeleteReview = async (id: number) => {
         if (!confirm("¿Deseas eliminar esta reseña?")) return;
         try {
-            await supabase.from('reviews').delete().eq('id', id);
-        } catch (e) {}
+            const { error } = await supabase.from('reviews').delete().eq('id', id);
+            if (error) console.error("Error deleting review in Supabase:", error);
+        } catch (e) {
+            console.error("Error deleting review:", e);
+        }
 
         setReviewsList(prev => {
             const updated = prev.filter(r => r.id !== id);

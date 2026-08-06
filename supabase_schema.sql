@@ -182,3 +182,101 @@ CREATE POLICY "Public Delete Resources"
 ON storage.objects FOR delete
 USING ( bucket_id = 'resources' );
 
+
+-- ----------------------------------------------------
+-- CMS TABLES & POLICIES (REVIEWS, GALLERY, ABOUT ME, DESTINATIONS, BLOG)
+-- ----------------------------------------------------
+
+-- 1. Ensure Reviews policies support UPDATE and DELETE
+CREATE POLICY "Enable update access for reviews" ON public.reviews
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Enable delete access for reviews" ON public.reviews
+  FOR DELETE USING (true);
+
+
+-- 2. Homepage Gallery Table & Policies
+CREATE TABLE IF NOT EXISTS public.homepage_gallery (
+  id text PRIMARY KEY,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  image_url text NOT NULL,
+  alt text DEFAULT '',
+  sort_order integer DEFAULT 0
+);
+
+ALTER TABLE public.homepage_gallery ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for gallery" ON public.homepage_gallery FOR SELECT USING (true);
+CREATE POLICY "Enable insert access for gallery" ON public.homepage_gallery FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update access for gallery" ON public.homepage_gallery FOR UPDATE USING (true);
+CREATE POLICY "Enable delete access for gallery" ON public.homepage_gallery FOR DELETE USING (true);
+
+-- Storage bucket for gallery
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('gallery', 'gallery', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public Access Gallery" ON storage.objects FOR SELECT USING ( bucket_id = 'gallery' );
+CREATE POLICY "Public Upload Gallery" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'gallery' );
+CREATE POLICY "Public Update Gallery" ON storage.objects FOR UPDATE WITH CHECK ( bucket_id = 'gallery' );
+CREATE POLICY "Public Delete Gallery" ON storage.objects FOR DELETE USING ( bucket_id = 'gallery' );
+
+
+-- 3. Site Settings Table (About Me & Global Config)
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key text PRIMARY KEY,
+  value text NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for site_settings" ON public.site_settings FOR SELECT USING (true);
+CREATE POLICY "Enable insert access for site_settings" ON public.site_settings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update access for site_settings" ON public.site_settings FOR UPDATE USING (true);
+CREATE POLICY "Enable delete access for site_settings" ON public.site_settings FOR DELETE USING (true);
+
+
+-- 4. Destinations Table
+CREATE TABLE IF NOT EXISTS public.destinations (
+  slug text PRIMARY KEY,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  title text NOT NULL,
+  subtitle text,
+  hero_image text,
+  overview text,
+  highlights text,
+  must_dos text,
+  tips text
+);
+
+ALTER TABLE public.destinations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for destinations" ON public.destinations FOR SELECT USING (true);
+CREATE POLICY "Enable insert access for destinations" ON public.destinations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update access for destinations" ON public.destinations FOR UPDATE USING (true);
+CREATE POLICY "Enable delete access for destinations" ON public.destinations FOR DELETE USING (true);
+
+
+-- 5. Blog Posts Table
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  slug text UNIQUE NOT NULL,
+  title text NOT NULL,
+  excerpt text,
+  content text,
+  date text,
+  read_time text,
+  image text,
+  category text
+);
+
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for blog_posts" ON public.blog_posts FOR SELECT USING (true);
+CREATE POLICY "Enable insert access for blog_posts" ON public.blog_posts FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update access for blog_posts" ON public.blog_posts FOR UPDATE USING (true);
+CREATE POLICY "Enable delete access for blog_posts" ON public.blog_posts FOR DELETE USING (true);
+
+

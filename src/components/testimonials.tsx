@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Star, Quote, ChevronLeft, ChevronRight, MessageSquareQuote } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,21 +19,21 @@ const defaultTestimonials: Review[] = [
         id: 1,
         name: "María G.",
         role: "Mamá de 3 • Disney World",
-        content: "¡Ana Karen hizo que nuestro viaje fuera perfecto! No tuvimos que preocuparnos por nada, solo disfrutar cada momento en los parques.",
+        content: "¡Ana Karen hizo que nuestro viaje fuera perfecto! No tuvimos que preocuparnos por nada, solo disfrutar cada momento en los parques. La guía de Lightning Lane y recomendaciones de restaurantes fueron excepcionales.",
         rating: 5,
     },
     {
         id: 2,
         name: "Familia Aguirre",
         role: "Disney Cruise Line",
-        content: "Cansadísimos pero con el corazón muy feliz. Mil gracias por tu acompañamiento, definitivamente no lo hubiéramos logrado solitos.",
+        content: "Cansadísimos pero con el corazón muy feliz. Mil gracias por tu acompañamiento, definitivamente no lo hubiéramos logrado solitos. Claro que esperemos volver y te andaremos buscando, pero por lo pronto 100% recomendada.",
         rating: 5,
     },
     {
         id: 3,
         name: "Nayely Morales",
         role: "Crucero Disney Destiny",
-        content: "Excelente servicio de principio a fin. En nuestro viaje al crucero de Disney todo salió perfecto. 100% recomendada.",
+        content: "Excelente servicio de principio a fin. En nuestro viaje al crucero de Disney todo salió perfecto. Se nota que conoce muy bien el destino, hace recomendaciones muy acertadas y siempre estuvo al pendiente.",
         rating: 5,
     }
 ];
@@ -60,7 +60,7 @@ export function Testimonials({ reviews }: TestimonialsProps) {
 
     const scroll = (direction: 'left' | 'right') => {
         if (!scrollContainerRef.current) return;
-        const scrollAmount = 360;
+        const scrollAmount = 400;
         scrollContainerRef.current.scrollBy({
             left: direction === 'left' ? -scrollAmount : scrollAmount,
             behavior: 'smooth'
@@ -133,7 +133,7 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                             x: {
                                 repeat: Infinity,
                                 repeatType: "loop",
-                                duration: Math.max(30, marqueeItems.length * 4),
+                                duration: Math.max(35, marqueeItems.length * 4.5),
                                 ease: "linear",
                             },
                         }}
@@ -144,29 +144,15 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                             return (
                                 <div
                                     key={`${t.id}-${index}`}
-                                    className="flex-shrink-0 w-[320px] sm:w-[380px] min-h-[230px] max-h-[280px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col justify-between group"
+                                    className="flex-shrink-0 w-[340px] sm:w-[400px] h-[360px] sm:h-[390px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-7 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-md hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col group relative"
                                 >
-                                    {/* Top Card Header */}
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex gap-1">
-                                            {[...Array(Math.max(0, Math.min(5, Math.floor(t.rating || 5))))].map((_, i) => (
-                                                <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                                            ))}
-                                        </div>
-                                        <Quote className="h-6 w-6 text-primary/20 group-hover:text-primary/40 transition-colors" />
-                                    </div>
+                                    {/* Quote watermark top right */}
+                                    <Quote className="absolute top-6 right-6 h-8 w-8 text-primary/10 group-hover:text-primary/25 transition-colors pointer-events-none" />
 
-                                    {/* Review Body */}
-                                    <div className="flex-1 my-2 overflow-y-auto scrollbar-none pr-1">
-                                        <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 italic font-medium leading-relaxed">
-                                            "{t.content}"
-                                        </p>
-                                    </div>
-
-                                    {/* Card Footer (Author Info) */}
-                                    <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
+                                    {/* 1. TOP: User Avatar Image */}
+                                    <div className="flex items-center gap-4 mb-3">
                                         {t.image_url && typeof t.image_url === 'string' && t.image_url.trim() !== '' ? (
-                                            <div className="relative h-10 w-10 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">
+                                            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20 shadow-md shrink-0 group-hover:scale-105 transition-transform">
                                                 <img
                                                     src={t.image_url}
                                                     alt={t.name}
@@ -177,18 +163,34 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-primary to-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                                            <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-primary via-purple-600 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-md border-2 border-primary/20 group-hover:scale-105 transition-transform">
                                                 {initials}
                                             </div>
                                         )}
+
+                                        {/* 2. Below Image: Customer Name & Role */}
                                         <div className="min-w-0">
-                                            <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                                            <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
                                                 {t.name}
                                             </h4>
-                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                                            <p className="text-xs text-primary font-semibold truncate mt-0.5">
                                                 {t.role}
                                             </p>
                                         </div>
+                                    </div>
+
+                                    {/* 3. Below Name: Rating Stars */}
+                                    <div className="flex gap-1.5 mb-4">
+                                        {[...Array(Math.max(0, Math.min(5, Math.floor(t.rating || 5))))].map((_, i) => (
+                                            <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                                        ))}
+                                    </div>
+
+                                    {/* 4. Review Content (6+ lines comfortably) */}
+                                    <div className="flex-1 overflow-y-auto scrollbar-none pr-1">
+                                        <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 italic font-medium leading-relaxed">
+                                            "{t.content}"
+                                        </p>
                                     </div>
                                 </div>
                             );

@@ -8,8 +8,10 @@ import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function LatestBlogPosts() {
+    const { t } = useLanguage();
     const [latestPosts, setLatestPosts] = useState<any[]>(blogPosts.slice(0, 4));
     const [active, setActive] = useState(0);
 
@@ -61,14 +63,16 @@ export function LatestBlogPosts() {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-bold uppercase tracking-wider mb-4"
                     >
                         <Sparkles className="h-4 w-4" />
-                        <span>Blog de Expertos</span>
+                        <span>{t("blog_badge")}</span>
                     </motion.div>
-                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Tips y Secretos Mágicos</h2>
-                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Guías esenciales para planear tus vacaciones perfectas.
+                    <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">
+                        {t("blog_title")}
+                    </h2>
+                    <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto font-normal">
+                        {t("blog_subtitle")}
                     </p>
                 </div>
 
@@ -138,8 +142,8 @@ export function LatestBlogPosts() {
                                     <p className="text-base text-white/90 mb-6 max-w-2xl line-clamp-2">{latestPosts[active].excerpt}</p>
 
                                     <Link href={`/blog/${latestPosts[active].slug}`}>
-                                        <button className="bg-white text-black px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2 text-sm">
-                                            Leer artículo completo <ArrowRight className="h-4 w-4" />
+                                        <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2 text-sm shadow-md">
+                                            {t("blog_read_more")} <ArrowRight className="h-4 w-4" />
                                         </button>
                                     </Link>
                                 </div>

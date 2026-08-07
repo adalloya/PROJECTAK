@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
 import { useState } from "react";
+import { Navbar } from "@/components/navbar";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const faqs = [
     {
@@ -31,17 +33,12 @@ const faqs = [
     },
 ];
 
-import { Navbar } from "@/components/navbar";
-
-
-// ... imports remain the same
-
 export default function FAQPage() {
+    const { t } = useLanguage();
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
             <main className="pt-24 pb-16 px-4">
                 <div className="max-w-3xl mx-auto">
                     <motion.div
@@ -49,8 +46,8 @@ export default function FAQPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-16"
                     >
-                        <h1 className="text-4xl font-bold tracking-tight mb-4">Preguntas Frecuentes</h1>
-                        <p className="text-muted-foreground">Todo lo que necesitas saber para tu próxima aventura mágica.</p>
+                        <h1 className="text-4xl font-bold tracking-tight mb-4">{t("faq_hero_title")}</h1>
+                        <p className="text-muted-foreground">{t("faq_hero_sub")}</p>
                     </motion.div>
 
                     <div className="space-y-4">
@@ -68,7 +65,7 @@ export default function FAQPage() {
                                 >
                                     <span>{faq.question}</span>
                                     {openIndex === index ? (
-                                        <Minus className="h-5 w-5 text-primary" />
+                                        <Minus className="h-5 w-5 text-purple-600" />
                                     ) : (
                                         <Plus className="h-5 w-5 text-muted-foreground" />
                                     )}
@@ -83,7 +80,6 @@ export default function FAQPage() {
                     </div>
                 </div>
             </main>
-
         </div>
     );
 }

@@ -8,8 +8,10 @@ import { destinationsData } from "@/lib/destinations";
 
 import { submitLead } from "../actions";
 import { useTransition } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function ContactPage() {
+    const { t } = useLanguage();
     const [submitted, setSubmitted] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [selectedDestination, setSelectedDestination] = useState("");
@@ -39,7 +41,7 @@ export default function ContactPage() {
                     {/* Header Section */}
                     <div className="text-center mb-12">
                         <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-                            Solicitud de Cotización
+                            {t("contact_title")}
                         </h1>
                         <div className="bg-white dark:bg-card p-8 rounded-3xl shadow-sm border border-border/50 text-left space-y-4 max-w-3xl mx-auto">
                             <p className="text-lg font-medium text-primary">

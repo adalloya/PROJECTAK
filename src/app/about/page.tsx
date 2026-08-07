@@ -4,19 +4,17 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Map, Ticket, Headphones } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function AboutPage() {
+    const { t } = useLanguage();
     const [activeImage, setActiveImage] = useState<"left" | "right">("right");
     const [aboutMe, setAboutMe] = useState({
-        about_me_title: "¿Quién Soy?",
-        about_me_greeting: "¡Hola! Soy Anna Karen.",
-        about_me_role: "Creadora de Here We Go Advisor y Agente Certificada Disney.",
-        about_me_paragraphs: JSON.stringify([
-            "Mi amor por Disney comenzó desde pequeña, tuve la oportunidad de trabajar en Walt Disney World a través del programa Disney College Program. Ahí descubrí que lo que más disfruto es organizar, planear y ayudar a que cada familia viva su propia versión de la magia.",
-            "Hoy me dedico a diseñar experiencias personalizadas para que tú solamente te preocupes por sonreír y crear recuerdos. Conozco los secretos que hacen la diferencia: desde el mejor lugar para ver los fuegos artificiales hasta esos detalles que elevan cualquier itinerario.",
-            "No solo reservo viajes: transformo tus sueños Disney en momentos inolvidables."
-        ]),
-        about_me_quote: '"Here We Go Advisor nació con una idea muy sencilla: la magia se disfruta más cuando la planeación no te quita tiempo, energía ni ilusión."',
+        about_me_title: "",
+        about_me_greeting: "",
+        about_me_role: "",
+        about_me_paragraphs: "",
+        about_me_quote: "",
         about_me_image_grads: "/images/about-grads.jpg",
         about_me_image_solo: "/images/about-solo.jpg"
     });
@@ -31,11 +29,11 @@ export default function AboutPage() {
                     data.forEach(item => { settings[item.key] = item.value; });
                     
                     setAboutMe(prev => ({
-                        about_me_title: settings.about_me_title || prev.about_me_title,
-                        about_me_greeting: settings.about_me_greeting || prev.about_me_greeting,
-                        about_me_role: settings.about_me_role || prev.about_me_role,
-                        about_me_paragraphs: settings.about_me_paragraphs || prev.about_me_paragraphs,
-                        about_me_quote: settings.about_me_quote || prev.about_me_quote,
+                        about_me_title: settings.about_me_title || "",
+                        about_me_greeting: settings.about_me_greeting || "",
+                        about_me_role: settings.about_me_role || "",
+                        about_me_paragraphs: settings.about_me_paragraphs || "",
+                        about_me_quote: settings.about_me_quote || "",
                         about_me_image_grads: settings.about_me_image_grads || prev.about_me_image_grads,
                         about_me_image_solo: settings.about_me_image_solo || prev.about_me_image_solo
                     }));
@@ -47,14 +45,16 @@ export default function AboutPage() {
         fetchAboutMe();
     }, []);
 
-    const parsedParagraphs = (() => {
-        try {
-            const arr = JSON.parse(aboutMe.about_me_paragraphs);
-            return Array.isArray(arr) ? arr : [aboutMe.about_me_paragraphs];
-        } catch (e) {
-            return [aboutMe.about_me_paragraphs];
-        }
-    })();
+    const pageTitle = aboutMe.about_me_title || t("about_title");
+    const greeting = aboutMe.about_me_greeting || t("about_greeting");
+    const role = aboutMe.about_me_role || t("about_role");
+    const quote = aboutMe.about_me_quote || t("about_quote");
+
+    const paragraphs = [
+        t("about_p1"),
+        t("about_p2"),
+        t("about_p3")
+    ];
 
     return (
         <main className="min-h-screen pt-24 pb-16 px-4">
@@ -65,11 +65,11 @@ export default function AboutPage() {
                     transition={{ duration: 0.6 }}
                 >
                     <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-20 text-center">
-                        {aboutMe.about_me_title}
+                        {pageTitle}
                     </h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-24">
-                        {/* Image Stack - "Photos on Table" Effect */}
+                        {/* Image Stack */}
                         <div className="relative h-[600px] w-full flex items-center justify-center">
                             {/* Photo 1 (Left - Grads) */}
                             <div
@@ -112,69 +112,59 @@ export default function AboutPage() {
 
                         {/* Text Content */}
                         <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
-                            <p className="font-medium text-2xl text-primary mb-2">
-                                {aboutMe.about_me_greeting}
+                            <p className="font-medium text-2xl text-purple-600 dark:text-purple-400 mb-2">
+                                {greeting}
                             </p>
                             <p className="text-xl font-semibold text-foreground mb-4">
-                                {aboutMe.about_me_role}
+                                {role}
                             </p>
                             
-                            {parsedParagraphs.map((para: string, idx: number) => {
-                                const isLast = idx === parsedParagraphs.length - 1;
-                                
-                                if (idx === 0) {
-                                    return (
-                                        <div key={idx} className="space-y-6">
-                                            <p>{para}</p>
-                                            {aboutMe.about_me_quote && (
-                                                <p className="italic text-foreground/80 border-l-4 border-primary/20 pl-4 py-2 my-6 bg-secondary/10 rounded-r-lg">
-                                                    {aboutMe.about_me_quote}
-                                                </p>
-                                            )}
-                                        </div>
-                                    );
-                                }
-                                
-                                return (
-                                    <p key={idx} className={isLast ? "font-bold text-foreground pt-2" : ""}>
-                                        {para}
-                                    </p>
-                                );
-                            })}
+                            <p>{paragraphs[0]}</p>
+                            
+                            {quote && (
+                                <p className="italic text-foreground/80 border-l-4 border-purple-500/30 pl-4 py-2 my-6 bg-purple-50/50 dark:bg-purple-950/20 rounded-r-lg">
+                                    {quote}
+                                </p>
+                            )}
+
+                            <p>{paragraphs[1]}</p>
+                            <p className="font-bold text-foreground pt-2">{paragraphs[2]}</p>
                         </div>
                     </div>
 
                     <div className="space-y-8 text-lg text-muted-foreground leading-relaxed">
-                        <h2 className="text-2xl font-semibold text-foreground mt-12 mb-4">¿Por Qué Elegirnos?</h2>
+                        <h2 className="text-2xl font-semibold text-foreground mt-12 mb-4">
+                            {t("about_why_title")}
+                        </h2>
 
                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
-                                <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
+                                <div className="bg-purple-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
                                     <Sparkles className="h-6 w-6" />
                                 </div>
-                                <h3 className="font-semibold text-foreground mb-2">Concierge Personalizado</h3>
-                                <p className="text-base text-muted-foreground">Planificación uno a uno con un experto dedicado que aprende las preferencias de tu familia.</p>
+                                <h3 className="font-semibold text-foreground mb-2">{t("about_why_1_title")}</h3>
+                                <p className="text-base text-muted-foreground">{t("about_why_1_desc")}</p>
                             </li>
                             <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
-                                <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
+                                <div className="bg-purple-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
                                     <Map className="h-6 w-6" />
                                 </div>
-                                <h3 className="font-semibold text-foreground mb-2">Arquitectura de Itinerario</h3>
-                                <p className="text-base text-muted-foreground">Diseñamos tus días para maximizar la magia y minimizar las esperas, a tu propio ritmo.</p>
+                                <h3 className="font-semibold text-foreground mb-2">{t("about_why_2_title")}</h3>
+                                <p className="text-base text-muted-foreground">{t("about_why_2_desc")}</p>
                             </li>
                             <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
-                                <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
+                                <div className="bg-purple-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
                                     <Ticket className="h-6 w-6" />
                                 </div>
-                                <h3 className="font-semibold text-foreground mb-2">Reservas y Extras</h3>
-                                <p className="text-base text-muted-foreground">Nos encargamos de las reservas difíciles y experiencias exclusivas, para que tú no tengas que madrugar.</p>
+                                <h3 className="font-semibold text-foreground mb-2">{t("about_why_3_title")}</h3>
+                                <p className="text-base text-muted-foreground">{t("about_why_3_desc")}</p>
                             </li>
                             <li className="bg-secondary/50 p-6 rounded-2xl hover:bg-secondary/70 transition-colors flex flex-col items-center text-center">
-                                <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-primary">
+                                <div className="bg-purple-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
                                     <Headphones className="h-6 w-6" />
                                 </div>
-                                <h3 className="font-semibold text-foreground mb-2">Soporte antes y durante tu viaje</h3>
-                                <p className="text-base text-muted-foreground">Mientras viajas, permanecemos atentos para resolver cualquier contratiempo al instante.</p>
+                                <h3 className="font-semibold text-foreground mb-2">{t("about_why_4_title")}</h3>
+                                <p className="text-base text-muted-foreground">{t("about_why_4_desc")}</p>
                             </li>
                         </ul>
                     </div>

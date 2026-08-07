@@ -98,14 +98,14 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                     <div className="flex items-center gap-2 ml-auto">
                         <button
                             onClick={() => scroll('left')}
-                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"
+                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"
                             aria-label="Reseña anterior"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => scroll('right')}
-                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"
+                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"
                             aria-label="Siguiente reseña"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -141,56 +141,73 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                     >
                         {marqueeItems.map((t, index) => {
                             const initials = t.name ? t.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : 'HW';
+                            const hasImageUrl = t.image_url && typeof t.image_url === 'string' && t.image_url.trim() !== '';
+
                             return (
                                 <div
                                     key={`${t.id}-${index}`}
-                                    className="flex-shrink-0 w-[340px] sm:w-[400px] h-[360px] sm:h-[390px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-7 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-md hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col group relative"
+                                    className="flex-shrink-0 w-[340px] sm:w-[400px] h-[360px] sm:h-[390px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-7 sm:p-8 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800/90 shadow-md hover:shadow-2xl hover:border-purple-500 hover:shadow-purple-500/15 transition-all duration-300 flex flex-col group relative overflow-hidden"
                                 >
+                                    {/* Blurred Background Image Texture */}
+                                    {hasImageUrl ? (
+                                        <div 
+                                            className="absolute inset-0 bg-cover bg-center opacity-20 dark:opacity-25 blur-xl scale-110 pointer-events-none group-hover:scale-125 group-hover:opacity-30 transition-all duration-700"
+                                            style={{ backgroundImage: `url(${t.image_url})` }}
+                                        />
+                                    ) : (
+                                        <div 
+                                            className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent blur-2xl pointer-events-none"
+                                        />
+                                    )}
+
                                     {/* Quote watermark top right */}
-                                    <Quote className="absolute top-6 right-6 h-8 w-8 text-primary/10 group-hover:text-primary/25 transition-colors pointer-events-none" />
+                                    <Quote className="absolute top-6 right-6 h-8 w-8 text-purple-600/15 dark:text-purple-400/20 group-hover:text-purple-600/35 transition-colors pointer-events-none z-10" />
 
-                                    {/* 1. TOP: User Avatar Image */}
-                                    <div className="flex items-center gap-4 mb-3">
-                                        {t.image_url && typeof t.image_url === 'string' && t.image_url.trim() !== '' ? (
-                                            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20 shadow-md shrink-0 group-hover:scale-105 transition-transform">
-                                                <img
-                                                    src={t.image_url}
-                                                    alt={t.name}
-                                                    className="object-cover w-full h-full"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                    }}
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-primary via-purple-600 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-md border-2 border-primary/20 group-hover:scale-105 transition-transform">
-                                                {initials}
-                                            </div>
-                                        )}
+                                    {/* Card Content Container */}
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        {/* 1. TOP: User Avatar Image */}
+                                        <div className="flex items-center gap-4 mb-3">
+                                            {hasImageUrl ? (
+                                                <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-purple-500/30 shadow-md shrink-0 group-hover:scale-105 group-hover:border-purple-500 transition-all">
+                                                    <img
+                                                        src={t.image_url}
+                                                        alt={t.name}
+                                                        className="object-cover w-full h-full"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-primary text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-md border-2 border-purple-500/30 group-hover:scale-105 group-hover:border-purple-500 transition-all">
+                                                    {initials}
+                                                </div>
+                                            )}
 
-                                        {/* 2. Below Image: Customer Name & Role */}
-                                        <div className="min-w-0">
-                                            <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
-                                                {t.name}
-                                            </h4>
-                                            <p className="text-xs text-primary font-semibold truncate mt-0.5">
-                                                {t.role}
+                                            {/* 2. Below Image: Customer Name & Role */}
+                                            <div className="min-w-0">
+                                                <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                                                    {t.name}
+                                                </h4>
+                                                <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold truncate mt-0.5">
+                                                    {t.role}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* 3. Below Name: Rating Stars */}
+                                        <div className="flex gap-1.5 mb-4">
+                                            {[...Array(Math.max(0, Math.min(5, Math.floor(t.rating || 5))))].map((_, i) => (
+                                                <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                                            ))}
+                                        </div>
+
+                                        {/* 4. Review Content (6+ lines comfortably) */}
+                                        <div className="flex-1 overflow-y-auto scrollbar-none pr-1">
+                                            <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-100 italic font-medium leading-relaxed">
+                                                "{t.content}"
                                             </p>
                                         </div>
-                                    </div>
-
-                                    {/* 3. Below Name: Rating Stars */}
-                                    <div className="flex gap-1.5 mb-4">
-                                        {[...Array(Math.max(0, Math.min(5, Math.floor(t.rating || 5))))].map((_, i) => (
-                                            <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                                        ))}
-                                    </div>
-
-                                    {/* 4. Review Content (6+ lines comfortably) */}
-                                    <div className="flex-1 overflow-y-auto scrollbar-none pr-1">
-                                        <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 italic font-medium leading-relaxed">
-                                            "{t.content}"
-                                        </p>
                                     </div>
                                 </div>
                             );

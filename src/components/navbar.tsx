@@ -94,7 +94,7 @@ export function Navbar() {
                         ))}
 
                         <Link href="/contact">
-                            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-bold transition-colors text-sm shadow-md hover:shadow-lg transform active:scale-95 border-2 border-transparent hover:border-primary/20">
+                            <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-full font-bold transition-all text-sm shadow-md hover:shadow-lg shadow-purple-500/20 transform active:scale-95 border-2 border-transparent">
                                 Solicitar cotización
                             </button>
                         </Link>
@@ -160,7 +160,7 @@ export function Navbar() {
                             <Link
                                 href="/contact"
                                 onClick={() => setIsOpen(false)}
-                                className="block w-full text-center py-3 text-base font-bold bg-primary text-primary-foreground rounded-xl shadow-lg active:scale-95 transition-all"
+                                className="block w-full text-center py-3 text-base font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-lg shadow-purple-500/20 active:scale-95 transition-all"
                             >
                                 Solicitar cotización
                             </Link>

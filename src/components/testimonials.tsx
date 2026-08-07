@@ -90,12 +90,8 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                 </motion.div>
 
                 {/* Controls Bar */}
-                <div className="flex items-center justify-between mt-6 px-2">
-                    <span className="text-xs text-slate-500 font-medium hidden sm:inline-flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Pasa el cursor sobre una reseña para pausar la lectura
-                    </span>
-                    <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center justify-end mt-6 px-2">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => scroll('left')}
                             className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"

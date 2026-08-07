@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function Hero() {
+    const { t } = useLanguage();
+
     return (
         <div className="relative h-screen w-full flex items-center justify-center overflow-hidden">
             {/* Background Video */}
@@ -20,7 +23,7 @@ export function Hero() {
                         type="video/mp4"
                     />
                 </video>
-                <div className="absolute inset-0 bg-black/40" /> {/* Overlay for text readability */}
+                <div className="absolute inset-0 bg-black/40" />
             </div>
 
             {/* Content */}
@@ -31,18 +34,18 @@ export function Hero() {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-white mb-6"
                 >
-                    Viajes Mágicos.
+                    {t("hero_title_1")}
                     <br />
-                    <span className="text-white/90">Diseñados para Ti.</span>
+                    <span className="text-white/90">{t("hero_title_2")}</span>
                 </motion.h1>
 
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                    className="text-lg md:text-2xl text-white/80 mb-8 max-w-2xl mx-auto leading-relaxed"
+                    className="text-lg md:text-2xl text-white/80 mb-8 max-w-2xl mx-auto leading-relaxed font-normal"
                 >
-                    Vive Disney como nunca antes. Itinerarios a medida, planificación sin esfuerzo y recuerdos para toda la vida.
+                    {t("hero_subtitle")}
                 </motion.p>
 
                 <motion.div
@@ -53,18 +56,19 @@ export function Hero() {
                 >
                     <Link
                         href="/contact"
-                        className="px-8 py-4 bg-white text-black text-lg font-medium rounded-full hover:bg-white/90 transition-all hover:scale-105"
+                        className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white text-lg font-bold rounded-full shadow-lg shadow-purple-600/30 transition-all hover:scale-105"
                     >
-                        Comienza tu Viaje
+                        {t("hero_cta_primary")}
                     </Link>
                     <Link
                         href="#destinations"
-                        className="px-8 py-4 bg-transparent border border-white/30 text-white text-lg font-medium rounded-full hover:bg-white/10 transition-all backdrop-blur-sm"
+                        className="px-8 py-4 bg-transparent border border-white/40 text-white text-lg font-bold rounded-full hover:bg-white/10 transition-all backdrop-blur-sm"
                     >
-                        Explorar Destinos
+                        {t("hero_cta_secondary")}
                     </Link>
                 </motion.div>
             </div>
+
             {/* Curved Divider */}
             <div className="absolute -bottom-1 left-0 w-full leading-none z-20">
                 <svg

@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { X, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+
 const images = [
     { src: "/images/gallery/1.jpg", alt: "Familia feliz en Magic Kingdom" },
     { src: "/images/gallery/2.jpg", alt: "Disfrutando Disney Cruise Line" },
@@ -44,6 +46,7 @@ const swipePower = (offset: number, velocity: number) => {
 };
 
 export function Gallery() {
+    const { t } = useLanguage();
     const [galleryImages, setGalleryImages] = useState<{ src: string; alt: string }[]>(images);
     const [current, setCurrent] = useState(0);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -120,10 +123,9 @@ export function Gallery() {
                             viewport={{ once: true }}
                             className="mb-8"
                         >
-                            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-primary">Momentos Mágicos</h2>
+                            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-primary">{t("gal_title")}</h2>
                             <p className="text-lg text-muted-foreground">
-                                Capturando sonrisas y recuerdos que durarán toda la vida.
-                                Cada viaje es una historia única.
+                                {t("gal_subtitle")}
                             </p>
                         </motion.div>
 

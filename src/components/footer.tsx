@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook, Twitter, Mail } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function Footer() {
+    const { t } = useLanguage();
     const [logoSrc, setLogoSrc] = useState("/logo.png");
 
     useEffect(() => {
@@ -28,7 +30,7 @@ export function Footer() {
                             <h3 className="text-xl font-bold tracking-tight">Here We Go Advisor</h3>
                         </div>
                         <p className="text-muted-foreground max-w-sm mb-6">
-                            El apoyo experto que necesitas. Nosotros nos encargamos de los detalles mientras tú creas los recuerdos.
+                            {t("footer_desc")}
                         </p>
                         <div className="flex space-x-4">
                             <Link href="https://www.instagram.com/herewego_advisor/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">

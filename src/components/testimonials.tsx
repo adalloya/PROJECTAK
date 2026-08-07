@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Star, Quote, ChevronLeft, ChevronRight, MessageSquareQuote } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Review {
     id: number;
@@ -43,6 +44,7 @@ interface TestimonialsProps {
 }
 
 export function Testimonials({ reviews }: TestimonialsProps) {
+    const { t } = useLanguage();
     const listToDisplay = Array.isArray(reviews) && reviews.length > 0 ? reviews : defaultTestimonials;
     const [isPaused, setIsPaused] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -79,13 +81,13 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                 >
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
                         <MessageSquareQuote className="h-3.5 w-3.5" />
-                        <span>Experiencias Reales</span>
+                        <span>{t("test_badge")}</span>
                     </div>
                     <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                        Lo Que Dicen Nuestros Viajeros
+                        {t("test_title")}
                     </h2>
                     <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto font-normal">
-                        Historias de magia, acompañamiento y momentos inolvidables diseñados por Here We Go Advisor.
+                        {t("test_subtitle")}
                     </p>
                 </motion.div>
 

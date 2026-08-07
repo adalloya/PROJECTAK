@@ -1,12 +1,12 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const defaultDestinations = [
     {
@@ -44,6 +44,7 @@ const defaultDestinations = [
 ];
 
 export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
+    const { t } = useLanguage();
     const [destList, setDestList] = useState(defaultDestinations);
 
     useEffect(() => {
@@ -80,20 +81,22 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"
+                            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-600/10 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider mb-4"
                         >
                             <Sparkles className="h-4 w-4" />
-                            <span>Destinos Exclusivos</span>
+                            <span>{t("dest_badge")}</span>
                         </motion.div>
-                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Descubre la Magia</h2>
-                        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                            Elige tu próxima aventura de nuestra colección premium.
+                        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">
+                            {t("dest_title")}
+                        </h2>
+                        <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto font-normal">
+                            {t("dest_subtitle")}
                         </p>
                     </div>
                 )}
 
                 <div>
-                    {/* Desktop Grid (Restored) */}
+                    {/* Desktop Grid */}
                     <div className="hidden lg:grid grid-cols-4 gap-6 mb-16">
                         {destList.map((dest, index) => (
                             <Link href={dest.href} key={dest.id} className="block group relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer">
@@ -115,8 +118,8 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                                         <p className="text-sm text-white/80 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
                                             {dest.description}
                                         </p>
-                                        <div className="flex items-center text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200 text-white/90">
-                                            Explorar <ArrowRight className="ml-2 h-3 w-3" />
+                                        <div className="flex items-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200 text-white/90">
+                                            {t("dest_view_details")} <ArrowRight className="ml-2 h-3 w-3" />
                                         </div>
                                     </div>
                                 </motion.div>
@@ -124,7 +127,7 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                         ))}
                     </div>
 
-                    {/* Mobile Swiper (Kept as is) */}
+                    {/* Mobile Swiper */}
                     <div className="lg:hidden w-full overflow-x-auto snap-x snap-mandatory flex gap-4 pb-8 scrollbar-hide px-4 -mx-4">
                         {destList.map((dest) => (
                             <Link
@@ -144,23 +147,12 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                                     <h3 className="text-2xl font-bold mb-1">{dest.title}</h3>
                                     <p className="text-sm text-white/80 mb-3">{dest.description}</p>
                                     <div className="inline-flex items-center gap-2 text-sm font-semibold bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">
-                                        Explorar <ArrowRight className="h-3 w-3" />
+                                        {t("dest_view_details")} <ArrowRight className="h-3 w-3" />
                                     </div>
                                 </div>
                             </Link>
                         ))}
                     </div>
-
-                    {!hideTitle && (
-                        <div className="hidden lg:flex justify-center mt-8">
-                            <Link href="/destinations">
-                                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-4 rounded-full font-semibold transition-all hover:scale-105 shadow-lg flex items-center gap-2">
-                                    Conocer Más Destinos
-                                    <ArrowRight className="h-4 w-4" />
-                                </button>
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </div>
         </section>

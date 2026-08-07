@@ -12,14 +12,13 @@ import {
     Bookmark, 
     Sparkles, 
     Eye, 
-    ChevronRight, 
     MessageCircle,
     X,
-    Lock,
-    HelpCircle
+    Lock
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Lead, ResourceItem } from "@/lib/crm/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Local date getter YYYY-MM-DD
 const getLocalYYYYMMDD = () => {
@@ -30,18 +29,8 @@ const getLocalYYYYMMDD = () => {
     return `${year}-${month}-${day}`;
 };
 
-// Format Spanish date
-const formatSpanishDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const [year, month, day] = dateStr.split("-");
-    const months = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
-    return `${parseInt(day)} de ${months[parseInt(month) - 1]} de ${year}`;
-};
-
 export default function ResourceDashboardPage() {
+    const { t } = useLanguage();
     const [lead, setLead] = useState<Lead | null>(null);
     const [resources, setResources] = useState<ResourceItem[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -107,7 +96,7 @@ export default function ResourceDashboardPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <p className="text-slate-400 text-sm font-medium">Cargando tu portal mágico...</p>
+                    <p className="text-slate-400 text-sm font-medium">{t("res_validating")}</p>
                 </div>
             </div>
         );
@@ -148,7 +137,7 @@ export default function ResourceDashboardPage() {
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-900/50 transition-all text-xs font-semibold cursor-pointer"
                     >
                         <LogOut className="h-4.5 w-4.5" />
-                        <span>Cerrar Sesión</span>
+                        <span>{t("res_logout")}</span>
                     </button>
                 </div>
             </header>
@@ -163,11 +152,11 @@ export default function ResourceDashboardPage() {
                 >
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                            ¡Hola, {lead.client_name}! ✨
+                            {t("res_welcome")} {lead.client_name}! ✨
                         </h1>
                     </div>
                     <p className="text-slate-400 text-sm md:text-base">
-                        ¡Bienvenido a tu centro de recursos mágico! Aquí encontrarás guías personalizadas y esenciales para tu aventura.
+                        {t("res_welcome_sub")}
                     </p>
                 </motion.div>
 
@@ -183,8 +172,8 @@ export default function ResourceDashboardPage() {
                             <Compass className="h-6 w-6" />
                         </div>
                         <div>
-                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">Destino</span>
-                            <span className="text-sm font-bold text-slate-200">{lead.destination || "Viaje Mágico"}</span>
+                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">{t("res_dest")}</span>
+                            <span className="text-sm font-bold text-slate-200">{lead.destination || "Disney"}</span>
                         </div>
                     </div>
 
@@ -193,10 +182,9 @@ export default function ResourceDashboardPage() {
                             <Calendar className="h-6 w-6" />
                         </div>
                         <div>
-                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">Fechas de Viaje</span>
+                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">{t("res_dates")}</span>
                             <span className="text-sm font-bold text-slate-200">
-                                {lead.check_in ? formatSpanishDate(lead.check_in) : "Por definir"} 
-                                {lead.check_out ? ` al ${formatSpanishDate(lead.check_out)}` : ""}
+                                {lead.check_in || "Pending"} {lead.check_out ? ` - ${lead.check_out}` : ""}
                             </span>
                         </div>
                     </div>
@@ -206,8 +194,8 @@ export default function ResourceDashboardPage() {
                             <Users className="h-6 w-6" />
                         </div>
                         <div>
-                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">Pasajeros</span>
-                            <span className="text-sm font-bold text-slate-200">{lead.travelers || "Sin registrar"}</span>
+                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">{t("res_passengers")}</span>
+                            <span className="text-sm font-bold text-slate-200">{lead.travelers || "Registered"}</span>
                         </div>
                     </div>
 
@@ -216,9 +204,9 @@ export default function ResourceDashboardPage() {
                             <Bookmark className="h-6 w-6" />
                         </div>
                         <div>
-                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">Clave de Reserva</span>
+                            <span className="text-xs text-slate-500 block uppercase tracking-wider font-semibold">{t("res_booking")}</span>
                             <span className="text-sm font-bold font-mono tracking-wider text-slate-200">
-                                {lead.booking_reference || "Pendiente"}
+                                {lead.booking_reference || "Pending"}
                             </span>
                         </div>
                     </div>
@@ -232,16 +220,16 @@ export default function ResourceDashboardPage() {
                         className="bg-slate-900/40 border border-slate-800 rounded-3xl p-12 text-center max-w-xl mx-auto"
                     >
                         <Lock className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-slate-300 mb-2">Secciones no activadas</h3>
+                        <h3 className="text-lg font-bold text-slate-300 mb-2">{t("res_no_access")}</h3>
                         <p className="text-sm text-slate-500">
-                            El administrador aún no ha habilitado ninguna sección de recursos para tu cuenta. Por favor contáctanos para habilitarlas.
+                            {t("res_no_access_sub")}
                         </p>
                         <button
                             onClick={handleContactWhatsApp}
                             className="mt-6 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-full text-sm font-semibold transition-colors flex items-center gap-2 mx-auto cursor-pointer"
                         >
                             <MessageCircle className="h-4 w-4" />
-                            <span>Contactar Asesor</span>
+                            <span>{t("res_contact_agent")}</span>
                         </button>
                     </motion.div>
                 ) : (
@@ -270,7 +258,7 @@ export default function ResourceDashboardPage() {
                                     </div>
                                 ) : (
                                     <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-6 text-center text-slate-500 text-xs font-semibold">
-                                        Próximamente disponible - Tu asesor está preparando tus guías mágicas.
+                                        {t("res_coming_soon")}
                                     </div>
                                 )}
                             </motion.section>
@@ -300,7 +288,7 @@ export default function ResourceDashboardPage() {
                                     </div>
                                 ) : (
                                     <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-6 text-center text-slate-500 text-xs font-semibold">
-                                        Próximamente disponible - Tu asesor está preparando tus guías mágicas.
+                                        {t("res_coming_soon")}
                                     </div>
                                 )}
                             </motion.section>
@@ -330,7 +318,7 @@ export default function ResourceDashboardPage() {
                                     </div>
                                 ) : (
                                     <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-6 text-center text-slate-500 text-xs font-semibold">
-                                        Próximamente disponible - Tu asesor está preparando tus guías mágicas.
+                                        {t("res_coming_soon")}
                                     </div>
                                 )}
                             </motion.section>
@@ -341,9 +329,6 @@ export default function ResourceDashboardPage() {
 
             {/* Float Action WhatsApp Button */}
             <div className="fixed bottom-6 right-6 z-40 group">
-                <div className="absolute -top-12 right-0 bg-slate-900 text-slate-100 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-800 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-                    ¿Necesitas ayuda? Escríbenos 🪄
-                </div>
                 <button
                     onClick={handleContactWhatsApp}
                     className="h-14 w-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-2xl transition-all hover:scale-110 active:scale-95 cursor-pointer border border-emerald-400/20"
@@ -368,10 +353,6 @@ export default function ResourceDashboardPage() {
                                 <h3 className="font-bold text-slate-200 text-sm md:text-base tracking-wide truncate max-w-xs md:max-w-md">
                                     {selectedPdf.title}
                                 </h3>
-                                <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-semibold uppercase tracking-wider">
-                                    <Lock className="h-3 w-3" />
-                                    <span>Vista Protegida</span>
-                                </div>
                             </div>
                             <button
                                 onClick={() => setSelectedPdf(null)}
@@ -381,20 +362,16 @@ export default function ResourceDashboardPage() {
                             </button>
                         </div>
 
-                        {/* Visualizer iframe & secure blockers wrapper */}
+                        {/* Visualizer iframe */}
                         <div 
                             className="flex-1 w-full bg-slate-950 relative overflow-hidden flex justify-center items-center"
-                            onContextMenu={(e) => e.preventDefault()} // Block right click
+                            onContextMenu={(e) => e.preventDefault()}
                         >
-                            {/* PDF Render */}
                             <iframe
                                 src={`${selectedPdf.url}#toolbar=0&navpanes=0&scrollbar=1`}
                                 className="w-full h-full border-none max-w-5xl bg-slate-900 shadow-2xl rounded-t-xl"
                                 title="Visor de Guías"
                             />
-
-                            {/* Secure Overlay: Covers top bar controls where download/print buttons might float in Chrome/Firefox default PDF wrappers */}
-                            <div className="absolute top-0 left-0 right-0 h-14 bg-transparent cursor-default select-none pointer-events-auto" />
                         </div>
                     </motion.div>
                 )}
@@ -411,6 +388,7 @@ interface GuideCardProps {
 }
 
 function GuideCard({ guide, index, onView }: GuideCardProps) {
+    const { t } = useLanguage();
     const isAvailable = !!guide.pdf_url;
 
     return (
@@ -438,18 +416,14 @@ function GuideCard({ guide, index, onView }: GuideCardProps) {
                         {guide.title}
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
-                        {isAvailable ? "Guía en PDF • Haz clic para abrir" : "Próximamente disponible"}
+                        {isAvailable ? t("res_pdf_view") : t("res_coming_soon")}
                     </p>
                 </div>
             </div>
             <div>
-                {isAvailable ? (
+                {isAvailable && (
                     <div className="h-8 w-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all shadow-sm">
                         <Eye className="h-4 w-4" />
-                    </div>
-                ) : (
-                    <div className="text-[10px] text-slate-600 font-bold uppercase tracking-wider border border-slate-800 px-2 py-1 rounded">
-                        Espera
                     </div>
                 )}
             </div>

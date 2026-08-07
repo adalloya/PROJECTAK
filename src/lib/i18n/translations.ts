@@ -103,6 +103,27 @@ export const translations = {
         // Contact Page
         contact_title: "Solicita tu Cotización",
         contact_subtitle: "Completa el formulario y me pondré en contacto contigo a la brevedad para organizar tu viaje perfecto.",
+
+        // Resource Center
+        res_title: "Centro de Recursos",
+        res_sub: "Ingresa tu código PIN de 4 dígitos para acceder a tus guías de viaje",
+        res_clear: "Limpiar",
+        res_back: "Volver al sitio principal",
+        res_validating: "Validando acceso...",
+        res_err_disabled: "El acceso al centro de recursos está desactivado por el administrador.",
+        res_err_invalid: "Código PIN incorrecto o acceso no habilitado.",
+        res_welcome: "¡Hola,",
+        res_welcome_sub: "¡Bienvenido a tu centro de recursos mágico! Aquí encontrarás guías personalizadas y esenciales para tu aventura.",
+        res_logout: "Cerrar Sesión",
+        res_dest: "Destino",
+        res_dates: "Fechas de Viaje",
+        res_passengers: "Pasajeros",
+        res_booking: "Clave de Reserva",
+        res_no_access: "Secciones no activadas",
+        res_no_access_sub: "El administrador aún no ha habilitado ninguna sección de recursos para tu cuenta.",
+        res_contact_agent: "Contactar Asesor",
+        res_pdf_view: "Guía en PDF • Haz clic para abrir",
+        res_coming_soon: "Próximamente disponible",
     },
     en: {
         // Navbar
@@ -194,6 +215,27 @@ export const translations = {
         // Contact Page
         contact_title: "Get Your Quote",
         contact_subtitle: "Fill out the form below and I will get back to you shortly to plan your perfect vacation.",
+
+        // Resource Center
+        res_title: "Resource Center",
+        res_sub: "Enter your 4-digit PIN code to access your travel guides",
+        res_clear: "Clear",
+        res_back: "Back to main site",
+        res_validating: "Validating access...",
+        res_err_disabled: "Resource center access is disabled by the administrator.",
+        res_err_invalid: "Incorrect PIN code or access not enabled.",
+        res_welcome: "Hello,",
+        res_welcome_sub: "Welcome to your magical resource center! Here you will find essential personalized guides for your adventure.",
+        res_logout: "Log Out",
+        res_dest: "Destination",
+        res_dates: "Travel Dates",
+        res_passengers: "Guests",
+        res_booking: "Booking Ref",
+        res_no_access: "Sections not enabled",
+        res_no_access_sub: "The administrator has not yet enabled any resource sections for your account.",
+        res_contact_agent: "Contact Advisor",
+        res_pdf_view: "PDF Guide • Click to open",
+        res_coming_soon: "Coming soon",
     },
     pt: {
         // Navbar
@@ -279,12 +321,33 @@ export const translations = {
         serv_feat3_desc: "Conhecemos os segredos para tornar sua visita inesquecível.",
 
         // FAQ Page
-        faq_hero_title: "Perguntas Frequentes",
+        faq_hero_title: "Perguntas Frecuentes",
         faq_hero_sub: "Tudo o que você precisa saber antes de planejar sua aventura mágica.",
 
         // Contact Page
         contact_title: "Solicite seu Orçamento",
         contact_subtitle: "Preencha o formulário abaixo e entrarei em contato em breve para planejar sua viagem perfeita.",
+
+        // Resource Center
+        res_title: "Centro de Recursos",
+        res_sub: "Insira seu código PIN de 4 dígitos para acessar seus guias de viagem",
+        res_clear: "Limpar",
+        res_back: "Voltar ao site principal",
+        res_validating: "Validando acesso...",
+        res_err_disabled: "O acesso ao centro de recursos está desativado pelo administrador.",
+        res_err_invalid: "Código PIN incorreto ou acesso não habilitado.",
+        res_welcome: "Olá,",
+        res_welcome_sub: "Bem-vindo ao seu centro de recursos mágico! Aqui você encontrará guias personalizados e essenciais para sua aventura.",
+        res_logout: "Sair",
+        res_dest: "Destino",
+        res_dates: "Datas de Viagem",
+        res_passengers: "Passageiros",
+        res_booking: "Código de Reserva",
+        res_no_access: "Seções não ativadas",
+        res_no_access_sub: "O administrador ainda não ativou nenhuma seção de recursos para sua conta.",
+        res_contact_agent: "Contatar Consultor",
+        res_pdf_view: "Guia em PDF • Clique para abrir",
+        res_coming_soon: "Em breve",
     }
 };
 

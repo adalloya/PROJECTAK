@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Sparkles, AlertCircle, KeyRound, ArrowRight } from "lucide-react";
+import { AlertCircle, KeyRound, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Lead } from "@/lib/crm/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Local date getter YYYY-MM-DD
 const getLocalYYYYMMDD = () => {
@@ -14,17 +15,6 @@ const getLocalYYYYMMDD = () => {
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-};
-
-// Format Spanish date
-const formatSpanishDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const [year, month, day] = dateStr.split("-");
-    const months = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
-    return `${parseInt(day)} de ${months[parseInt(month) - 1]} de ${year}`;
 };
 
 const MOCK_FALLBACK_CLIENT: Lead = {
@@ -49,6 +39,7 @@ const MOCK_FALLBACK_CLIENT: Lead = {
 };
 
 export default function ResourceLoginPage() {
+    const { t } = useLanguage();
     const [pin, setPin] = useState<string>("");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
@@ -113,7 +104,6 @@ export default function ResourceLoginPage() {
         setErrorMsg(null);
 
         try {
-            // Query DB for matching pin & active status
             const { data, error } = await supabase
                 .from("leads")
                 .select("*")
@@ -124,47 +114,40 @@ export default function ResourceLoginPage() {
             if (error) {
                 console.warn("Error checking database pin, attempting fallback check", error);
             } else if (data && data.length > 0) {
-                // Find any matching lead with access enabled
                 matchedLead = data.find(l => l.resource_access_enabled === true) || null;
                 
-                // If not found but there is a matching pin that is disabled, set disabled error
                 if (!matchedLead && data.some(l => l.resource_pin === enteredPin)) {
-                    setErrorMsg("El acceso al centro de recursos está desactivado por el administrador.");
+                    setErrorMsg(t("res_err_disabled"));
                     setPin("");
                     setLoading(false);
                     return;
                 }
             }
 
-            // Fallback for review/demo purposes
             if (!matchedLead && enteredPin === "1234") {
                 matchedLead = MOCK_FALLBACK_CLIENT;
             }
 
             if (!matchedLead) {
-                setErrorMsg("Código PIN incorrecto o acceso no habilitado.");
+                setErrorMsg(t("res_err_invalid"));
                 setPin("");
                 setLoading(false);
                 return;
             }
 
-            // Expiration validation (check_out date)
             const todayStr = getLocalYYYYMMDD();
             if (matchedLead.check_out && matchedLead.check_out < todayStr) {
-                setErrorMsg(`Tu acceso expiró el ${formatSpanishDate(matchedLead.check_out)}.`);
+                setErrorMsg(t("res_err_disabled"));
                 setPin("");
                 setLoading(false);
                 return;
             }
 
-            // Store user details in sessionStorage
             sessionStorage.setItem("client_resource_lead", JSON.stringify(matchedLead));
-
-            // Redirect to dashboard
             router.push("/resources/dashboard");
         } catch (e) {
             console.error("Login Error:", e);
-            setErrorMsg("Ocurrió un error de conexión. Intente de nuevo.");
+            setErrorMsg(t("res_err_invalid"));
             setPin("");
         } finally {
             setLoading(false);
@@ -194,7 +177,7 @@ export default function ResourceLoginPage() {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-300 via-fuchsia-200 to-indigo-300 bg-clip-text text-transparent"
                     >
-                        Centro de Recursos
+                        {t("res_title")}
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0 }}
@@ -202,7 +185,7 @@ export default function ResourceLoginPage() {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="text-slate-400 text-sm mt-2"
                     >
-                        Ingresa tu código PIN de 4 dígitos para acceder a tus guías de viaje
+                        {t("res_sub")}
                     </motion.p>
                 </div>
 
@@ -250,7 +233,7 @@ export default function ResourceLoginPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span>Validando acceso...</span>
+                                    <span>{t("res_validating")}</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -274,7 +257,7 @@ export default function ResourceLoginPage() {
                             onClick={() => { setPin(""); setErrorMsg(null); }}
                             className="h-16 text-sm font-semibold text-slate-400 hover:text-slate-200 bg-transparent hover:bg-slate-800/20 rounded-2xl transition-all cursor-pointer transform active:scale-95 flex items-center justify-center"
                         >
-                            Limpiar
+                            {t("res_clear")}
                         </button>
                         <button
                             type="button"
@@ -303,7 +286,7 @@ export default function ResourceLoginPage() {
                         onClick={() => router.push("/")}
                         className="inline-flex items-center gap-2 text-slate-500 hover:text-violet-400 text-xs font-semibold transition-colors bg-transparent border-0 cursor-pointer"
                     >
-                        <span>Volver al sitio principal</span>
+                        <span>{t("res_back")}</span>
                         <ArrowRight className="h-3 w-3" />
                     </button>
                 </div>

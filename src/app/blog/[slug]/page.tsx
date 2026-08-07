@@ -1,10 +1,6 @@
 import { blogPosts, BlogPost } from "@/lib/blog";
-import { Navbar } from "@/components/navbar";
-
-import Link from "next/link";
-import Image from "next/image";
+import { BlogPostClient } from "@/components/blog-post-client";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface BlogPostPageProps {
@@ -57,79 +53,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
-
-            <main className="pt-32 pb-16">
-                <article className="container px-4 mx-auto max-w-4xl">
-                    {/* Back Link */}
-                    <div className="mb-8">
-                        <Link href="/blog" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Volver al Blog
-                        </Link>
-                    </div>
-
-                    {/* Header */}
-                    <header className="mb-10 text-center">
-                        <div className="flex items-center justify-center gap-2 mb-6">
-                            <span className="bg-primary/10 text-primary text-sm px-3 py-1 rounded-full font-medium">
-                                {post.category}
-                            </span>
-                        </div>
-                        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 leading-tight">
-                            {post.title}
-                        </h1>
-
-                        <div className="flex items-center justify-center text-sm text-muted-foreground gap-6">
-                            <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {post.date}
-                            </div>
-                            <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-2" />
-                                {post.readTime}
-                            </div>
-                            <div className="flex items-center">
-                                <User className="h-4 w-4 mr-2" />
-                                Autor: Equipo Expertos
-                            </div>
-                        </div>
-                    </header>
-
-                    {/* Featured Image */}
-                    <div className="relative aspect-video w-full bg-muted rounded-2xl mb-12 overflow-hidden shadow-lg">
-                        <Image
-                            src={post.image}
-                            alt={post.title}
-                            fill
-                            className="object-cover"
-                            priority
-                            sizes="(max-width: 1024px) 100vw, 896px"
-                        />
-                    </div>
-
-                    {/* Content */}
-                    <div
-                        className="prose prose-lg dark:prose-invert max-w-none mx-auto"
-                        dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
-
-                    {/* CTA Box */}
-                    <div className="mt-16 bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
-                        <h3 className="text-2xl font-bold mb-4">¿Te gustó este artículo?</h3>
-                        <p className="text-muted-foreground mb-6">
-                            Deja que nosotros nos encarguemos de aplicar todos estos tips en tu viaje. Nuestra planificación es 100% gratuita.
-                        </p>
-                        <Link href="/contact">
-                            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-full font-semibold transition-all hover:scale-105 shadow-md">
-                                Solicitar Cotización Gratis
-                            </button>
-                        </Link>
-                    </div>
-                </article>
-            </main>
-
-
+            <BlogPostClient post={post} />
         </div>
     );
 }

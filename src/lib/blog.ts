@@ -1,13 +1,43 @@
+export interface LocalizedBlogPost {
+    title: string;
+    excerpt: string;
+    content: string;
+    category: string;
+    readTime: string;
+    date: string;
+}
+
 export interface BlogPost {
     id: string;
     slug: string;
     title: string;
-    excerpt: string; // The "problem" it solves
+    excerpt: string;
     content: string;
     date: string;
     readTime: string;
     image: string;
     category: string;
+    translations?: {
+        es?: Partial<LocalizedBlogPost>;
+        en?: Partial<LocalizedBlogPost>;
+        pt?: Partial<LocalizedBlogPost>;
+    };
+}
+
+export function getLocalizedBlogPost(post: BlogPost, lang: 'es' | 'en' | 'pt'): BlogPost {
+    if (!post.translations || !post.translations[lang]) {
+        return post;
+    }
+    const loc = post.translations[lang]!;
+    return {
+        ...post,
+        title: loc.title || post.title,
+        excerpt: loc.excerpt || post.excerpt,
+        content: loc.content || post.content,
+        category: loc.category || post.category,
+        readTime: loc.readTime || post.readTime,
+        date: loc.date || post.date,
+    };
 }
 
 export const blogPosts: BlogPost[] = [
@@ -28,19 +58,54 @@ export const blogPosts: BlogPost[] = [
 
             <h3>Reglas de Reserva Anticipada</h3>
             <ul>
-                <li><strong>Huéspedes de Hoteles Disney:</strong> Pueden reservar sus pases con plantillas de <strong>7 días de anticipación</strong> a su check-in.</li>
+                <li><strong>Huéspedes de Hoteles Disney:</strong> Pueden reservar sus pases con hasta <strong>7 días de anticipación</strong> a su check-in.</li>
                 <li><strong>Visitantes Generales:</strong> Pueden reservar con <strong>3 días de anticipación</strong> a su visita al parque.</li>
             </ul>
 
             <h3>Single Pass vs. Multi Pass</h3>
-            <p>Al igual que antes, las atracciones más populares (como <em>Star Wars: Rise of the Resistance</em> o <em>TRON Lightcycle / Run</em>) no suelen estar incluidas en el Multi Pass y se venden por separado como <strong>Lightning Lane Single Pass</strong>. Puedes comprar hasta 2 de estos por día.</p>
+            <p>Al igual que antes, las atracciones más populares (como <em>Star Wars: Rise of the Resistance</em> o <em>TRON Lightcycle / Run</em>) no suelen estar incluidas en el Multi Pass y se venden por separado como <strong>Lightning Lane Single Pass</strong>.</p>
+        `,
+        translations: {
+            en: {
+                title: "Ultimate Lightning Lane Guide: Multi Pass & Single Pass",
+                excerpt: "Genie+ has evolved. Learn how to master the new Lightning Lane Multi Pass system to pre-book your favorite rides before arriving at the parks.",
+                readTime: "6 min read",
+                category: "Expert Tips",
+                content: `
+                    <p>Goodbye Genie+, hello Lightning Lane Multi Pass! Disney has updated its skip-the-line system with major perks for planners.</p>
+                    
+                    <h3>What is Lightning Lane Multi Pass?</h3>
+                    <p>It's the new service replacing Genie+. The main difference: <strong>now you can pre-book 3 attractions BEFORE your trip</strong>. No more waking up at 7:00 AM every vacation morning stressed to secure a spot.</p>
 
-            <h3>Estrategia de Tiers (Niveles)</h3>
-            <p>En Magic Kingdom, Epcot y Hollywood Studios, las atracciones están divididas en grupos. Al hacer tus pre-reservas, generalmente puedes elegir 1 atracción del Grupo A (las más populares) y 2 del Grupo B (las demás).</p>
+                    <h3>Advance Booking Rules</h3>
+                    <ul>
+                        <li><strong>Disney Resort Hotel Guests:</strong> Can book passes up to <strong>7 days in advance</strong> of check-in.</li>
+                        <li><strong>General Visitors:</strong> Can book <strong>3 days in advance</strong> of their park visit.</li>
+                    </ul>
 
-            <h3>¿Vale la pena?</h3>
-            <p>Definitivamente. Poder llegar al parque sabiendo que ya tienes asegurada la entrada rápida a <em>Slinky Dog Dash</em> o <em>Remy’s Ratatouille Adventure</em> te da una tranquilidad invaluable. ¡Nosotros te ayudamos a configurar todo!</p>
-        `
+                    <h3>Single Pass vs. Multi Pass</h3>
+                    <p>Top attractions (like <em>Star Wars: Rise of the Resistance</em> or <em>TRON Lightcycle / Run</em>) are sold separately as <strong>Lightning Lane Single Pass</strong>.</p>
+                `
+            },
+            pt: {
+                title: "Guia Definitivo do Lightning Lane: Multi Pass e Single Pass",
+                excerpt: "Genie+ evoluiu. Aprenda a dominar o novo sistema Lightning Lane Multi Pass para reservar suas atrações favoritas antes de chegar aos parques.",
+                readTime: "6 min de leitura",
+                category: "Dicas de Especialistas",
+                content: `
+                    <p>Adeus Genie+, olá Lightning Lane Multi Pass! A Disney renovou seu sistema de filas rápidas com grandes vantagens para quem gosta de planejar.</p>
+                    
+                    <h3>O que é o Lightning Lane Multi Pass?</h3>
+                    <p>É o novo serviço que substitui o Genie+. A grande diferença: <strong>agora você pode reservar 3 atrações ANTES da sua viagem</strong>. Não precisa mais acordar às 7:00 da manhã nas férias estressado para garantir um lugar.</p>
+
+                    <h3>Regras de Reserva Antecipada</h3>
+                    <ul>
+                        <li><strong>Hóspedes dos Hotéis Disney:</strong> Podem reservar com até <strong>7 dias de antecedência</strong> do check-in.</li>
+                        <li><strong>Visitantes Gerais:</strong> Podem reservar com <strong>3 dias de antecedência</strong> da visita ao parque.</li>
+                    </ul>
+                `
+            }
+        }
     },
     {
         id: "2",
@@ -56,17 +121,42 @@ export const blogPosts: BlogPost[] = [
 
             <h3>Beneficios Exclusivos de Hoteles Disney</h3>
             <ul>
-                <li><strong>Transporte Gratuito:</strong> Buses, monorriel, barcos y el Skyliner te llevan a los parques gratis. Ahorras en Uber o alquiler de auto + estacionamiento ($30/día).</li>
-                <li><strong>Early Entry:</strong> Entras a CUALQUIER parque 30 minutos antes que el público general. Esos 30 min valen oro para hacer 1 o 2 atracciones principales sin fila.</li>
-                <li><strong>Reservas de Lightning Lane:</strong> Acceso prioritario para reservar tus pases rápidos 7 días antes, frente a solo 3 días para los demás.</li>
+                <li><strong>Transporte Gratuito:</strong> Buses, monorriel, barcos y Skyliner te llevan gratis.</li>
+                <li><strong>Early Entry:</strong> Entras a cualquier parque 30 minutos antes.</li>
             </ul>
+        `,
+        translations: {
+            en: {
+                title: "Disney Hotel vs. Off-Site: The Truth About Your Budget",
+                excerpt: "Is staying at a Disney hotel worth the extra cost? We analyze hidden expenses and perks so you make the best decision.",
+                readTime: "7 min read",
+                category: "Planning",
+                content: `
+                    <p>This is the ultimate question. At first glance, off-site hotels seem much cheaper, but hidden costs like parking and Ubers add up fast.</p>
 
-            <h3>Cuándo elegir un Hotel Externo</h3>
-            <p>Si tienes una familia muy grande (6+ personas) y necesitas cocina completa, o si planeas visitar otros parques como Universal o SeaWorld la mitad del tiempo, una casa vacacional o un hotel en Disney Springs puede ser mejor opción.</p>
+                    <h3>Exclusive Disney Hotel Benefits</h3>
+                    <ul>
+                        <li><strong>Free Transportation:</strong> Buses, monorail, boats, and Skyliner get you everywhere for free.</li>
+                        <li><strong>Early Entry:</strong> Enter any park 30 minutes early every day.</li>
+                    </ul>
+                `
+            },
+            pt: {
+                title: "Hotel Disney ou Externo? A Verdade Sobre Seu Orçamento",
+                excerpt: "Vale a pena pagar mais por um hotel dentro da Disney? Analisamos custos ocultos e benefícios reais.",
+                readTime: "7 min de leitura",
+                category: "Planejamento",
+                content: `
+                    <p>Essa é a pergunta de ouro. À primeira vista, um hotel fora da Disney parece mais barato. Mas com custos de transporte e estacionamento, a balança muda.</p>
 
-            <h3>Veredicto</h3>
-            <p>Para un primer viaje centrado 100% en Disney, la "burbuja" de inmersión y la conveniencia del transporte suelen justificar el precio extra. ¡Déjanos cotizarte ambas opciones para que compares!</p>
-        `
+                    <h3>Benefícios Exclusivos dos Hotéis Disney</h3>
+                    <ul>
+                        <li><strong>Transporte Gratuito:</strong> Ônibus, monotrilho, barcos e Skyliner gratuitos.</li>
+                        <li><strong>Entrada Antecipada:</strong> Entre em qualquer parque 30 minutos antes.</li>
+                    </ul>
+                `
+            }
+        }
     },
     {
         id: "3",
@@ -79,103 +169,74 @@ export const blogPosts: BlogPost[] = [
         category: "Guías Básicas",
         content: `
             <p>Hemos visto muchas familias regresar agotadas y frustradas por no planear correctamente. Aquí los errores más graves:</p>
-
             <ol>
-                <li><strong>No comprar Lightning Lane con anticipación:</strong> Ahora que se puede pre-reservar, llegar sin nada planeado es un error.</li>
-                <li><strong>Querer hacerlo todo:</strong> Disney es ENORME. Intentar ver todo en un solo viaje es receta para el agotamiento. Prioriza tus "must-dos".</li>
-                <li><strong>Ignorar el clima de Florida:</strong> Lloverá. Hará calor húmedo. Lleva ponchos (cómpralos en Amazon antes, no en el parque a $15) y zapatos extra cómodos ya caminados.</li>
-                <li><strong>No descargar la App My Disney Experience antes:</strong> Familiarízate con los mapas y tiempos de espera desde casa.</li>
-                <li><strong>Olvidar los descansos:</strong> Un día de parque es como una maratón. Regresar al hotel a la piscina al mediodía puede salvar la tarde.</li>
+                <li><strong>No comprar Lightning Lane con anticipación.</strong></li>
+                <li><strong>Querer hacerlo todo sin descansar.</strong></li>
+                <li><strong>Ignorar el clima y no llevar calzado cómodo.</strong></li>
             </ol>
-            
-            <p>No dejes que estos errores te pasen. ¡Con nuestra asesoría, tu itinerario estará blindado contra frustraciones!</p>
-        `
+        `,
+        translations: {
+            en: {
+                title: "10 Common Mistakes When Planning Your First Disney Trip",
+                excerpt: "Avoid beginner traps that ruin vacations. From uncomfortable shoes to packed schedules, here is what NOT to do.",
+                readTime: "6 min read",
+                category: "Basic Guides",
+                content: `
+                    <p>We've seen many families return exhausted from improper planning. Here are the biggest mistakes:</p>
+                    <ol>
+                        <li><strong>Not pre-booking Lightning Lane passes.</strong></li>
+                        <li><strong>Trying to do everything without breaks.</strong></li>
+                        <li><strong>Ignoring Florida weather and wearing bad shoes.</strong></li>
+                    </ol>
+                `
+            },
+            pt: {
+                title: "10 Erros Comuns ao Planejar Sua Primeira Viagem à Disney",
+                excerpt: "Evite armadilhas de iniciantes que estragam as férias. De sapatos desconfortáveis a horários impossíveis.",
+                readTime: "6 min de leitura",
+                category: "Guias Básicos",
+                content: `
+                    <p>Vimos muitas famílias exaustas por falta de planejamento. Aqui estão os piores erros:</p>
+                    <ol>
+                        <li><strong>Não reservar o Lightning Lane com antecedência.</strong></li>
+                        <li><strong>Tentar fazer tudo sem descansar.</strong></li>
+                        <li><strong>Ignorar o clima e usar sapatos ruins.</strong></li>
+                    </ol>
+                `
+            }
+        }
     },
     {
         id: "4",
         slug: "universal-vs-disney",
         title: "Universal vs. Disney: ¿Cuál es Mejor para tu Familia?",
-        excerpt: "¿Harry Potter o Star Wars? ¿Montañas rusas extremas o magia clásica? Te ayudamos a decidir qué destino se adapta mejor a la edad y gustos de tu grupo.",
+        excerpt: "¿Harry Potter o Star Wars? ¿Montañas rusas extremas o magia clásica? Te ayudamos a decidir qué destino se adapta mejor a tu grupo.",
         date: "01 Dic, 2025",
         readTime: "4 min de lectura",
         image: "/blog/universal-vs-disney.png",
         category: "Comparativas",
         content: `
             <p>Ambos son increíbles, pero ofrecen experiencias muy diferentes. Elegir el incorrecto para la edad de tus hijos puede ser un error costoso.</p>
-
-            <h3>Disney World es para ti si...</h3>
-            <ul>
-                <li>Viajas con niños pequeños (menores de 8 años) o abuelos.</li>
-                <li>Amas la magia clásica, los desfiles y los fuegos artificiales.</li>
-                <li>Te gusta la inmersión total y el "storytelling" más que la adrenalina pura.</li>
-                <li>Buscas una experiencia gastronómica temática superior.</li>
-            </ul>
-
-            <h3>Universal Orlando es para ti si...</h3>
-            <ul>
-                <li>Tu familia ama Harry Potter (The Wizarding World es inigualable).</li>
-                <li>Tienes adolescentes o adultos que buscan montañas rusas intensas (VelociCoaster, Hulk).</li>
-                <li>Prefieres un ritmo más relajado; Universal es más fácil de navegar y requiere menos planificación anticipada que Disney.</li>
-                <li>Te hospedas en sus hoteles Premier: ¡incluyen pases Express ilimitados gratis!</li>
-            </ul>
-
-            <p>¿Por qué elegir? Muchos de nuestros clientes hacen un "paquete combinado" para disfrutar lo mejor de ambos mundos.</p>
-        `
-    },
-    {
-        id: "5",
-        slug: "presupuesto-realista-2025",
-        title: "Presupuesto Realista: Cuánto Cuesta un Viaje Mágico en 2025",
-        excerpt: "Desglosamos los costos reales de boletos, hospedaje y comida para que no te lleves sorpresas. Aprende dónde ahorrar y dónde invertir.",
-        date: "28 Nov, 2025",
-        readTime: "8 min de lectura",
-        image: "/blog/budget.png",
-        category: "Finanzas",
-        content: `
-            <p>Hablemos de números claros. Un viaje a Orlando es una inversión importante y la transparencia es clave.</p>
-
-            <h3>1. Boletos de Parque</h3>
-            <p>Calcula aproximadamente $109-$169 USD por día, por persona. Mientras más días vas, menos cuesta el día individual. El ticket de 4 días es el "sweet spot" para muchos.</p>
-
-            <h3>2. Hospedaje</h3>
-            <ul>
-                <li><strong>Económico (Value):</strong> $150 - $250 USD por noche.</li>
-                <li><strong>Moderado:</strong> $280 - $450 USD por noche.</li>
-                <li><strong>Lujo (Deluxe):</strong> $550+ USD por noche.</li>
-            </ul>
-
-            <h3>3. Comida</h3>
-            <p>Presupuesta unos $60-$100 USD por persona al día si haces una comida rápida y una comida de mesa (Table Service). Puedes ahorrar llevando snacks y desayunando en la habitación.</p>
-
-            <h3>4. Extras Ocultos</h3>
-            <p>No olvides: Lightning Lane ($25-$40/día), Propinas (18-20% en USA), Souvenirs y Vuelos. </p>
-
-            <p><strong>Nuestra promesa:</strong> Te ayudaremos a construir un paquete que maximice cada dólar de tu presupuesto, aprovechando ofertas que a veces no son públicas.</p>
-        `
-    },
-    {
-        id: "6",
-        slug: "por-que-agente-gratis",
-        title: "Por qué Nuestra Asesoría es GRATIS (y Mejor que Hacerlo Solo)",
-        excerpt: "Muchos creen que contratar un agente es más caro. Descubre por qué es exactamente lo contrario y cómo ganamos dinero sin cobrarte un centavo extra.",
-        date: "25 Nov, 2025",
-        readTime: "3 min de lectura",
-        image: "/blog/agent.png",
-        category: "Servicios",
-        content: `
-            <p>Suena demasiado bueno para ser verdad, ¿cierto? ¿Alguien que planea todo mi viaje, hace mis reservas de madrugada y resuelve mis problemas... gratis?</p>
-
-            <h3>¿Cómo funciona?</h3>
-            <p>Es sencillo: <strong>Disney nos paga a nosotros, no tú.</strong> Los precios de Disney ya tienen incluida una comisión para agentes de viajes. Si reservas directo por la web de Disney, te cuesta LO MISMO, pero Disney se queda con esa comisión y tú te quedas sin ayuda.</p>
-
-            <h3>¿Qué gano al reservar con Here We Go Advisor?</h3>
-            <ul>
-                <li><strong>Alguien de tu lado:</strong> Si hay un huracán, un vuelo cancelado o un problema en el hotel, no pasas horas en espera al teléfono. Nosotros lo hacemos por ti.</li>
-                <li><strong>Conocimiento Experto:</strong> Visitamos los parques constantemente. Sabemos qué atracciones están cerradas, qué snacks son nuevos y qué hoteles están en remodelación.</li>
-                <li><strong>Monitoreo de Ofertas:</strong> Si sale una promoción después de que reservaste, ajustamos tu reserva para que pagues menos.</li>
-            </ul>
-
-            <p>Básicamente, al no usarnos, estás pagando por un servicio que no estás recibiendo. ¡Déjanos hacer la magia por ti!</p>
-        `
+        `,
+        translations: {
+            en: {
+                title: "Universal vs. Disney: Which is Best for Your Family?",
+                excerpt: "Harry Potter or Star Wars? Thrill rides or classic magic? We help you pick the best destination for your group.",
+                readTime: "4 min read",
+                category: "Comparisons",
+                content: `
+                    <p>Both are incredible, but offer unique experiences. Choosing the right one for your kids' ages makes all the difference.</p>
+                `
+            },
+            pt: {
+                title: "Universal vs. Disney: Qual é o Melhor para Sua Família?",
+                excerpt: "Harry Potter ou Star Wars? Montanhas-russas radicais ou magia clássica? Ajudamos a escolher o melhor destino.",
+                readTime: "4 min de leitura",
+                category: "Comparações",
+                content: `
+                    <p>Ambos são incríveis, mas oferecem experiências muito diferentes. Escolher o melhor destino para a idade das suas crianças faz toda a diferença.</p>
+                `
+            }
+        }
     }
 ];

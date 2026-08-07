@@ -32,7 +32,6 @@ export function LanguageSelector({ className }: { className?: string }) {
                 aria-label="Select Language"
             >
                 <Globe className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                <span className="text-sm">{activeOption.flag}</span>
                 <span className="uppercase tracking-wider font-extrabold">{activeOption.code}</span>
                 <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform duration-200", isOpen && "rotate-180")} />
             </button>

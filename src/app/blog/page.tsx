@@ -1,15 +1,16 @@
 "use client";
 
-import { Navbar } from "@/components/navbar";
-import { blogPosts } from "@/lib/blog";
+import { blogPosts, getLocalizedBlogPost } from "@/lib/blog";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function BlogPage() {
+    const { t, language } = useLanguage();
     const [postsList, setPostsList] = useState<any[]>(blogPosts);
 
     useEffect(() => {
@@ -39,47 +40,44 @@ export default function BlogPage() {
         }
         fetchPosts();
     }, []);
+
+    const localizedList = postsList.map(p => getLocalizedBlogPost(p, language));
+
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
-
-            <main className="pt-32 pb-16">
+            <main className="pt-28 pb-16">
                 {/* Header */}
                 <div className="container px-4 mx-auto mb-16 text-center">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-5xl font-bold tracking-tight mb-4"
+                        className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-slate-900 dark:text-white"
                     >
-                        Blog & Tips Mágicos
+                        {t("blog_title")}
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-lg text-muted-foreground max-w-2xl mx-auto"
+                        className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto"
                     >
-                        Consejos expertos, guías de ahorro y todo lo que necesitas saber para planear el viaje perfecto.
+                        {t("blog_subtitle")}
                     </motion.p>
                 </div>
 
                 {/* Grid */}
                 <div className="container px-4 mx-auto">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {postsList.map((post, index) => (
+                        {localizedList.map((post, index) => (
                             <motion.article
                                 key={post.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
-                                className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow flex flex-col h-full"
+                                className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border hover:shadow-xl hover:border-purple-500/30 transition-all flex flex-col h-full"
                             >
                                 <Link href={`/blog/${post.slug}`} className="block relative aspect-video overflow-hidden">
-                                    {/* Fallback image logic or real image if available. 
-                                        Since we don't have real implementation of these image files locally yet, 
-                                        we will use a placeholder styling but try to load the image.
-                                      */}
                                     <Image
                                         src={post.image}
                                         alt={post.title}
@@ -89,14 +87,14 @@ export default function BlogPage() {
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                     <div className="absolute bottom-4 left-4">
-                                        <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+                                        <span className="bg-purple-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm">
                                             {post.category}
                                         </span>
                                     </div>
                                 </Link>
 
                                 <div className="p-6 flex flex-col flex-grow">
-                                    <div className="flex items-center text-xs text-muted-foreground mb-4 space-x-4">
+                                    <div className="flex items-center text-xs text-slate-500 mb-4 space-x-4">
                                         <div className="flex items-center">
                                             <Calendar className="h-3 w-3 mr-1" />
                                             {post.date}
@@ -108,21 +106,21 @@ export default function BlogPage() {
                                     </div>
 
                                     <Link href={`/blog/${post.slug}`} className="block mb-3">
-                                        <h2 className="text-xl font-bold hover:text-primary transition-colors line-clamp-2">
+                                        <h2 className="text-xl font-bold hover:text-purple-600 transition-colors line-clamp-2">
                                             {post.title}
                                         </h2>
                                     </Link>
 
-                                    <p className="text-muted-foreground text-sm mb-6 line-clamp-3">
+                                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-6 line-clamp-3">
                                         {post.excerpt}
                                     </p>
 
                                     <div className="mt-auto">
                                         <Link
                                             href={`/blog/${post.slug}`}
-                                            className="inline-flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                                            className="inline-flex items-center text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
                                         >
-                                            Leer artículo completo
+                                            {t("blog_read_more")}
                                             <ArrowRight className="h-4 w-4 ml-1" />
                                         </Link>
                                     </div>
@@ -132,8 +130,6 @@ export default function BlogPage() {
                     </div>
                 </div>
             </main>
-
-
         </div>
     );
 }

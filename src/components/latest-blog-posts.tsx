@@ -1,6 +1,6 @@
 "use client";
 
-import { blogPosts } from "@/lib/blog";
+import { blogPosts, getLocalizedBlogPost } from "@/lib/blog";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function LatestBlogPosts() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [latestPosts, setLatestPosts] = useState<any[]>(blogPosts.slice(0, 4));
     const [active, setActive] = useState(0);
 
@@ -50,7 +50,9 @@ export function LatestBlogPosts() {
         }
     }, [latestPosts.length, active]);
 
-    if (latestPosts.length === 0) return null;
+    const displayPosts = latestPosts.map(p => getLocalizedBlogPost(p, language));
+
+    if (displayPosts.length === 0) return null;
 
     return (
         <section className="py-12 md:py-24 bg-secondary/5 relative overflow-hidden">
@@ -80,36 +82,36 @@ export function LatestBlogPosts() {
 
                     {/* Desktop Menu (Left Side) */}
                     <div className="hidden lg:flex flex-col gap-2 w-1/3 overflow-y-auto pr-2 custom-scrollbar">
-                        {latestPosts.map((post, index) => (
+                        {displayPosts.map((post, index) => (
                             <div
                                 key={post.id}
                                 onMouseEnter={() => setActive(index)}
                                 className={cn(
                                     "p-5 rounded-xl cursor-pointer transition-all duration-300 border border-transparent relative group",
                                     active === index
-                                        ? "bg-white shadow-md border-primary/20 translate-x-2"
+                                        ? "bg-white shadow-md border-purple-500/20 translate-x-2"
                                         : "hover:bg-white/50 hover:translate-x-1"
                                 )}
                             >
-                                <div className="flex items-center text-xs text-muted-foreground mb-2">
+                                <div className="flex items-center text-xs text-slate-500 mb-2">
                                     <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mr-2",
-                                        active === index ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
+                                        active === index ? "bg-purple-600 text-white" : "bg-secondary text-secondary-foreground")}>
                                         {post.category}
                                     </span>
                                     <Calendar className="h-3 w-3 mr-1" />
                                     {post.date}
                                 </div>
-                                <h3 className={cn("text-lg font-bold leading-tight transition-colors", active === index ? "text-primary" : "text-foreground")}>
+                                <h3 className={cn("text-lg font-bold leading-tight transition-colors", active === index ? "text-purple-600" : "text-foreground")}>
                                     {post.title}
                                 </h3>
-                                <p className={cn("text-xs mt-2 line-clamp-2", active !== index && "text-muted-foreground")}>
+                                <p className={cn("text-xs mt-2 line-clamp-2", active !== index && "text-slate-500")}>
                                     {post.excerpt}
                                 </p>
                             </div>
                         ))}
                         <div className="mt-auto pt-4 text-center">
-                            <Link href="/blog" className="text-sm font-medium text-primary hover:underline inline-flex items-center">
-                                Ver todos los artículos <ArrowRight className="h-4 w-4 ml-1" />
+                            <Link href="/blog" className="text-sm font-bold text-purple-600 hover:underline inline-flex items-center">
+                                {t("blog_read_more")} <ArrowRight className="h-4 w-4 ml-1" />
                             </Link>
                         </div>
                     </div>
@@ -127,8 +129,8 @@ export function LatestBlogPosts() {
                             >
                                 <div className="relative flex-grow overflow-hidden">
                                     <Image
-                                        src={latestPosts[active].image}
-                                        alt={latestPosts[active].title}
+                                        src={displayPosts[active]?.image || "/blog/lightning-lane.png"}
+                                        alt={displayPosts[active]?.title || "Blog"}
                                         fill
                                         className="object-cover"
                                         priority
@@ -138,10 +140,10 @@ export function LatestBlogPosts() {
                                 </div>
 
                                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white bg-gradient-to-t from-black/95 to-transparent pt-32">
-                                    <h3 className="text-3xl font-bold mb-3 leading-tight">{latestPosts[active].title}</h3>
-                                    <p className="text-base text-white/90 mb-6 max-w-2xl line-clamp-2">{latestPosts[active].excerpt}</p>
+                                    <h3 className="text-3xl font-bold mb-3 leading-tight">{displayPosts[active]?.title}</h3>
+                                    <p className="text-base text-white/90 mb-6 max-w-2xl line-clamp-2">{displayPosts[active]?.excerpt}</p>
 
-                                    <Link href={`/blog/${latestPosts[active].slug}`}>
+                                    <Link href={`/blog/${displayPosts[active]?.slug}`}>
                                         <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2 text-sm shadow-md">
                                             {t("blog_read_more")} <ArrowRight className="h-4 w-4" />
                                         </button>
@@ -153,7 +155,7 @@ export function LatestBlogPosts() {
 
                     {/* Mobile Swiper (Horizontal Scroll) */}
                     <div className="lg:hidden w-full overflow-x-auto snap-x snap-mandatory flex gap-4 pb-8 scrollbar-hide px-4 -mx-4">
-                        {latestPosts.map((post) => (
+                        {displayPosts.map((post) => (
                             <Link
                                 key={post.id}
                                 href={`/blog/${post.slug}`}
@@ -167,23 +169,23 @@ export function LatestBlogPosts() {
                                         className="object-cover"
                                         sizes="(max-width: 768px) 80vw, 350px"
                                     />
-                                    <span className="absolute top-4 left-4 bg-background/90 backdrop-blur text-foreground text-xs px-2 py-1 rounded-full font-bold shadow-sm">
+                                    <span className="absolute top-4 left-4 bg-purple-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm">
                                         {post.category}
                                     </span>
                                 </div>
                                 <div className="p-5 flex flex-col flex-grow">
-                                    <div className="flex items-center text-xs text-muted-foreground mb-2">
+                                    <div className="flex items-center text-xs text-slate-500 mb-2">
                                         <Calendar className="h-3 w-3 mr-1" />
                                         {post.date}
                                     </div>
                                     <h3 className="text-lg font-bold mb-2 line-clamp-2 leading-tight">
                                         {post.title}
                                     </h3>
-                                    <p className="text-muted-foreground text-sm line-clamp-3 mb-4">
+                                    <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-3 mb-4">
                                         {post.excerpt}
                                     </p>
-                                    <div className="mt-auto text-primary font-semibold text-sm flex items-center">
-                                        Leer más <ArrowRight className="h-3 w-3 ml-1" />
+                                    <div className="mt-auto text-purple-600 font-bold text-sm flex items-center">
+                                        {t("blog_read_more")} <ArrowRight className="h-3 w-3 ml-1" />
                                     </div>
                                 </div>
                             </Link>

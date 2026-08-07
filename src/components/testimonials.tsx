@@ -3,8 +3,8 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Star, Quote, ChevronLeft, ChevronRight, MessageSquareQuote } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Language } from "@/lib/i18n/translations";
 
 interface Review {
     id: number;
@@ -13,6 +13,10 @@ interface Review {
     content: string;
     rating: number;
     image_url?: string;
+    translations?: {
+        en?: { name?: string; role?: string; content?: string };
+        pt?: { name?: string; role?: string; content?: string };
+    };
 }
 
 const defaultTestimonials: Review[] = [
@@ -22,6 +26,18 @@ const defaultTestimonials: Review[] = [
         role: "Mamá de 3 • Disney World",
         content: "¡Ana Karen hizo que nuestro viaje fuera perfecto! No tuvimos que preocuparnos por nada, solo disfrutar cada momento en los parques. La guía de Lightning Lane y recomendaciones de restaurantes fueron excepcionales.",
         rating: 5,
+        translations: {
+            en: {
+                name: "Maria G.",
+                role: "Mom of 3 • Disney World",
+                content: "Anna Karen made our trip absolute perfection! We didn't have to worry about a thing, just enjoying every single moment at the parks. The Lightning Lane guide and restaurant recommendations were top tier."
+            },
+            pt: {
+                name: "Maria G.",
+                role: "Mãe de 3 • Disney World",
+                content: "A Anna Karen tornou nossa viagem perfeita! Não tivemos que nos preocupar com nada, apenas curtir cada momento nos parques. O guia do Lightning Lane e as recomendações de restaurantes foram excepcionais."
+            }
+        }
     },
     {
         id: 2,
@@ -29,6 +45,18 @@ const defaultTestimonials: Review[] = [
         role: "Disney Cruise Line",
         content: "Cansadísimos pero con el corazón muy feliz. Mil gracias por tu acompañamiento, definitivamente no lo hubiéramos logrado solitos. Claro que esperemos volver y te andaremos buscando, pero por lo pronto 100% recomendada.",
         rating: 5,
+        translations: {
+            en: {
+                name: "Aguirre Family",
+                role: "Disney Cruise Line",
+                content: "Exhausted but our hearts are so full! Thank you so much for your guidance; we definitely couldn't have pulled this off alone. We 100% recommend her service!"
+            },
+            pt: {
+                name: "Família Aguirre",
+                role: "Disney Cruise Line",
+                content: "Cansadíssimos mas com o coração transbordando de alegria. Muito obrigado por todo o suporte, com certeza 100% recomendada!"
+            }
+        }
     },
     {
         id: 3,
@@ -36,16 +64,74 @@ const defaultTestimonials: Review[] = [
         role: "Crucero Disney Destiny",
         content: "Excelente servicio de principio a fin. En nuestro viaje al crucero de Disney todo salió perfecto. Se nota que conoce muy bien el destino, hace recomendaciones muy acertadas y siempre estuvo al pendiente.",
         rating: 5,
+        translations: {
+            en: {
+                name: "Nayely Morales",
+                role: "Disney Destiny Cruise",
+                content: "Excellent service from start to finish. Everything on our Disney cruise went seamlessly. She truly knows the destination inside out and made spot-on recommendations."
+            },
+            pt: {
+                name: "Nayely Morales",
+                role: "Cruzeiro Disney Destiny",
+                content: "Excelente serviço do início ao fim. Nossa viagem no cruzeiro Disney foi perfeita. Dá para ver que ela conhece muito bem o destino e fez recomendações impecáveis."
+            }
+        }
     }
 ];
+
+// Helper to translate roles & text dynamically for reviews from DB
+function localizeReview(review: Review, lang: Language): Review {
+    if (review.translations && review.translations[lang as 'en' | 'pt']) {
+        const trans = review.translations[lang as 'en' | 'pt']!;
+        return {
+            ...review,
+            name: trans.name || review.name,
+            role: trans.role || review.role,
+            content: trans.content || review.content,
+        };
+    }
+
+    if (lang === 'es') return review;
+
+    // Localize common terms in custom user reviews
+    let role = review.role || "";
+    let content = review.content || "";
+    let name = review.name || "";
+
+    if (lang === 'en') {
+        role = role
+            .replace(/cumpleaños/gi, "birthday")
+            .replace(/primer visita/gi, "first visit")
+            .replace(/Crucero a/gi, "Cruise to")
+            .replace(/Mamá de/gi, "Mom of")
+            .replace(/Familia/gi, "Family")
+            .replace(/Viaje en familia/gi, "Family Trip");
+    } else if (lang === 'pt') {
+        role = role
+            .replace(/cumpleaños/gi, "aniversário")
+            .replace(/primer visita/gi, "primeira visita")
+            .replace(/Crucero a/gi, "Cruzeiro para")
+            .replace(/Mamá de/gi, "Mãe de")
+            .replace(/Familia/gi, "Família")
+            .replace(/Viaje en familia/gi, "Viagem em família");
+    }
+
+    return {
+        ...review,
+        name,
+        role,
+        content
+    };
+}
 
 interface TestimonialsProps {
     reviews?: Review[] | null;
 }
 
 export function Testimonials({ reviews }: TestimonialsProps) {
-    const { t } = useLanguage();
-    const listToDisplay = Array.isArray(reviews) && reviews.length > 0 ? reviews : defaultTestimonials;
+    const { t, language } = useLanguage();
+    const rawList = Array.isArray(reviews) && reviews.length > 0 ? reviews : defaultTestimonials;
+    const listToDisplay = rawList.map(r => localizeReview(r, language));
     const [isPaused, setIsPaused] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +139,6 @@ export function Testimonials({ reviews }: TestimonialsProps) {
         return null;
     }
 
-    // Duplicate list enough times to ensure seamless infinite loop
     let itemsToRepeat = [...listToDisplay];
     while (itemsToRepeat.length < 8) {
         itemsToRepeat = [...itemsToRepeat, ...listToDisplay];
@@ -79,7 +164,7 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                     transition={{ duration: 0.6 }}
                     className="text-center space-y-3"
                 >
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider">
                         <MessageSquareQuote className="h-3.5 w-3.5" />
                         <span>{t("test_badge")}</span>
                     </div>
@@ -96,14 +181,14 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => scroll('left')}
-                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"
+                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200 cursor-pointer"
                             aria-label="Reseña anterior"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => scroll('right')}
-                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200"
+                            className="p-2.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white transition-all text-slate-700 dark:text-slate-200 cursor-pointer"
                             aria-label="Siguiente reseña"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -137,20 +222,20 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                         }}
                         style={{ width: "fit-content" }}
                     >
-                        {marqueeItems.map((t, index) => {
-                            const initials = t.name ? t.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : 'HW';
-                            const hasImageUrl = t.image_url && typeof t.image_url === 'string' && t.image_url.trim() !== '';
+                        {marqueeItems.map((tItem, index) => {
+                            const initials = tItem.name ? tItem.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : 'HW';
+                            const hasImageUrl = tItem.image_url && typeof tItem.image_url === 'string' && tItem.image_url.trim() !== '';
 
                             return (
                                 <div
-                                    key={`${t.id}-${index}`}
+                                    key={`${tItem.id}-${index}`}
                                     className="flex-shrink-0 w-[340px] sm:w-[400px] h-[360px] sm:h-[390px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-7 sm:p-8 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800/90 shadow-md hover:shadow-2xl hover:border-purple-500 hover:shadow-purple-500/15 transition-all duration-300 flex flex-col group relative overflow-hidden"
                                 >
                                     {/* Blurred Background Image Texture */}
                                     {hasImageUrl ? (
                                         <div 
                                             className="absolute inset-0 bg-cover bg-center opacity-20 dark:opacity-25 blur-xl scale-110 pointer-events-none group-hover:scale-125 group-hover:opacity-30 transition-all duration-700"
-                                            style={{ backgroundImage: `url(${t.image_url})` }}
+                                            style={{ backgroundImage: `url(${tItem.image_url})` }}
                                         />
                                     ) : (
                                         <div 
@@ -168,8 +253,8 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                                             {hasImageUrl ? (
                                                 <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-purple-500/30 shadow-md shrink-0 group-hover:scale-105 group-hover:border-purple-500 transition-all">
                                                     <img
-                                                        src={t.image_url}
-                                                        alt={t.name}
+                                                        src={tItem.image_url}
+                                                        alt={tItem.name}
                                                         className="object-cover w-full h-full"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).style.display = 'none';
@@ -185,25 +270,25 @@ export function Testimonials({ reviews }: TestimonialsProps) {
                                             {/* 2. Below Image: Customer Name & Role */}
                                             <div className="min-w-0">
                                                 <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
-                                                    {t.name}
+                                                    {tItem.name}
                                                 </h4>
                                                 <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold truncate mt-0.5">
-                                                    {t.role}
+                                                    {tItem.role}
                                                 </p>
                                             </div>
                                         </div>
 
                                         {/* 3. Below Name: Rating Stars */}
                                         <div className="flex gap-1.5 mb-4">
-                                            {[...Array(Math.max(0, Math.min(5, Math.floor(t.rating || 5))))].map((_, i) => (
+                                            {[...Array(Math.max(0, Math.min(5, Math.floor(tItem.rating || 5))))].map((_, i) => (
                                                 <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                                             ))}
                                         </div>
 
-                                        {/* 4. Review Content (6+ lines comfortably) */}
+                                        {/* 4. Review Content */}
                                         <div className="flex-1 overflow-y-auto scrollbar-none pr-1">
                                             <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-100 italic font-medium leading-relaxed">
-                                                "{t.content}"
+                                                "{tItem.content}"
                                             </p>
                                         </div>
                                     </div>

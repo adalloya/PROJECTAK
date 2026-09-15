@@ -497,7 +497,11 @@ export default function AdminDashboard() {
                 .order('updated_at', { ascending: true });
 
             if (!error && data) {
-                if (data.length === 0) {
+                const validData = (data as ResourceItem[]).filter(
+                    item => item.title !== '[DELETED]' && item.pdf_url !== 'DELETED'
+                );
+
+                if (validData.length === 0) {
                     const initialized = localStorage.getItem('crm_resources_db_initialized');
                     if (!initialized) {
                         try {
@@ -516,9 +520,8 @@ export default function AdminDashboard() {
                 }
 
                 localStorage.setItem('crm_resources_db_initialized', 'true');
-                const list = data as ResourceItem[];
-                setResourcesList(list);
-                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(list));
+                setResourcesList(validData);
+                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(validData));
                 return;
             }
         } catch (e) {
@@ -528,7 +531,11 @@ export default function AdminDashboard() {
         const local = localStorage.getItem('crm_resources_list_fallback');
         if (local) {
             try {
-                setResourcesList(JSON.parse(local));
+                const parsed = JSON.parse(local) as ResourceItem[];
+                const validParsed = parsed.filter(
+                    item => item.title !== '[DELETED]' && item.pdf_url !== 'DELETED'
+                );
+                setResourcesList(validParsed);
                 return;
             } catch (e) {}
         }

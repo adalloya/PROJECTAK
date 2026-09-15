@@ -238,14 +238,23 @@ export async function saveAdminReview(reviewData: any) {
 
 export async function deleteAdminResource(resourceId: string) {
     try {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
+            .from('resources')
+            .update({
+                title: '[DELETED]',
+                pdf_url: 'DELETED',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', resourceId);
+
+        await supabase
             .from('resources')
             .delete()
             .eq('id', resourceId);
 
-        if (error) {
-            console.error('Error deleting resource in Supabase:', error);
-            return { success: false, message: error.message };
+        if (updateError) {
+            console.error('Error deleting resource in Supabase:', updateError);
+            return { success: false, message: updateError.message };
         }
 
         revalidatePath('/admin/dashboard');

@@ -75,7 +75,10 @@ export default function ResourceDashboardPage() {
             if (error) {
                 console.warn("DB resources table not available, using fallbacks.", error);
             } else if (data) {
-                setResources(data as ResourceItem[]);
+                const validData = (data as ResourceItem[]).filter(
+                    item => item.title !== '[DELETED]' && item.pdf_url !== 'DELETED'
+                );
+                setResources(validData);
             }
         } catch (err) {
             console.error("Failed to load resources:", err);

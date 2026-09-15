@@ -348,34 +348,43 @@ export default function ResourceDashboardPage() {
                         className="fixed inset-0 z-50 bg-black/95 flex flex-col"
                     >
                         {/* Header bar */}
-                        <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-950 border-b border-slate-900 gap-2">
-                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                                <FileText className="h-5 w-5 text-violet-400 shrink-0" />
-                                <h3 className="font-bold text-slate-200 text-xs sm:text-base tracking-wide truncate max-w-[150px] sm:max-w-md">
-                                    {selectedPdf.title}
-                                </h3>
+                        <div className="flex flex-col bg-slate-950 border-b border-slate-900">
+                            <div className="flex items-center justify-between px-4 sm:px-6 py-3 gap-2">
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                    <FileText className="h-5 w-5 text-violet-400 shrink-0" />
+                                    <h3 className="font-bold text-slate-200 text-xs sm:text-base tracking-wide truncate max-w-[140px] sm:max-w-md">
+                                        {selectedPdf.title}
+                                    </h3>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <a
+                                        href={selectedPdf.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow transition-all hover:scale-105 cursor-pointer"
+                                        title="Ver todas las páginas a pantalla completa"
+                                    >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                        <span className="hidden sm:inline">Abrir PDF Completo (Todas las Páginas)</span>
+                                        <span className="sm:hidden">Abrir PDF Completo</span>
+                                    </a>
+                                    <button
+                                        onClick={() => setSelectedPdf(null)}
+                                        className="p-1.5 text-slate-400 hover:text-slate-100 rounded-full hover:bg-slate-900 transition-colors cursor-pointer"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                                <a
-                                    href={selectedPdf.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold shadow transition-all hover:scale-105"
-                                >
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                    <span className="hidden sm:inline">Abrir Documento</span>
-                                    <span className="sm:hidden">Abrir PDF</span>
-                                </a>
-                                <button
-                                    onClick={() => setSelectedPdf(null)}
-                                    className="p-1.5 text-slate-400 hover:text-slate-100 rounded-full hover:bg-slate-900 transition-colors cursor-pointer"
-                                >
-                                    <X className="h-6 w-6" />
-                                </button>
+                            
+                            {/* Mobile Multi-Page Helper Banner */}
+                            <div className="bg-violet-950/60 border-t border-violet-900/50 px-4 py-1.5 text-[11px] sm:text-xs text-violet-200 flex items-center justify-between">
+                                <span>📄 Desplázate hacia abajo para ver todas las páginas del documento.</span>
+                                <span className="hidden md:inline text-violet-400">Pellizca o usa "Abrir PDF Completo" para zoom nativo</span>
                             </div>
                         </div>
 
-                        {/* Visualizer iframe wrapper with responsive scrolling */}
+                        {/* Visualizer iframe wrapper */}
                         <div 
                             className="flex-1 w-full bg-slate-950 relative overflow-auto flex justify-center items-center p-0 sm:p-4"
                             style={{ WebkitOverflowScrolling: "touch" }}

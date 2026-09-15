@@ -522,18 +522,32 @@ export default function AdminDashboard() {
         setResourcesList(DEFAULT_RESOURCES);
     };
 
+    const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+
     const handleAddResource = async (category: 'wdw' | 'dl' | 'dcl', title: string, file: File | null) => {
+        if (file && file.size > MAX_FILE_SIZE_BYTES) {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            alert(`⚠️ El archivo "${file.name}" pesa ${fileSizeMB} MB, lo cual supera el límite máximo recomendado de 50 MB.\n\nPara que tus clientes puedan abrir la guía rápidamente en sus celulares sin agotar sus datos ni causar errores, por favor comprime tu PDF gratis en https://www.ilovepdf.com/es/comprimir_pdf antes de subirlo.`);
+            return;
+        }
+
         const newId = `${category}_${Math.random().toString(36).substring(2, 9)}`;
         let pdfUrl: string | null = null;
 
         if (file) {
             setUploadingResourceId(newId);
             try {
-                const fileExt = file.name.split('.').pop();
+                const fileExt = file.name.split('.').pop() || 'pdf';
                 const fileName = `${newId}_${Date.now()}.${fileExt}`;
                 const { data, error: uploadError } = await supabase.storage
                     .from('resources')
-                    .upload(fileName, file);
+                    .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+                if (uploadError) {
+                    console.error("Storage upload failed:", uploadError);
+                    alert(`Error al subir el archivo a Supabase Storage: ${uploadError.message || 'Error de almacenamiento'}\n\nSi el archivo es muy grande, intenta comprimirlo en www.ilovepdf.com antes de subirlo.`);
+                    return;
+                }
 
                 if (data) {
                     const { data: { publicUrl } } = supabase.storage
@@ -541,55 +555,56 @@ export default function AdminDashboard() {
                         .getPublicUrl(fileName);
                     pdfUrl = publicUrl;
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Upload error:", err);
+                alert(`Error al procesar el archivo: ${err?.message || 'Error de conexión'}`);
+                return;
             } finally {
                 setUploadingResourceId(null);
             }
         }
 
-        const saveItem = async (urlVal: string | null) => {
-            const newItem: ResourceItem = {
-                id: newId,
-                title,
-                category,
-                pdf_url: urlVal,
-                updated_at: new Date().toISOString()
-            };
-
-            const res = await saveAdminResource(newItem);
-            if (!res.success) {
-                alert(`Error al guardar la guía en la base de datos: ${res.message || 'Error desconocido'}`);
-            } else {
-                alert("Guía agregada exitosamente.");
-            }
-
-            await fetchAdminResources();
+        const newItem: ResourceItem = {
+            id: newId,
+            title,
+            category,
+            pdf_url: pdfUrl,
+            updated_at: new Date().toISOString()
         };
 
-        if (file && !pdfUrl) {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64 = e.target?.result as string;
-                await saveItem(base64);
-            };
-            reader.readAsDataURL(file);
+        const res = await saveAdminResource(newItem);
+        if (!res.success) {
+            alert(`Error al guardar la guía en la base de datos: ${res.message || 'Error desconocido'}`);
         } else {
-            await saveItem(pdfUrl);
+            alert("Guía agregada exitosamente.");
         }
+
+        await fetchAdminResources();
     };
 
     const handleUploadResource = async (resourceId: string, file: File) => {
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            alert(`⚠️ El archivo "${file.name}" pesa ${fileSizeMB} MB, lo cual supera el límite máximo recomendado de 50 MB.\n\nPara que tus clientes puedan abrir la guía rápidamente en sus celulares sin agotar sus datos ni causar errores, por favor comprime tu PDF gratis en https://www.ilovepdf.com/es/comprimir_pdf antes de subirlo.`);
+            return;
+        }
+
         setUploadingResourceId(resourceId);
         try {
-            let publicUrl = "";
-            const fileExt = file.name.split('.').pop();
+            const fileExt = file.name.split('.').pop() || 'pdf';
             const fileName = `${resourceId}_${Date.now()}.${fileExt}`;
             
             const { data, error: uploadError } = await supabase.storage
                 .from('resources')
-                .upload(fileName, file);
+                .upload(fileName, file, { cacheControl: '3600', upsert: true });
 
+            if (uploadError) {
+                console.error("Storage upload failed:", uploadError);
+                alert(`Error al subir el archivo a Supabase Storage: ${uploadError.message || 'Error de almacenamiento'}\n\nSi el archivo es muy grande, intenta comprimirlo en www.ilovepdf.com antes de subirlo.`);
+                return;
+            }
+
+            let publicUrl = "";
             if (data) {
                 const { data: { publicUrl: url } } = supabase.storage
                     .from('resources')
@@ -597,34 +612,27 @@ export default function AdminDashboard() {
                 publicUrl = url;
             }
 
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64 = e.target?.result as string;
-                const finalUrl = publicUrl || base64;
-
-                const existingItem = resourcesList.find(r => r.id === resourceId);
-                const upsertItem = {
-                    id: resourceId,
-                    title: existingItem?.title || "Guía",
-                    category: existingItem?.category || "wdw",
-                    pdf_url: finalUrl,
-                    updated_at: new Date().toISOString()
-                };
-
-                const res = await saveAdminResource(upsertItem);
-                if (!res.success) {
-                    alert(`Error al guardar el PDF en la base de datos: ${res.message || 'Error desconocido'}`);
-                } else {
-                    alert("Archivo PDF cargado exitosamente.");
-                }
-
-                await fetchAdminResources();
+            const existingItem = resourcesList.find(r => r.id === resourceId);
+            const upsertItem = {
+                id: resourceId,
+                title: existingItem?.title || "Guía",
+                category: existingItem?.category || "wdw",
+                pdf_url: publicUrl,
+                updated_at: new Date().toISOString()
             };
-            reader.readAsDataURL(file);
 
-        } catch (error) {
+            const res = await saveAdminResource(upsertItem);
+            if (!res.success) {
+                alert(`Error al guardar el PDF en la base de datos: ${res.message || 'Error desconocido'}`);
+            } else {
+                alert("Archivo PDF cargado exitosamente.");
+            }
+
+            await fetchAdminResources();
+
+        } catch (error: any) {
             console.error("Upload failed:", error);
-            alert("Error al subir el archivo.");
+            alert(`Error al subir el archivo: ${error?.message || 'Error desconocido'}`);
         } finally {
             setUploadingResourceId(null);
         }
@@ -2282,6 +2290,10 @@ export default function AdminDashboard() {
                         <div>
                             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Configurar Recursos del Viajero</h1>
                             <p className="text-gray-500 mt-1.5 text-base">Administra y sube los documentos guías en PDF que verán los clientes en sus portales.</p>
+                            <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-800 text-xs font-semibold">
+                                <AlertTriangle className="h-4 w-4 shrink-0 text-violet-600" />
+                                <span>Límite máximo permitido: <strong>50 MB por archivo PDF</strong>. (Recomendación: para que tus clientes abran sus guías rápidamente en celulares sin agotar datos, comprime PDFs pesados en <a href="https://www.ilovepdf.com/es/comprimir_pdf" target="_blank" rel="noopener noreferrer" className="underline font-bold text-violet-900 hover:text-purple-600">ilovepdf.com</a> antes de subirlos).</span>
+                            </div>
                         </div>
                     </div>
 

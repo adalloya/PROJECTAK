@@ -14,7 +14,8 @@ import {
     Eye, 
     MessageCircle,
     X,
-    Lock
+    Lock,
+    ExternalLink
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Lead, ResourceItem } from "@/lib/crm/types";
@@ -347,31 +348,52 @@ export default function ResourceDashboardPage() {
                         className="fixed inset-0 z-50 bg-black/95 flex flex-col"
                     >
                         {/* Header bar */}
-                        <div className="flex items-center justify-between px-6 py-4 bg-slate-950 border-b border-slate-900">
-                            <div className="flex items-center gap-3">
-                                <FileText className="h-5 w-5 text-violet-400" />
-                                <h3 className="font-bold text-slate-200 text-sm md:text-base tracking-wide truncate max-w-xs md:max-w-md">
+                        <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-950 border-b border-slate-900 gap-2">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                <FileText className="h-5 w-5 text-violet-400 shrink-0" />
+                                <h3 className="font-bold text-slate-200 text-xs sm:text-base tracking-wide truncate max-w-[150px] sm:max-w-md">
                                     {selectedPdf.title}
                                 </h3>
                             </div>
-                            <button
-                                onClick={() => setSelectedPdf(null)}
-                                className="p-2 text-slate-400 hover:text-slate-100 rounded-full hover:bg-slate-900 transition-colors cursor-pointer"
-                            >
-                                <X className="h-6 w-6" />
-                            </button>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <a
+                                    href={selectedPdf.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold shadow transition-all hover:scale-105"
+                                >
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                    <span className="hidden sm:inline">Abrir Documento</span>
+                                    <span className="sm:hidden">Abrir PDF</span>
+                                </a>
+                                <button
+                                    onClick={() => setSelectedPdf(null)}
+                                    className="p-1.5 text-slate-400 hover:text-slate-100 rounded-full hover:bg-slate-900 transition-colors cursor-pointer"
+                                >
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Visualizer iframe */}
+                        {/* Visualizer iframe wrapper with responsive scrolling */}
                         <div 
-                            className="flex-1 w-full bg-slate-950 relative overflow-hidden flex justify-center items-center"
+                            className="flex-1 w-full bg-slate-950 relative overflow-auto flex justify-center items-center p-0 sm:p-4"
+                            style={{ WebkitOverflowScrolling: "touch" }}
                             onContextMenu={(e) => e.preventDefault()}
                         >
-                            <iframe
-                                src={`${selectedPdf.url}#toolbar=0&navpanes=0&scrollbar=1`}
-                                className="w-full h-full border-none max-w-5xl bg-slate-900 shadow-2xl rounded-t-xl"
-                                title="Visor de Guías"
-                            />
+                            {selectedPdf.url.startsWith("http") ? (
+                                <iframe
+                                    src={`https://docs.google.com/gview?url=${encodeURIComponent(selectedPdf.url)}&embedded=true`}
+                                    className="w-full h-full border-none max-w-5xl bg-white shadow-2xl rounded-none sm:rounded-2xl"
+                                    title={selectedPdf.title}
+                                />
+                            ) : (
+                                <iframe
+                                    src={`${selectedPdf.url}#toolbar=1&navpanes=0&scrollbar=1`}
+                                    className="w-full h-full border-none max-w-5xl bg-slate-900 shadow-2xl rounded-none sm:rounded-2xl"
+                                    title={selectedPdf.title}
+                                />
+                            )}
                         </div>
                     </motion.div>
                 )}

@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { supabase } from "@/lib/supabase";
-import { submitLead, deleteLead, revalidateHomePage, deleteAdminReview, saveAdminReview } from "@/app/actions";
+import { submitLead, deleteLead, revalidateHomePage, deleteAdminReview, saveAdminReview, deleteAdminResource, removeAdminResourcePdf, saveAdminResource } from "@/app/actions";
 const getLocalYYYYMMDD = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -490,46 +490,41 @@ export default function AdminDashboard() {
     };
 
     const fetchAdminResources = async () => {
-        let dbList: ResourceItem[] = [];
         try {
             const { data, error } = await supabase
                 .from('resources')
                 .select('*')
                 .order('updated_at', { ascending: true });
-            if (data && data.length > 0) {
-                dbList = data as ResourceItem[];
+
+            if (!error && data) {
+                const dbMap = new Map<string, ResourceItem>();
+                (data as ResourceItem[]).forEach(item => dbMap.set(item.id, item));
+
+                const defaultSlots = DEFAULT_RESOURCES.map(def => dbMap.get(def.id) || def);
+                const customSlots = (data as ResourceItem[]).filter(item => !DEFAULT_RESOURCES.some(def => def.id === item.id));
+
+                const fullList = [...defaultSlots, ...customSlots];
+                setResourcesList(fullList);
+                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(fullList));
+                return;
             }
         } catch (e) {
-            console.error("Failed to fetch admin resources:", e);
+            console.error("Failed to fetch admin resources from DB:", e);
         }
 
-        // Merge with local storage fallback
-        let localList: ResourceItem[] = [];
         const local = localStorage.getItem('crm_resources_list_fallback');
         if (local) {
             try {
-                localList = JSON.parse(local) as ResourceItem[];
+                setResourcesList(JSON.parse(local));
+                return;
             } catch (e) {}
         }
-
-        const combined = [...dbList];
-        localList.forEach(l => {
-            if (!combined.some(c => c.id === l.id)) {
-                combined.push(l);
-            }
-        });
-
-        if (combined.length === 0) {
-            setResourcesList(DEFAULT_RESOURCES);
-            localStorage.setItem('crm_resources_list_fallback', JSON.stringify(DEFAULT_RESOURCES));
-        } else {
-            setResourcesList(combined);
-        }
+        setResourcesList(DEFAULT_RESOURCES);
     };
 
     const handleAddResource = async (category: 'wdw' | 'dl' | 'dcl', title: string, file: File | null) => {
         const newId = `${category}_${Math.random().toString(36).substring(2, 9)}`;
-        let pdfUrl = "";
+        let pdfUrl: string | null = null;
 
         if (file) {
             setUploadingResourceId(newId);
@@ -562,33 +557,25 @@ export default function AdminDashboard() {
                 updated_at: new Date().toISOString()
             };
 
-            try {
-                const { error } = await supabase
-                    .from('resources')
-                    .insert([newItem]);
-                if (error) {
-                    console.warn("DB insert failed, using fallback.", error);
-                }
-            } catch (e) {}
+            const res = await saveAdminResource(newItem);
+            if (!res.success) {
+                alert(`Error al guardar la guía en la base de datos: ${res.message || 'Error desconocido'}`);
+            } else {
+                alert("Guía agregada exitosamente.");
+            }
 
-            setResourcesList(prev => {
-                const updated = [...prev, newItem];
-                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(updated));
-                return updated;
-            });
-            alert("Guía agregada exitosamente.");
-            fetchAdminResources();
+            await fetchAdminResources();
         };
 
         if (file && !pdfUrl) {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const base64 = e.target?.result as string;
-                saveItem(base64);
+                await saveItem(base64);
             };
             reader.readAsDataURL(file);
         } else {
-            saveItem(pdfUrl || null);
+            await saveItem(pdfUrl);
         }
     };
 
@@ -603,9 +590,7 @@ export default function AdminDashboard() {
                 .from('resources')
                 .upload(fileName, file);
 
-            if (uploadError && !uploadError.message?.includes("already exists")) {
-                console.warn("Storage upload failed, attempting fallback to local Base64.", uploadError);
-            } else if (data) {
+            if (data) {
                 const { data: { publicUrl: url } } = supabase.storage
                     .from('resources')
                     .getPublicUrl(fileName);
@@ -617,31 +602,23 @@ export default function AdminDashboard() {
                 const base64 = e.target?.result as string;
                 const finalUrl = publicUrl || base64;
 
-                try {
-                    const existingItem = resourcesList.find(r => r.id === resourceId);
-                    const upsertData = {
-                        id: resourceId,
-                        title: existingItem?.title || "Guía",
-                        category: existingItem?.category || "wdw",
-                        pdf_url: finalUrl,
-                        updated_at: new Date().toISOString()
-                    };
-                    await supabase
-                        .from('resources')
-                        .upsert(upsertData);
-                } catch (dbErr) {
-                    console.error("Database upsert failed:", dbErr);
+                const existingItem = resourcesList.find(r => r.id === resourceId);
+                const upsertItem = {
+                    id: resourceId,
+                    title: existingItem?.title || "Guía",
+                    category: existingItem?.category || "wdw",
+                    pdf_url: finalUrl,
+                    updated_at: new Date().toISOString()
+                };
+
+                const res = await saveAdminResource(upsertItem);
+                if (!res.success) {
+                    alert(`Error al guardar el PDF en la base de datos: ${res.message || 'Error desconocido'}`);
+                } else {
+                    alert("Archivo PDF cargado exitosamente.");
                 }
 
-                setResourcesList(prev => {
-                    const updated = prev.map(item => 
-                        item.id === resourceId ? { ...item, pdf_url: finalUrl, updated_at: new Date().toISOString() } : item
-                    );
-                    localStorage.setItem('crm_resources_list_fallback', JSON.stringify(updated));
-                    return updated;
-                });
-
-                alert("Archivo PDF cargado exitosamente.");
+                await fetchAdminResources();
             };
             reader.readAsDataURL(file);
 
@@ -653,25 +630,28 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleRemovePdf = async (resourceId: string) => {
+        if (!confirm("¿Deseas quitar el archivo PDF de esta guía? La guía volverá a estar sin archivo asignado.")) return;
+
+        const res = await removeAdminResourcePdf(resourceId);
+        if (!res.success) {
+            alert(`Error al quitar el PDF: ${res.message || 'Error en el servidor'}`);
+        } else {
+            alert("PDF removido exitosamente.");
+            await fetchAdminResources();
+        }
+    };
+
     const handleDeleteResource = async (resourceId: string) => {
         if (!confirm("¿Estás seguro de que quieres eliminar esta guía por completo?")) return;
         
-        try {
-            const { error } = await supabase
-                .from('resources')
-                .delete()
-                .eq('id', resourceId);
-            if (error) {
-                console.warn("DB delete failed, using local fallback", error);
-            }
-        } catch (e) {}
-
-        setResourcesList(prev => {
-            const updated = prev.filter(item => item.id !== resourceId);
-            localStorage.setItem('crm_resources_list_fallback', JSON.stringify(updated));
-            return updated;
-        });
-        alert("Guía eliminada exitosamente.");
+        const res = await deleteAdminResource(resourceId);
+        if (!res.success) {
+            alert(`Error al eliminar la guía: ${res.message || 'Error en el servidor'}`);
+        } else {
+            alert("Guía eliminada exitosamente.");
+            await fetchAdminResources();
+        }
     };
 
 
@@ -2441,19 +2421,27 @@ export default function AdminDashboard() {
                                                                         href={pdfUrl}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
-                                                                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                                                                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5"
                                                                     >
                                                                         <Eye className="h-3.5 w-3.5" /> Ver PDF
                                                                     </a>
                                                                     <button
+                                                                        onClick={() => handleRemovePdf(slot.id)}
+                                                                        className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                                        title="Quitar el archivo PDF de esta guía"
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5" /> Quitar PDF
+                                                                    </button>
+                                                                    <button
                                                                         onClick={() => handleDeleteResource(slot.id)}
                                                                         className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                                        title="Eliminar la guía por completo"
                                                                     >
-                                                                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                                                        <Trash2 className="h-3.5 w-3.5" /> Eliminar Guía
                                                                     </button>
                                                                 </>
                                                             ) : (
-                                                                <div className="flex items-center">
+                                                                <div className="flex items-center gap-2">
                                                                     <label className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5">
                                                                         {isUploading ? (
                                                                             <>
@@ -2479,6 +2467,13 @@ export default function AdminDashboard() {
                                                                             }}
                                                                         />
                                                                     </label>
+                                                                    <button
+                                                                        onClick={() => handleDeleteResource(slot.id)}
+                                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                                                                        title="Eliminar la guía por completo"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </button>
                                                                 </div>
                                                             )}
                                                         </div>

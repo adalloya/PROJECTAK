@@ -236,4 +236,72 @@ export async function saveAdminReview(reviewData: any) {
     }
 }
 
+export async function deleteAdminResource(resourceId: string) {
+    try {
+        const { error } = await supabase
+            .from('resources')
+            .delete()
+            .eq('id', resourceId);
+
+        if (error) {
+            console.error('Error deleting resource in Supabase:', error);
+            return { success: false, message: error.message };
+        }
+
+        revalidatePath('/admin/dashboard');
+        revalidatePath('/resources/dashboard');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Server Action deleteAdminResource error:', e);
+        return { success: false, message: e?.message || 'Server error' };
+    }
+}
+
+export async function removeAdminResourcePdf(resourceId: string) {
+    try {
+        const { error } = await supabase
+            .from('resources')
+            .update({ pdf_url: null, updated_at: new Date().toISOString() })
+            .eq('id', resourceId);
+
+        if (error) {
+            console.error('Error removing resource PDF in Supabase:', error);
+            return { success: false, message: error.message };
+        }
+
+        revalidatePath('/admin/dashboard');
+        revalidatePath('/resources/dashboard');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Server Action removeAdminResourcePdf error:', e);
+        return { success: false, message: e?.message || 'Server error' };
+    }
+}
+
+export async function saveAdminResource(resourceItem: any) {
+    try {
+        const { error } = await supabase
+            .from('resources')
+            .upsert({
+                id: resourceItem.id,
+                title: resourceItem.title,
+                category: resourceItem.category,
+                pdf_url: resourceItem.pdf_url,
+                updated_at: new Date().toISOString()
+            });
+
+        if (error) {
+            console.error('Error saving resource in Supabase:', error);
+            return { success: false, message: error.message };
+        }
+
+        revalidatePath('/admin/dashboard');
+        revalidatePath('/resources/dashboard');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Server Action saveAdminResource error:', e);
+        return { success: false, message: e?.message || 'Server error' };
+    }
+}
+
 

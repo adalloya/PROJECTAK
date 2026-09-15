@@ -497,15 +497,28 @@ export default function AdminDashboard() {
                 .order('updated_at', { ascending: true });
 
             if (!error && data) {
-                const dbMap = new Map<string, ResourceItem>();
-                (data as ResourceItem[]).forEach(item => dbMap.set(item.id, item));
+                if (data.length === 0) {
+                    const initialized = localStorage.getItem('crm_resources_db_initialized');
+                    if (!initialized) {
+                        try {
+                            await supabase.from('resources').insert(DEFAULT_RESOURCES);
+                            localStorage.setItem('crm_resources_db_initialized', 'true');
+                            setResourcesList(DEFAULT_RESOURCES);
+                            localStorage.setItem('crm_resources_list_fallback', JSON.stringify(DEFAULT_RESOURCES));
+                            return;
+                        } catch (seedErr) {
+                            console.error("Failed to seed default resources:", seedErr);
+                        }
+                    }
+                    setResourcesList([]);
+                    localStorage.setItem('crm_resources_list_fallback', JSON.stringify([]));
+                    return;
+                }
 
-                const defaultSlots = DEFAULT_RESOURCES.map(def => dbMap.get(def.id) || def);
-                const customSlots = (data as ResourceItem[]).filter(item => !DEFAULT_RESOURCES.some(def => def.id === item.id));
-
-                const fullList = [...defaultSlots, ...customSlots];
-                setResourcesList(fullList);
-                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(fullList));
+                localStorage.setItem('crm_resources_db_initialized', 'true');
+                const list = data as ResourceItem[];
+                setResourcesList(list);
+                localStorage.setItem('crm_resources_list_fallback', JSON.stringify(list));
                 return;
             }
         } catch (e) {

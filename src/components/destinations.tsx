@@ -56,7 +56,13 @@ export function Destinations({ hideTitle = false }: { hideTitle?: boolean }) {
                     .order('title', { ascending: true });
                 if (error) throw error;
                 if (data && data.length > 0) {
-                    setDestList(data.map((item, idx) => ({
+                    const preferredOrder = ['disney-world', 'disneyland', 'disney-cruise', 'universal-studios'];
+                    const sortedData = [...data].sort((a, b) => {
+                        const ia = preferredOrder.indexOf(a.slug);
+                        const ib = preferredOrder.indexOf(b.slug);
+                        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+                    });
+                    setDestList(sortedData.map((item, idx) => ({
                         id: idx + 1,
                         title: item.title,
                         description: item.subtitle || "",
